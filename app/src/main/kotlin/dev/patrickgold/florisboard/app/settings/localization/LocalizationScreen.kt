@@ -37,12 +37,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import dev.patrickgold.florisboard.R
+import dev.patrickgold.florisboard.app.settings.search.settingsSearchAnchor
 import dev.patrickgold.florisboard.app.LocalNavController
 import dev.patrickgold.florisboard.app.Routes
 import dev.patrickgold.florisboard.app.enumDisplayEntriesOf
 import dev.patrickgold.florisboard.ime.core.DisplayLanguageNamesIn
 import dev.patrickgold.florisboard.ime.core.Subtype
 import dev.patrickgold.florisboard.ime.keyboard.LayoutType
+import dev.patrickgold.florisboard.ime.nlp.latin.GlideDictionaryCatalog
+import dev.patrickgold.florisboard.ime.nlp.latin.BigramCatalog
+import dev.patrickgold.florisboard.ime.nlp.latin.GlideDictionaryManager
+import dev.patrickgold.florisboard.ime.nlp.latin.LatinLanguageProvider
 import dev.patrickgold.florisboard.keyboardManager
 import dev.patrickgold.florisboard.lib.compose.FlorisScreen
 import dev.patrickgold.florisboard.subtypeManager
@@ -54,6 +59,7 @@ import dev.patrickgold.jetpref.datastore.ui.SwitchPreference
 import dev.patrickgold.jetpref.material.ui.JetPrefAlertDialog
 import kotlinx.serialization.json.Json
 import org.florisboard.lib.compose.FlorisWarningCard
+import org.florisboard.lib.compose.florisDialogScroll
 import org.florisboard.lib.compose.stringRes
 
 internal val SubtypeSaver = Saver<MutableState<Subtype?>, String>(
@@ -99,14 +105,17 @@ fun LocalizationScreen() = FlorisScreen {
     content {
         ListPreference(
             prefs.localization.displayLanguageNamesIn,
+            modifier = Modifier.settingsSearchAnchor("settings__localization__display_language_names_in__label"),
             title = stringRes(R.string.settings__localization__display_language_names_in__label),
             entries = enumDisplayEntriesOf(DisplayLanguageNamesIn::class),
         )
         SwitchPreference(
             prefs.localization.displayKeyboardLabelsInSubtypeLanguage,
+            modifier = Modifier.settingsSearchAnchor("settings__localization__display_keyboard_labels_in_subtype_language"),
             title = stringRes(R.string.settings__localization__display_keyboard_labels_in_subtype_language),
         )
         Preference(
+            modifier = Modifier.settingsSearchAnchor("settings__localization__language_pack_title"),
             title = stringRes(R.string.settings__localization__language_pack_title),
             summary = stringRes(R.string.settings__localization__language_pack_summary),
             onClick = {
@@ -124,16 +133,46 @@ fun LocalizationScreen() = FlorisScreen {
                 val currencySets by keyboardManager.resources.currencySets.collectAsState()
                 val layouts by keyboardManager.resources.layouts.collectAsState()
                 val displayLanguageNamesIn by prefs.localization.displayLanguageNamesIn.collectAsState()
+                // Live glide-dictionary status (issue #127): recomposes as downloads progress/complete.
+                val glideProgress by GlideDictionaryManager.progress.collectAsState()
+                val glideInstalledVersion by GlideDictionaryManager.installedVersion.collectAsState()
                 for (subtype in subtypes) {
                     val cMeta = layouts[LayoutType.CHARACTERS]?.get(subtype.layoutMap.characters)
                     val sMeta = layouts[LayoutType.SYMBOLS]?.get(subtype.layoutMap.symbols)
                     val currMeta = currencySets[subtype.currencySet]
-                    val summary = stringRes(
+                    val baseSummary = stringRes(
                         id = R.string.settings__localization__subtype_summary,
                         "characters_name" to (cMeta?.label ?: "null"),
                         "symbols_name" to (sMeta?.label ?: "null"),
                         "currency_set_name" to (currMeta?.label ?: "null"),
                     )
+                    // Data status (issue #127 + Tier 2): word list and autocorrect-context (bigram)
+                    // download state, compact on ONE line (the summary is capped at ~2 lines, so two
+                    // separate status lines would truncate). Icons: ✓ ready · ⤓ downloads on use · ✕ none ·
+                    // ⬇N% downloading.
+                    //
+                    // Labelled "Suggestions" rather than "Glide" since issue #265. The same file drives
+                    // word suggestions, autocorrect and the spell checker, and a language without one now
+                    // gets none of them instead of quietly getting English — so this row is where a user
+                    // finds out that the feature is absent for their language rather than broken.
+                    val glideLang = LatinLanguageProvider.normalizeLang(subtype.primaryLocale.language)
+                    @Suppress("UNUSED_EXPRESSION") glideInstalledVersion // re-read installed state on change
+                    val glideIcon = when {
+                        glideProgress[glideLang] != null -> "⬇${glideProgress[glideLang]}%"
+                        glideLang in GlideDictionaryCatalog.BUNDLED ||
+                            GlideDictionaryManager.isInstalled(context, glideLang) -> "✓"
+                        GlideDictionaryCatalog.forLang(glideLang) != null -> "⤓"
+                        else -> "✕"
+                    }
+                    val contextIcon = when {
+                        glideLang in BigramCatalog.BUNDLED ||
+                            GlideDictionaryManager.bigramInstalled(context, glideLang) -> "✓"
+                        BigramCatalog.forLang(glideLang) != null -> "⤓"
+                        else -> "✕"
+                    }
+                    val summary = baseSummary + "\n" +
+                        "$glideIcon " + stringRes(R.string.settings__localization__subtype_status_words) +
+                        "   $contextIcon " + stringRes(R.string.settings__localization__subtype_status_context)
                     Preference(
                         title = when (displayLanguageNamesIn) {
                             DisplayLanguageNamesIn.SYSTEM_LOCALE -> subtype.primaryLocale.displayName()
@@ -177,6 +216,7 @@ fun DeleteSubtypeConfirmationDialog(
 )   {
     subtypeToDelete?.let {
         JetPrefAlertDialog(
+            scrollModifier = florisDialogScroll(),
             title = stringRes(R.string.settings__localization__subtype_delete_confirmation_title),
             confirmLabel = stringRes(R.string.action__yes),
             dismissLabel = stringRes(R.string.action__no),

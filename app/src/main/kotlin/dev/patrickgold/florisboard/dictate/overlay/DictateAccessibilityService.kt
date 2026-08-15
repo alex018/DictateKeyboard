@@ -14,11 +14,16 @@ import android.accessibilityservice.AccessibilityService
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.BroadcastReceiver
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.ServiceInfo
 import android.os.Build
+import android.os.PowerManager
+import android.os.SystemClock
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
@@ -26,11 +31,13 @@ import android.os.Bundle
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityWindowInfo
+import android.view.inputmethod.EditorInfo
 import dev.patrickgold.florisboard.R
 import dev.patrickgold.florisboard.lib.devtools.flogDebug
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import org.florisboard.lib.android.systemService
 
 /**
  * Optional accessibility service that powers the floating dictation button (issue #88). It does two
@@ -54,11 +61,39 @@ class DictateAccessibilityService : AccessibilityService() {
     private var isForeground = false
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    /** Listens for the display going dark and coming back; see [refreshScreenState] for why (#269). */
+    private var screenReceiver: BroadcastReceiver? = null
+
+    // Coalesce selection re-checks. Selection-changed events can arrive on every keystroke, but the
+    // expensive part of updateEditableFocus() — fetching the focused node's full AccessibilityNodeInfo
+    // over IPC — only needs to run once a burst settles: the editable-focus state does not change while
+    // typing in the same field. Debouncing only this noisy event removes the per-keystroke IPC flood
+    // without delaying the bubble after a real focus or window change (#222).
+    private val focusUpdateRunnable = Runnable { updateEditableFocus() }
+
+    private fun scheduleFocusUpdate() {
+        mainHandler.removeCallbacks(focusUpdateRunnable)
+        mainHandler.postDelayed(focusUpdateRunnable, FOCUS_UPDATE_DEBOUNCE_MS)
+    }
+
+    /**
+     * Runs a focus check as soon as Android tells us that the input target or window changed. Any pending
+     * selection debounce is stale at that point, so cancel it rather than letting an old callback delay or
+     * overwrite this state. These event types are not emitted for every typed character, unlike selection
+     * changes, so the immediate IPC is both safe and necessary for a responsive overlay.
+     */
+    private fun updateEditableFocusImmediately() {
+        mainHandler.removeCallbacks(focusUpdateRunnable)
+        updateEditableFocus()
+    }
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         instance = this
         flogDebug { "DictateAccessibilityService connected" }
         createNotificationChannel()
+        registerScreenReceiver()
+        refreshScreenState()
         bubble = DictateBubbleController(this).also { it.start() }
         updateEditableFocus()
     }
@@ -69,6 +104,7 @@ class DictateAccessibilityService : AccessibilityService() {
     }
 
     override fun onDestroy() {
+        mainHandler.removeCallbacks(focusUpdateRunnable)
         clearInstance()
         super.onDestroy()
     }
@@ -79,13 +115,21 @@ class DictateAccessibilityService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         when (event?.eventType) {
+            // Note: TYPE_WINDOW_CONTENT_CHANGED is intentionally absent (and not subscribed in the
+            // service config): it fires on every keystroke and made updateEditableFocus() re-fetch the
+            // whole focused AccessibilityNodeInfo per character — a per-keystroke IPC flood that caused
+            // typing jank. Focus/editability only change on the events below, so we lose nothing.
+            // A focus/click or window transition is exactly when the bubble should appear or disappear.
+            // Do not route these through the typing-oriented debounce: it used to add 150 ms to every
+            // transition on top of the accessibility framework's notification timeout (#222).
             AccessibilityEvent.TYPE_VIEW_FOCUSED,
             AccessibilityEvent.TYPE_VIEW_CLICKED,
-            AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED,
             AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,
-            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED,
             AccessibilityEvent.TYPE_WINDOWS_CHANGED,
-            -> updateEditableFocus()
+            -> updateEditableFocusImmediately()
+            // This is the only subscribed event which can arrive for every keystroke. Keep it coalesced
+            // so caret moves and text selection do not cause a focused-node IPC round trip per character.
+            AccessibilityEvent.TYPE_VIEW_TEXT_SELECTION_CHANGED -> scheduleFocusUpdate()
         }
     }
 
@@ -132,7 +176,65 @@ class DictateAccessibilityService : AccessibilityService() {
         windows.any { it.type == AccessibilityWindowInfo.TYPE_INPUT_METHOD }
     }.getOrDefault(false)
 
+    /**
+     * Starts listening for the display turning off and on. Both actions are sent to runtime-registered
+     * receivers only — a manifest entry would never fire — and they are protected system broadcasts, so the
+     * receiver is registered as not exported. Registered for as long as the service lives, unlike the
+     * screen-off listener in `DictateController` (#147), which only runs during a recording.
+     */
+    private fun registerScreenReceiver() {
+        if (screenReceiver != null) return
+        val receiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) = refreshScreenState()
+        }
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_SCREEN_ON)
+        }
+        val registered = runCatching {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+            } else {
+                registerReceiver(receiver, filter)
+            }
+        }.isSuccess
+        if (registered) screenReceiver = receiver
+    }
+
+    /** Stops listening. Idempotent, and safe to call from both teardown paths. */
+    private fun unregisterScreenReceiver() {
+        val receiver = screenReceiver ?: return
+        screenReceiver = null
+        runCatching { unregisterReceiver(receiver) }
+    }
+
+    /**
+     * Publishes whether the display is interactive right now (#269).
+     *
+     * The floating button lives in a [android.view.WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY]
+     * window, a layer that deliberately outlives the keyguard so an accessibility tool keeps working there.
+     * The platform therefore never takes it down for us, and no accessibility event announces a screen going
+     * dark — so without this the last "a text field is focused" survives into the always-on display, and the
+     * button is still sitting on a phone the user believes to be off.
+     *
+     * Cheap enough to call on every focus update as well: a single binder call for a boolean, not the node
+     * tree fetch that made typing janky in #222. That second caller is the safety net — if an
+     * [Intent.ACTION_SCREEN_ON] is ever missed, the next accessibility event brings the button back rather
+     * than leaving it gone for the rest of the session.
+     */
+    private fun refreshScreenState() {
+        val on = runCatching { systemService(PowerManager::class).isInteractive }.getOrDefault(true)
+        if (_screenOn.value != on) {
+            _screenOn.value = on
+            flogDebug { "screen interactive = $on" }
+        }
+    }
+
     private fun updateEditableFocus() {
+        // Re-read the screen here too, not only from the broadcast: every path that can make the bubble
+        // appear runs through this method, so a missed ACTION_SCREEN_ON heals on the next event instead of
+        // hiding the button for the rest of the session (#269).
+        refreshScreenState()
         // Show the bubble whenever there is somewhere to dictate: either an editable field holds focus, or a
         // soft keyboard is physically out (covers apps whose fields don't report an accessible editable focus).
         val imeShown = isImeWindowShown()
@@ -186,44 +288,58 @@ class DictateAccessibilityService : AccessibilityService() {
      * Falls back to appending at the end when the field reports no usable selection. Returns true when
      * the field accepted the change — some custom/legacy views do not support `ACTION_SET_TEXT`.
      */
-    private fun commitTextIntoFocused(text: String): Boolean {
-        // Resolve the target field freshly. The accessibility input focus (and its input connection) can
-        // go stale when the host app recreates its field — e.g. WhatsApp clearing the composer on send —
-        // and a stale binding silently swallows the commit, so the green check showed but no text appeared
-        // (#132 follow-up). We therefore trust the input-connection path only while the focused node is
-        // still a *live* node; otherwise we re-locate the field from the currently visible window and write
-        // straight into that, so the text always lands in the field the user actually sees, even after the
-        // service has been running a long time.
-        val focused = focusedEditableNode()
-        val focusLive = focused != null && runCatching { focused.refresh() }.getOrDefault(false)
+    private fun commitTextIntoFocused(text: String, verify: Boolean = true): Boolean {
+        if (text.isEmpty()) return true // silence: nothing to insert — a no-op is a success, not a failure.
 
-        // 1. Live focus → the accessibility input connection (cleanest: WebView-safe, no clipboard toast).
-        if (focusLive && commitViaInputConnection(text)) {
-            flogDebug { "commit via inputConnection (live focus) len=${text.length}" }
-            return true
-        }
+        // Insert exactly like a normal keyboard: through the accessibility input connection's commitText,
+        // straight into the field at the cursor — no clipboard, no toast, and it never prepends a shown
+        // placeholder (e.g. WhatsApp's "Message"). The stability trick is to first resolve the field the
+        // user actually SEES (fresh from the live window, so a recreated/stale field can't swallow the
+        // text) and, if it isn't already focused, give it input focus. Focusing the visible field points
+        // the input connection at THAT field instead of an editor the app discarded — the root of the old
+        // "green check, no text" flakiness. A short retry covers the instant right after a send when the
+        // host app is still rebuilding its field. Node ACTION_SET_TEXT / clipboard paste stay only as
+        // fallbacks for the rare fields that accept no input connection (old OS, some WebView/custom views).
+        repeat(COMMIT_ATTEMPTS) { attempt ->
+            val target = activeWindowEditable()
+            if (target != null && !target.isFocused) {
+                runCatching { target.performAction(AccessibilityNodeInfo.ACTION_FOCUS) }
+                runCatching { target.refresh() }
+                // Let the input connection rebind to the field we just focused before we commit into it.
+                SystemClock.sleep(FOCUS_SETTLE_MS)
+            }
 
-        // 2. Node-based write into the actual on-screen field. Prefer the live focused node; if it was
-        //    stale or missing, take the editable field from the currently active window (the real one).
-        val target = (if (focusLive) focused else null) ?: activeWindowEditable()
-        if (target != null) {
-            runCatching { target.refresh() }
-            if (setTextOnFocused(target, text)) {
+            // 1. The keyboard-style path: commit through the input connection (no clipboard, no toast).
+            //    Its API returns void, so "it did not throw" is all the call itself tells us — hence the
+            //    read-back below (issue #277).
+            val before = if (verify) readBeforeCursor(text.length) else null
+            if (commitViaInputConnection(text)) {
+                if (!verify || insertLanded(before, text.length)) {
+                    flogDebug { "commit via inputConnection len=${text.length}" }
+                    return true
+                }
+                // The field demonstrably did not change. Deliberately NOT falling through to the other
+                // two mechanisms: if this verdict were wrong, writing again would leave the text in the
+                // field twice, and duplicated text is worse than a wrong error message. The caller puts
+                // it on the clipboard instead.
+                flogDebug { "commit swallowed by the field len=${text.length}" }
+                return false
+            }
+            // 2. Fallback: write straight into the visible node (older OS without the a11y input method, or
+            //    fields that expose no editor connection). Placeholder-safe via editableText().
+            if (target != null && setTextOnFocused(target, text)) {
                 flogDebug { "commit via setText len=${text.length}" }
                 return true
             }
-            if (pasteIntoFocused(target, text)) {
+            // 3. Last resort only: clipboard paste (WebView/custom inputs that ignore both). The paste
+            //    toast is therefore the rare exception, never the normal case.
+            if (target != null && pasteIntoFocused(target, text)) {
                 flogDebug { "commit via paste len=${text.length}" }
                 return true
             }
+            if (attempt < COMMIT_ATTEMPTS - 1) SystemClock.sleep(COMMIT_RETRY_DELAY_MS)
         }
-
-        // 3. Last resort: the input connection even when no live focused node was found — covers apps that
-        //    expose an editor connection without an accessible focused node.
-        if (!focusLive && commitViaInputConnection(text)) {
-            flogDebug { "commit via inputConnection (fallback) len=${text.length}" }
-            return true
-        }
+        flogDebug { "commit FAILED after $COMMIT_ATTEMPTS attempts len=${text.length}" }
         return false
     }
 
@@ -241,6 +357,38 @@ class DictateAccessibilityService : AccessibilityService() {
         }
         if (root.isLikelyEditable()) return root
         return findEditableDescendant(root, 0)
+    }
+
+    /**
+     * The text immediately before the cursor, read back through the *same* input connection the write
+     * goes through, or null when it cannot be read.
+     *
+     * Deliberately not the accessibility node: reading the node means `refresh()` plus [editableText]'s
+     * placeholder heuristic, which reports a hint-showing field as empty — unreliable enough that an
+     * earlier attempt at verifying writes that way produced false "couldn't insert" errors and was
+     * abandoned. `getSurroundingText` asks the app's own editor instead, and arrived with API 33, which
+     * is the same floor the write path already has.
+     */
+    private fun readBeforeCursor(sentLength: Int): String? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return null
+        val connection = inputMethod?.currentInputConnection ?: return null
+        return runCatching {
+            val window = connection.getSurroundingText(sentLength + VERIFY_WINDOW_PAD, 0, 0) ?: return null
+            val text = window.text ?: return null
+            val end = window.selectionStart.coerceIn(0, text.length)
+            text.subSequence(0, end).toString()
+        }.getOrNull()
+    }
+
+    /**
+     * Whether the write reached the field. Reads back once, and — only if nothing changed — once more
+     * after a short settle, because an app applies a commit on its own UI thread and may not have got
+     * to it yet.
+     */
+    private fun insertLanded(before: String?, sentLength: Int): Boolean {
+        if (insertLandedFrom(before, readBeforeCursor(sentLength))) return true
+        SystemClock.sleep(VERIFY_SETTLE_MS)
+        return insertLandedFrom(before, readBeforeCursor(sentLength))
     }
 
     /**
@@ -346,6 +494,49 @@ class DictateAccessibilityService : AccessibilityService() {
         return true
     }
 
+    // --- Real-time dictation preview via the overlay (issue #128) ---------------------------------
+    // Live streaming into another app's field over AccessibilityService. Each accessibility write costs a
+    // node fetch + set, so preview updates are throttled and applied as a minimal diff (delete the changed
+    // tail, insert the new tail) rather than re-setting the whole field. [previewShown] tracks exactly what
+    // we have injected so the diff stays correct even when throttling skips intermediate updates.
+    private var previewShown = ""
+    private var lastPreviewMs = 0L
+
+    /** Returns whether the field took the new tail, so callers only advance [previewShown] when it did. */
+    private fun applyPreviewDiff(old: String, new: String): Boolean {
+        if (old == new) return true
+        val cp = old.commonPrefixWith(new).length
+        if (cp < old.length) deleteLastTextFromFocused(old.substring(cp))
+        if (cp >= new.length) return true
+        // Streaming writes a tail many times a second; a read-back per update would double the IPC and
+        // fight the app's own rendering. The final commit is verified instead.
+        return commitTextIntoFocused(new.substring(cp), verify = false)
+    }
+
+    private fun setPreviewThrottled(full: String) {
+        if (full == previewShown) return
+        val now = SystemClock.uptimeMillis()
+        if (now - lastPreviewMs < PREVIEW_THROTTLE_MS) return   // skip; a later update catches up via the diff
+        // Only move the diff base when the write landed (issue #277). Advancing it regardless left the
+        // base describing text that was never inserted, and every later diff was computed against that
+        // fiction — so one refused write desynchronised the whole rest of the streaming session.
+        if (applyPreviewDiff(previewShown, full)) previewShown = full
+        lastPreviewMs = now
+    }
+
+    private fun commitPreviewFinalOnFocused(finalText: String): Boolean {
+        val landed = applyPreviewDiff(previewShown, finalText)   // no throttle — final result always lands
+        previewShown = ""
+        lastPreviewMs = 0L
+        return landed
+    }
+
+    private fun clearPreviewOnFocused() {
+        if (previewShown.isNotEmpty()) applyPreviewDiff(previewShown, "")
+        previewShown = ""
+        lastPreviewMs = 0L
+    }
+
     /** The selected text in the focused editable field, or empty when nothing is selected. */
     private fun selectedTextOfFocused(): String {
         val node = focusedEditableNode() ?: return ""
@@ -406,14 +597,43 @@ class DictateAccessibilityService : AccessibilityService() {
      * Presses the editor action / Enter on the focused field (auto-enter). Uses the proper IME-enter
      * action on Android 11+; on older releases there is no editor-action equivalent, so it falls back
      * to inserting a newline.
+     *
+     * Unlike the keyboard, which dispatches a real key event, this can only *ask* — and an app that
+     * implements no editor action refuses. Returns whether it was accepted (issue #278); the caller
+     * reports rather than pretends.
+     *
+     * The field is resolved the same way [commitTextIntoFocused] resolves it, freshly from the active
+     * window: the plain input-focus lookup used before could return a different node than the one the
+     * text just went into, which is the staleness #161 fixed for the insert but not for Enter.
      */
     private fun performEnterOnFocused(): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val node = focusedEditableNode() ?: return false
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return commitTextIntoFocused("\n")
+        val node = activeWindowEditable() ?: focusedEditableNode()
+        if (node != null &&
             node.performAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_IME_ENTER.id)
-        } else {
-            commitTextIntoFocused("\n")
+        ) {
+            return true
         }
+        // Second try through the input connection we already hold — the same call the keyboard path
+        // makes (EditorInstance.performEnterAction). Some fields accept the editor action while
+        // refusing the node action. The action is the one the field itself declares in its imeOptions
+        // (Send in a chat box, Search in a search bar, …); a field declaring none gets nothing, since
+        // guessing one would send a message the writer had not finished.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val method = inputMethod
+            val connection = method?.currentInputConnection
+            val action = method?.currentInputEditorInfo?.imeOptions?.and(EditorInfo.IME_MASK_ACTION)
+            if (connection != null && action != null &&
+                action != EditorInfo.IME_ACTION_NONE && action != EditorInfo.IME_ACTION_UNSPECIFIED
+            ) {
+                return runCatching {
+                    connection.performEditorAction(action)
+                    true
+                }.getOrDefault(false)
+            }
+        }
+        flogDebug { "auto-enter refused by the focused field" }
+        return false
     }
 
     /** Clamps a selection index into [0, length]; a missing index (-1) maps to the end (append). */
@@ -423,6 +643,7 @@ class DictateAccessibilityService : AccessibilityService() {
     private fun clearInstance() {
         if (instance === this) {
             instance = null
+            unregisterScreenReceiver()
             _editableFocused.value = false
             _dictateKeyboardActive.value = false
             _imeVisible.value = false
@@ -486,6 +707,38 @@ class DictateAccessibilityService : AccessibilityService() {
         private const val NOTIF_CHANNEL = "dictate_overlay_recording"
         private const val CLIPBOARD_RESTORE_DELAY_MS = 400L
         private const val MAX_EDITABLE_SEARCH_DEPTH = 6
+        // Floating-button commit reliability (#161): resolve + focus the field the user sees so the input
+        // connection binds to it, retry briefly while the host app rebuilds its field right after a send.
+        private const val COMMIT_ATTEMPTS = 2
+        private const val COMMIT_RETRY_DELAY_MS = 60L
+        private const val FOCUS_SETTLE_MS = 40L
+        // Read-back verification of the input-connection write (#277). The window is a little wider than
+        // what was sent so a field that reformats around it still reads as changed; the settle covers an
+        // app that applies the commit on its own UI thread a moment later.
+        private const val VERIFY_WINDOW_PAD = 16
+        private const val VERIFY_SETTLE_MS = 50L
+
+        /**
+         * Whether a write is judged to have reached the field, given the text before the cursor as it was
+         * [before] the write and as it reads [after] it.
+         *
+         * **Only a demonstrably unchanged field counts as a failure.** Anything else — either read
+         * unavailable, an exception, text that grew, shrank, or was reformatted by the app — counts as
+         * landed and leaves the behaviour exactly as it was before verification existed.
+         *
+         * Checking that the field now *ends with what we sent* would be the obvious rule and the wrong
+         * one: apps capitalise, trim and reflow what they are given, and every one of those would read as
+         * a failure. "Did anything change at all" survives all of it, and still catches the case this is
+         * for — the write that is silently dropped, where nothing changes because nothing happened.
+         */
+        internal fun insertLandedFrom(before: String?, after: String?): Boolean =
+            before == null || after == null || before != after
+        // Debounce window for focus re-checks so a typing burst triggers at most one focused-node fetch.
+        private const val FOCUS_UPDATE_DEBOUNCE_MS = 150L
+        // Real-time overlay preview (#128): min gap between accessibility writes while streaming, so live
+        // typing into another app doesn't flood the accessibility channel. 0 = apply every update (tested
+        // to work smoothly in practice; raise if a target app can't keep up).
+        private const val PREVIEW_THROTTLE_MS = 0L
 
         @Volatile
         private var instance: DictateAccessibilityService? = null
@@ -514,11 +767,20 @@ class DictateAccessibilityService : AccessibilityService() {
         /** Package name of the current foreground app, for per-app bubble positioning. */
         val foregroundPackage: StateFlow<String?> = _foregroundPackage.asStateFlow()
 
+        private val _screenOn = MutableStateFlow(true)
+
+        /**
+         * Whether the display is interactive. The bubble's window layer outlives a screen going dark, so it
+         * has to be told to leave (#269).
+         */
+        val screenOn: StateFlow<Boolean> = _screenOn.asStateFlow()
+
         /**
          * Inserts [text] into the focused editable field via the running service, returning true on
          * success. Returns false when the service is not running or no editable field is focused.
          */
-        fun injectText(text: String): Boolean = instance?.commitTextIntoFocused(text) ?: false
+        fun injectText(text: String, verify: Boolean = true): Boolean =
+            instance?.commitTextIntoFocused(text, verify) ?: false
 
         /** The selection in the focused field, or empty when the service is unavailable. */
         fun selectedText(): String = instance?.selectedTextOfFocused() ?: ""
@@ -534,5 +796,15 @@ class DictateAccessibilityService : AccessibilityService() {
 
         /** Removes the last inserted [text] from the focused field (undo, #133); false when unavailable. */
         fun deleteLastText(text: String): Boolean = instance?.deleteLastTextFromFocused(text) ?: false
+
+        /** Real-time overlay preview (#128): throttled live update of the streamed text into the field. */
+        fun setPreview(full: String) { instance?.setPreviewThrottled(full) }
+
+        /** Replace the live preview with the finished/reworded [finalText] (unthrottled). */
+        fun commitPreviewFinal(finalText: String): Boolean =
+            instance?.commitPreviewFinalOnFocused(finalText) ?: false
+
+        /** Remove the live preview entirely (recording cancelled). */
+        fun clearPreview() { instance?.clearPreviewOnFocused() }
     }
 }

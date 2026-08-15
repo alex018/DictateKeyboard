@@ -49,6 +49,45 @@ object AppVersionUtils {
     suspend fun updateVersionLastChangelog(context: Context, prefs: FlorisPreferenceModel) {
         prefs.internal.versionLastChangelog.set(getRawVersionName(context))
     }
+
+    /** The parsed version of the currently installed build, or [VersionName.DEFAULT] when unparseable. */
+    fun currentVersion(context: Context): VersionName =
+        VersionName.fromString(getRawVersionName(context)) ?: VersionName.DEFAULT
+
+    /** Remembers that the user has seen the "What's new" tour for the current version. */
+    suspend fun updateVersionLastWhatsNew(context: Context, prefs: FlorisPreferenceModel) {
+        prefs.internal.versionLastWhatsNew.set(getRawVersionName(context))
+    }
+
+    /**
+     * Remembers that the user has seen every "What's new" tour up to and including [version]. Used when
+     * more than one tour is queued (a user who skipped releases): after finishing an older tour we advance
+     * the high-water mark to it, so quitting mid-queue still resumes at the next unseen tour on relaunch.
+     */
+    suspend fun markWhatsNewSeen(context: Context, prefs: FlorisPreferenceModel, version: VersionName) {
+        prefs.internal.versionLastWhatsNew.set(version.toString())
+    }
+
+    /**
+     * The ascending list of tour versions from [candidates] that should auto-show now: only on a real
+     * update (not a fresh install), only those newer than the last-seen high-water mark, and only those the
+     * current build has actually reached. Empty means nothing auto-shows (fall back to the changelog).
+     */
+    fun pendingTourVersions(
+        context: Context,
+        prefs: FlorisPreferenceModel,
+        candidates: List<VersionName>,
+    ): List<VersionName> {
+        val installVersion =
+            VersionName.fromString(prefs.internal.versionOnInstall.get()) ?: VersionName.DEFAULT
+        val lastWhatsNew =
+            VersionName.fromString(prefs.internal.versionLastWhatsNew.get()) ?: VersionName.DEFAULT
+        val current = currentVersion(context)
+        if (installVersion == current) return emptyList() // fresh install → setup flow, not what's-new
+        return candidates
+            .filter { it > lastWhatsNew && !(current < it) }
+            .sortedWith { a, b -> a.compareTo(b) }
+    }
 }
 
 data class VersionName(

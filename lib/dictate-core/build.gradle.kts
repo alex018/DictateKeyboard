@@ -27,6 +27,7 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.agp.library)
+    alias(libs.plugins.kotest)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -63,6 +64,12 @@ configure<LibraryExtension> {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
+    testOptions {
+        unitTests.all {
+            it.useJUnitPlatform()
+        }
+    }
 }
 
 dependencies {
@@ -72,4 +79,10 @@ dependencies {
     api(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.coroutines)
     implementation(libs.androidx.core.ktx)
+
+    testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.kotest.runner.junit5)
+    testImplementation(libs.okhttp.mockwebserver)
+    // Kept alongside Kotest (both run on the JUnit 5 platform) so kotlin.test-based tests keep compiling.
+    testImplementation(libs.kotlin.test.junit5)
 }

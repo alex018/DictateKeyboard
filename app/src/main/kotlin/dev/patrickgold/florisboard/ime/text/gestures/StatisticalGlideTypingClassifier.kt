@@ -158,6 +158,18 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
         }
     }
 
+    override fun invalidateWordData(subtype: Subtype) {
+        // Nothing built yet: leave it that way. Building here would load the whole dictionary early for a
+        // keyboard that may never be opened, and the first real build reads the new words regardless.
+        if (wordDataSubtype == null) return
+        // The pruner is keyed by subtype and outlives a rebuild, and the suggestion cache answers by gesture
+        // shape — both would keep handing out the vocabulary from before the user's edit.
+        prunerCache.evictAll()
+        lruSuggestionCache.evictAll()
+        wordDataSubtype = null
+        setWordData(subtype)
+    }
+
     /**
      * Exists because Pruner requires both word data and layout are initialized,
      * however we don't know what order they're initialized in.
@@ -373,8 +385,10 @@ class StatisticalGlideTypingClassifier(context: Context) : GlideTypingClassifier
                 word: String,
                 keysByCharacter: SparseArrayCompat<TextKey>,
             ): Pair<Int, Int>? {
-                val firstLetter = word[0]
-                val lastLetter = word[word.length - 1]
+                // Lowercase first (keyboard keys are lowercase): a capitalised word like "Baum" would
+                // otherwise miss the key lookup (B vs b) and be pruned out entirely (issue #127).
+                val firstLetter = Character.toLowerCase(word[0])
+                val lastLetter = Character.toLowerCase(word[word.length - 1])
                 val firstBaseChar = Normalizer.normalize(firstLetter.toString(), Normalizer.Form.NFD)[0]
                 val lastBaseChar = Normalizer.normalize(lastLetter.toString(), Normalizer.Form.NFD)[0]
                 return when {

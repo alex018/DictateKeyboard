@@ -11,10 +11,10 @@
 package dev.patrickgold.florisboard.dictate.ui
 
 import android.os.SystemClock
-import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -38,13 +38,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Adjust
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.DataUsage
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.animation.core.Animatable
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.FastForward
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Language
@@ -52,8 +59,11 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.AddCard
+import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
@@ -67,6 +77,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState as collectFlowAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -81,17 +92,24 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.roundToIntRect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import dev.patrickgold.florisboard.R
 import dev.patrickgold.florisboard.app.FlorisPreferenceStore
 import dev.patrickgold.florisboard.dictate.DictateController
 import dev.patrickgold.florisboard.dictate.DictateLanguages
+import dev.patrickgold.florisboard.dictate.DictateRecordingAnimation
+import dev.patrickgold.florisboard.dictate.PushToTalkPhase
 import dev.patrickgold.florisboard.dictate.provider.DictateApiException
+import dev.patrickgold.florisboard.ime.keyboard.FlorisImeSizing
 import dev.patrickgold.florisboard.ime.theme.FlorisImeUi
 import dev.patrickgold.jetpref.datastore.model.collectAsState
 import kotlinx.coroutines.delay
@@ -102,12 +120,15 @@ import org.florisboard.lib.snygg.ui.SnyggRow
 import org.florisboard.lib.snygg.ui.SnyggText
 import org.florisboard.lib.snygg.ui.rememberSnyggThemeQuery
 
+/** Recording red, shared by the indicator dot and the armed slide-to-cancel bin (#235). */
+private val RecordingRed = Color(0xFFE53935)
+
 /**
  * Gboard-style in-Smartbar dictation indicator. Rendered in the Smartbar's center area (left of the
  * sticky mic button) while [DictateController] is recording or transcribing, so the keyboard itself
  * stays fully visible instead of being replaced by a separate panel.
  *
- * - Recording: a cancel button, a pulsing red dot + an elapsed `m:ss` timer, and a pause/resume
+ * - Recording: a cancel button, an audio-reactive cloud orb + an elapsed `m:ss` timer, and a pause/resume
  *   button. The sticky mic (rendered by the Smartbar) stops the recording and starts transcribing.
  * - Transcribing: a spinning icon + label, or a retry indicator while a transient failure is retried.
  * - Error: the error message, auto-cleared after a few seconds.
@@ -145,33 +166,73 @@ fun DictateSmartbarUi(state: DictateController.UiState, modifier: Modifier = Mod
 @Composable
 private fun RecordingContent(state: DictateController.UiState.Recording) {
     val prefs by FlorisPreferenceStore
-    val keepScreenAwake by prefs.dictate.keepScreenAwake.collectAsState()
-
-    // Keep the screen on while the recording indicator is visible, if the user enabled it.
-    val view = LocalView.current
-    DisposableEffect(keepScreenAwake) {
-        if (keepScreenAwake) view.keepScreenOn = true
-        onDispose { view.keepScreenOn = false }
+    val context = LocalContext.current
+    // Long-form segmented dictation (#170): whether the "Next segment" button is active and how many cut
+    // segments are transcribing in the background.
+    val segmented by DictateController.segmentedRecording.collectFlowAsState()
+    val segmentsInFlight by DictateController.segmentsInFlight.collectFlowAsState()
+    // A one-shot flash of the Next button (accent tint + a brief grow) on every segment cut, so the user
+    // sees a chunk was sent off (#170).
+    val flushCount by DictateController.segmentFlushCount.collectFlowAsState()
+    val accent by prefs.theme.accentColor.collectAsState()
+    val nextFlash = remember { Animatable(0f) }
+    LaunchedEffect(flushCount) {
+        if (flushCount > 0) {
+            nextFlash.snapTo(1f)
+            nextFlash.animateTo(0f, tween(550))
+        }
     }
 
-    // Cancel button (far left) – discards the recording.
+    // Push-to-talk (#235): while the finger is still down nothing on this bar can be tapped, so the
+    // buttons give way to the slide affordance — a bin that arms as you slide towards it, and the hint
+    // in place of the controls the finger cannot reach anyway.
+    val ptt by DictateController.pushToTalkVisuals.collectFlowAsState()
+    // The bar must not change back while the discarded mic is still flying towards the bin — the target
+    // it is aiming at is on this bar, and the controls returning underneath it broke the illusion.
+    val holding = ptt.micShown
+    val rawCancelProgress by DictateController.cancelSlideProgress.collectFlowAsState()
+    val cancelProgress = if (ptt.discarding) 1f else rawCancelProgress
+
+    // Cancel button (far left) – discards the recording. In long-form it drops only the current (uncut)
+    // segment and keeps recording, so you can scrap the last utterance without losing the transcript (#183).
+    // While holding it is the discard target: it reddens as the finger approaches, and reaching it drops
+    // the recording immediately (see DictateController.onPushToTalkSlide) rather than on release.
     SnyggIconButton(
         elementName = FlorisImeUi.SmartbarActionKey.elementName,
-        onClick = { DictateController.cancelRecording() },
-        modifier = Modifier.fillMaxHeight().aspectRatio(1f),
+        onClick = { DictateController.cancelOrDiscardSegment(context) },
+        modifier = Modifier
+            .fillMaxHeight()
+            .aspectRatio(1f)
+            // The swollen mic is drawn by the mic key and has to be thrown *here*; it can only aim at a
+            // position someone measured.
+            .onGloballyPositioned { DictateHoldTargets.reportBinBounds(it.boundsInWindow().roundToIntRect()) },
     ) {
-        SnyggIcon(
-            imageVector = Icons.Default.Delete,
-            contentDescription = stringRes(R.string.dictate__action_cancel),
-        )
+        // The red goes behind the icon rather than into it. SnyggIcon takes both its size and its colour
+        // from the keyboard theme, and swapping it for Material's Icon to gain a tint is exactly what
+        // shrank this button before — that one is a fixed 24 dp.
+        Box(contentAlignment = Alignment.Center) {
+            if (holding && cancelProgress > 0f) {
+                Box(
+                    modifier = Modifier
+                        .size(FlorisImeSizing.smartbarHeight * 0.8f)
+                        .background(RecordingRed.copy(alpha = 0.85f * cancelProgress), CircleShape),
+                )
+            }
+            SnyggIcon(
+                imageVector = Icons.Default.Delete,
+                contentDescription = stringRes(R.string.dictate__action_cancel),
+            )
+        }
     }
 
-    // Center: pulsing dot + elapsed timer.
+    // Center: audio-reactive dot + elapsed timer.
     Row(verticalAlignment = Alignment.CenterVertically) {
         var elapsedMs by remember { mutableLongStateOf(state.accumulatedMs) }
-        LaunchedEffect(state.startedAtMs, state.accumulatedMs, state.paused) {
-            if (state.paused) {
-                elapsedMs = state.accumulatedMs
+        // Frozen once the recording has been thrown away: nothing is being captured any more, so a timer
+        // still counting up and a dot still pulsing would be showing something that is not happening.
+        LaunchedEffect(state.startedAtMs, state.accumulatedMs, state.paused, ptt.discarding) {
+            if (state.paused || ptt.discarding) {
+                if (state.paused) elapsedMs = state.accumulatedMs
             } else {
                 while (true) {
                     elapsedMs = state.accumulatedMs + (SystemClock.elapsedRealtime() - state.startedAtMs)
@@ -179,41 +240,175 @@ private fun RecordingContent(state: DictateController.UiState.Recording) {
                 }
             }
         }
-        val transition = rememberInfiniteTransition(label = "recording")
-        val pulse by transition.animateFloat(
-            initialValue = 0.65f,
-            targetValue = 1.15f,
-            animationSpec = infiniteRepeatable(tween(650), RepeatMode.Reverse),
-            label = "pulse",
-        )
-        Spacer(
-            modifier = Modifier
-                .size(12.dp)
-                .scale(if (state.paused) 1f else pulse)
-                .alpha(if (state.paused) 0.4f else 1f)
-                .clip(CircleShape)
-                .background(Color(0xFFE53935)),
-        )
+        RecordingAudioDot(paused = state.paused, frozen = ptt.discarding)
         Spacer(modifier = Modifier.width(10.dp))
         SnyggText(text = formatElapsed(elapsedMs))
-    }
-
-    // Right group: language chip + pause/resume button (left of the sticky mic).
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        LanguageChip()
-        SnyggIconButton(
-            elementName = FlorisImeUi.SmartbarActionKey.elementName,
-            onClick = { DictateController.togglePause() },
-            modifier = Modifier.fillMaxHeight().aspectRatio(1f),
-        ) {
-            SnyggIcon(
-                imageVector = if (state.paused) Icons.Default.PlayArrow else Icons.Default.Pause,
-                contentDescription = stringRes(
-                    if (state.paused) R.string.dictate__action_resume else R.string.dictate__action_pause,
-                ),
-            )
+        // Segmented mode: how many cut segments are transcribing in the background right now.
+        if (segmentsInFlight > 0) {
+            Spacer(modifier = Modifier.width(8.dp))
+            SnyggIcon(imageVector = Icons.Default.Sync, modifier = Modifier.size(14.dp))
+            Spacer(modifier = Modifier.width(2.dp))
+            SnyggText(text = "$segmentsInFlight")
         }
     }
+
+    // Right group: language chip + (in long-form mode) the "Next segment" button, otherwise the
+    // pause/resume button — left of the sticky mic. Long-form replaces pause with Next: pausing is
+    // redundant there (the Next button / auto-split already handle thought-breaks).
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        if (holding) {
+            // Neither the chip nor pause can be reached with the finger still on the mic, so the space
+            // says what the gesture will do instead of showing controls that cannot be used.
+            PushToTalkAffordance(cancelProgress)
+            return@Row
+        }
+        LanguageChip()
+        if (segmented) {
+            SnyggIconButton(
+                elementName = FlorisImeUi.SmartbarActionKey.elementName,
+                onClick = { DictateController.flushSegment(context) },
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .aspectRatio(1f)
+                    .scale(1f + nextFlash.value * 0.35f),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.FastForward,
+                    contentDescription = stringRes(R.string.dictate__action_next_segment),
+                    tint = lerp(LocalContentColor.current, accent, nextFlash.value),
+                )
+            }
+        } else {
+            SnyggIconButton(
+                elementName = FlorisImeUi.SmartbarActionKey.elementName,
+                onClick = { DictateController.togglePause() },
+                modifier = Modifier.fillMaxHeight().aspectRatio(1f),
+            ) {
+                SnyggIcon(
+                    imageVector = if (state.paused) Icons.Default.PlayArrow else Icons.Default.Pause,
+                    contentDescription = stringRes(
+                        if (state.paused) R.string.dictate__action_resume else R.string.dictate__action_pause,
+                    ),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * What the bar shows while a finger is holding the mic (#235): the slide-to-cancel hint, with a chevron
+ * and the sweeping highlight voice-message UIs use to say "this is a gesture, not a label". It fades out
+ * as the finger nears the discard target, so it never competes with the bin for attention. The lock is
+ * not here — it is a target above the mic that the finger drags into (see QuickActionButton).
+ */
+@Composable
+private fun RowScope.PushToTalkAffordance(cancelProgress: Float) {
+    // The swollen mic reaches leftwards out of the key, so the hint is pushed clear of it — otherwise the
+    // words sit underneath the bubble and cannot be read at the moment they matter.
+    val clearance = FlorisImeSizing.smartbarHeight * 0.6f
+    val hintAlpha = (1f - cancelProgress).coerceIn(0f, 1f)
+    val muted = LocalContentColor.current.copy(alpha = 0.55f * hintAlpha)
+
+    // A chevron pointing the way, nudging left in time with the sweep below it.
+    val bob by rememberInfiniteTransition(label = "pttArrow").animateFloat(
+        initialValue = 0f,
+        targetValue = -3f,
+        animationSpec = infiniteRepeatable(tween(700), RepeatMode.Reverse),
+        label = "pttArrowBob",
+    )
+    Icon(
+        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+        contentDescription = null,
+        tint = muted,
+        modifier = Modifier
+            .size(16.dp)
+            .graphicsLayer { translationX = bob * density },
+    )
+    Spacer(modifier = Modifier.width(2.dp))
+
+    // The hint text, swept by a moving highlight rather than animated as a whole — the sweep is what
+    // reads as "keep going in this direction".
+    val sweep by rememberInfiniteTransition(label = "pttSweep").animateFloat(
+        initialValue = 1f,
+        targetValue = -1f,
+        animationSpec = infiniteRepeatable(tween(1600), RepeatMode.Restart),
+        label = "pttSweepX",
+    )
+    val highlight = LocalContentColor.current.copy(alpha = hintAlpha)
+    Text(
+        text = stringRes(R.string.dictate__push_to_talk_slide_cancel),
+        fontSize = 11.sp,
+        style = LocalTextStyle.current.copy(
+            brush = Brush.horizontalGradient(
+                0f to muted,
+                (sweep - 0.18f).coerceIn(0f, 1f) to muted,
+                sweep.coerceIn(0f, 1f) to highlight,
+                (sweep + 0.18f).coerceIn(0f, 1f) to muted,
+                1f to muted,
+            ),
+        ),
+        maxLines = 1,
+        modifier = Modifier.padding(end = clearance),
+    )
+}
+
+/**
+ * Small recording indicator for the Smartbar: a red dot that, depending on the user's choice
+ * ([DictateRecordingAnimation], issue #238), follows the shared 20 Hz microphone level, pulses at a
+ * fixed rate like the pre-rewrite app, or simply sits still. The level mode is the default because it
+ * doubles as proof that the mic is actually hearing you — without the heavier cloud-orb surface, which
+ * stays an opt-in floating-button skin.
+ *
+ * While paused the dot is always still and dimmed, whatever the mode: there is nothing to react to.
+ */
+/** The 4.0 pulse, kept as named constants so the classic layout can beat in time with the dot. */
+internal const val PULSE_MIN_SCALE = 0.65f
+internal const val PULSE_MAX_SCALE = 1.15f
+internal const val PULSE_DURATION_MS = 650
+
+@Composable
+private fun RecordingAudioDot(paused: Boolean, frozen: Boolean = false) {
+    val prefs by FlorisPreferenceStore
+    val animation by prefs.dictate.recordingAnimation.collectAsState()
+    // Frozen differs from paused: it stops every motion but keeps the dot at full strength, because the
+    // bar is only still on screen for the discard animation and dimming it would be a second change on
+    // top of the one being shown.
+    val still = paused || frozen
+    // Only collected in LEVEL mode, so the other modes don't recompose at 20 Hz for nothing.
+    val level = if (animation == DictateRecordingAnimation.LEVEL && !still) {
+        DictateController.audioLevel.collectFlowAsState().value
+    } else {
+        0f
+    }
+    // The original 4.0 heartbeat, restored: the dot drops well *below* its resting size and swells past
+    // it, which reads as a beat. Growing from full size instead only throbs, and that turned out to be
+    // the whole difference in feel. Both ends collapse to 1f when nothing should move.
+    val pulsing = animation == DictateRecordingAnimation.PULSE && !still
+    val pulse by rememberInfiniteTransition(label = "recordingDot").animateFloat(
+        initialValue = if (pulsing) PULSE_MIN_SCALE else 1f,
+        targetValue = if (pulsing) PULSE_MAX_SCALE else 1f,
+        animationSpec = infiniteRepeatable(tween(PULSE_DURATION_MS), RepeatMode.Reverse),
+        label = "recordingDotPulse",
+    )
+    val scale = when {
+        still -> 1f
+        animation == DictateRecordingAnimation.LEVEL -> 0.85f + 0.5f * level
+        else -> pulse // PULSE animates, STATIC stays at 1f because its target never leaves 1f
+    }
+    val alpha = when {
+        paused -> 0.4f
+        frozen -> 1f
+        animation == DictateRecordingAnimation.LEVEL -> 0.55f + 0.45f * level
+        else -> 1f
+    }
+    Spacer(
+        modifier = Modifier
+            .size(12.dp)
+            .scale(scale)
+            .alpha(alpha)
+            .clip(CircleShape)
+            .background(RecordingRed),
+    )
 }
 
 /**
@@ -296,6 +491,18 @@ private fun TranscribingContent(state: DictateController.UiState.Transcribing) {
             stringRes(R.string.dictate__status_transcribing)
         },
     )
+    // Transcribing is transcribing — the spinner and the wording stay the same wherever it happens. The
+    // phone alongside them says only where: this one is running here, not on a provider's machine. It
+    // matters most right after holding the button to escape a hanging request (#270), where it is the
+    // confirmation that the escape worked.
+    if (state.onDevice) {
+        Spacer(modifier = Modifier.width(8.dp))
+        SnyggIcon(
+            imageVector = Icons.Default.PhoneAndroid,
+            modifier = Modifier.size(16.dp),
+            contentDescription = stringRes(R.string.dictate__status_transcribing_local),
+        )
+    }
 }
 
 /**
@@ -333,8 +540,10 @@ private fun RowScope.ErrorContent(state: DictateController.UiState.Error) {
     var detailOpen by remember(state) { mutableStateOf(false) }
     val hasDetail = !state.detail.isNullOrBlank()
     val hasAction = state.action != DictateController.ErrorAction.NONE
-    // Errors are tinted a distinct red so they stand out from the normal (themed) Smartbar content.
-    val errorColor = Color(0xFFE53935)
+    // Real errors are tinted a distinct red so they stand out; informational notices (e.g. "no speech
+    // detected", issue #93) use the normal themed Smartbar foreground so they don't look like a failure.
+    val rowStyle = rememberSnyggThemeQuery(FlorisImeUi.SmartbarSharedActionsRow.elementName)
+    val errorColor = if (state.neutral) rowStyle.foreground() else Color(0xFFE53935)
 
     // Icon + message. Tappable when a raw provider detail is available, opening the detail popup below.
     Box(modifier = if (hasAction) Modifier.weight(1f) else Modifier) {
@@ -384,6 +593,32 @@ private fun RowScope.ErrorContent(state: DictateController.UiState.Error) {
                 SnyggIcon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = stringRes(R.string.dictate__action_settings),
+                )
+            }
+            DismissButton()
+        }
+        DictateController.ErrorAction.TOP_UP -> {
+            SnyggIconButton(
+                elementName = FlorisImeUi.SmartbarActionKey.elementName,
+                onClick = { DictateController.openCloudSettings(context) },
+                modifier = Modifier.fillMaxHeight().aspectRatio(1f),
+            ) {
+                SnyggIcon(
+                    imageVector = Icons.Default.AddCard,
+                    contentDescription = stringRes(R.string.dictate__action_top_up),
+                )
+            }
+            DismissButton()
+        }
+        DictateController.ErrorAction.SAVE_AUDIO -> {
+            SnyggIconButton(
+                elementName = FlorisImeUi.SmartbarActionKey.elementName,
+                onClick = { DictateController.saveRetainedAudio(context) },
+                modifier = Modifier.fillMaxHeight().aspectRatio(1f),
+            ) {
+                SnyggIcon(
+                    imageVector = Icons.Default.SaveAlt,
+                    contentDescription = stringRes(R.string.dictate__action_save_audio),
                 )
             }
             DismissButton()
@@ -505,9 +740,11 @@ private fun ErrorDetailPopup(detail: String, onDismiss: () -> Unit) {
 
 /** Kind-specific icon for the error chip; the open-settings action gets a key icon regardless of kind. */
 private fun errorIcon(kind: DictateApiException.Kind?, action: DictateController.ErrorAction): ImageVector = when {
+    action == DictateController.ErrorAction.TOP_UP -> Icons.Default.AddCard
     action == DictateController.ErrorAction.OPEN_SETTINGS -> Icons.Default.VpnKey
     kind == DictateApiException.Kind.QUOTA_EXCEEDED -> Icons.Default.DataUsage
     kind == DictateApiException.Kind.CONTENT_SIZE_LIMIT -> Icons.Default.WarningAmber
+    kind == DictateApiException.Kind.TEXT_SIZE_LIMIT -> Icons.Default.WarningAmber
     kind == DictateApiException.Kind.FORMAT_NOT_SUPPORTED -> Icons.Default.GraphicEq
     kind == DictateApiException.Kind.TIMEOUT -> Icons.Default.Schedule
     kind == DictateApiException.Kind.NETWORK -> Icons.Default.CloudOff
@@ -533,6 +770,9 @@ private fun PromoContent(kind: DictateController.PromoKind, message: String? = n
         DictateController.PromoKind.CHANGELOG -> Icons.Default.NewReleases
         DictateController.PromoKind.FLOATING_BUTTON -> Icons.Default.Adjust
         DictateController.PromoKind.MILESTONE -> Icons.Default.EmojiEvents
+        // The mark of what is running low, not of the action — the accent pill beside it already
+        // says "top up".
+        DictateController.PromoKind.LOW_CREDIT -> ImageVector.vectorResource(R.drawable.ic_dictate_cloud)
     }
     // Milestone text is dynamic (which milestone), so it arrives via [message]; the rest map to a res.
     val messageRes = when (kind) {
@@ -541,6 +781,7 @@ private fun PromoContent(kind: DictateController.PromoKind, message: String? = n
         DictateController.PromoKind.CHANGELOG -> R.string.dictate__promo_changelog_message
         DictateController.PromoKind.FLOATING_BUTTON -> R.string.dictate__promo_floating_button_message
         DictateController.PromoKind.MILESTONE -> R.string.dictate__stats_milestone_title
+        DictateController.PromoKind.LOW_CREDIT -> R.string.dictate__promo_low_credit_message
     }
     val actionRes = when (kind) {
         DictateController.PromoKind.RATE -> R.string.dictate__promo_rate_action
@@ -548,6 +789,7 @@ private fun PromoContent(kind: DictateController.PromoKind, message: String? = n
         DictateController.PromoKind.CHANGELOG -> R.string.dictate__promo_changelog_action
         DictateController.PromoKind.FLOATING_BUTTON -> R.string.dictate__promo_floating_button_action
         DictateController.PromoKind.MILESTONE -> R.string.dictate__promo_milestone_action
+        DictateController.PromoKind.LOW_CREDIT -> R.string.dictate__promo_low_credit_action
     }
 
     // Gentle pop-in (fade + slight scale) on top of the Smartbar's own slide transition.

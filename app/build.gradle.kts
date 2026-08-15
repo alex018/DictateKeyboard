@@ -77,9 +77,14 @@ configure<ApplicationExtension> {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // sherpa-onnx on-device STT (issue #104): ship the ABIs the vendored native libs cover —
-        // arm64-v8a (modern phones) and armeabi-v7a (older 32-bit devices).
+        // arm64-v8a (modern phones), armeabi-v7a (older 32-bit devices) and x86_64.
+        //
+        // x86_64 exists for emulators rather than for hardware: without it Play reports the app as
+        // incompatible on every emulator image, which rules out rehearsing a purchase on a throwaway
+        // account. Real users pay nothing for it — the bundle is split per architecture, so a phone
+        // only ever downloads the libraries it can run. See tools/fetch-sherpa-onnx.sh.
         ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
         }
 
         buildConfigField("String", "BUILD_COMMIT_HASH", "\"${getGitCommitHash().get()}\"")
@@ -215,6 +220,9 @@ dependencies {
     // testImplementation(composeBom)
     // androidTestImplementation(composeBom)
 
+    // Play Billing for the optional Dictate Cloud credit packs (#255 follow-up). Version 8 is
+    // not a choice: from 31.08.2026 Play refuses uploads built against anything older.
+    implementation(libs.android.billing.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.autofill)
@@ -235,6 +243,10 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.window.core)
     implementation(libs.cache4k)
+    // GIF search (Klipy): Compose image loading + animated GIF/WebP decoding + OkHttp network fetcher.
+    implementation(libs.coil.compose)
+    implementation(libs.coil.gif)
+    implementation(libs.coil.network.okhttp)
     implementation(libs.kotlin.reflect)
     implementation(libs.kotlinx.coroutines)
     implementation(libs.kotlinx.serialization.json)
@@ -251,6 +263,10 @@ dependencies {
     // the Kotlin/JNI API as a jar here; the matching native .so live in src/main/jniLibs/<abi>/.
     // Not on Maven Central, so consumed as a local file (see private/docs/research/sherpa-onnx-feasibility.md).
     implementation(files("libs/sherpa-onnx-1.13.3.jar"))
+    // Generic ONNX Runtime Java/JNI bridge for Smart Turn v3. The matching 1.24.3 runtime is already
+    // shipped by sherpa-onnx; tools/fetch-sherpa-onnx.sh extracts only the API jar + tiny JNI bridge,
+    // avoiding a second ~20–27 MB copy of libonnxruntime per ABI.
+    implementation(files("libs/onnxruntime-android-1.24.3.jar"))
 
     implementation(projects.lib.android)
     implementation(projects.lib.color)
@@ -282,8 +298,13 @@ val verifySherpaOnnxLibs by tasks.registering {
     val projectDir = layout.projectDirectory
     val required = buildList {
         add(projectDir.file("libs/sherpa-onnx-1.13.3.jar").asFile)
-        for (abi in listOf("arm64-v8a", "armeabi-v7a")) {
+        add(projectDir.file("libs/onnxruntime-android-1.24.3.jar").asFile)
+        // Must match the abiFilters above. A missing ABI here would not fail the build — it would
+        // produce a split for that architecture carrying no sherpa-onnx at all, which installs
+        // happily and then dies the first time on-device transcription or the VAD is touched.
+        for (abi in listOf("arm64-v8a", "armeabi-v7a", "x86_64")) {
             add(projectDir.file("src/main/jniLibs/$abi/libonnxruntime.so").asFile)
+            add(projectDir.file("src/main/jniLibs/$abi/libonnxruntime4j_jni.so").asFile)
             add(projectDir.file("src/main/jniLibs/$abi/libsherpa-onnx-jni.so").asFile)
         }
     }
@@ -293,7 +314,7 @@ val verifySherpaOnnxLibs by tasks.registering {
             throw GradleException(
                 "Missing vendored sherpa-onnx native libs:\n" +
                     missing.joinToString("\n") { "  - ${it.name}" } +
-                    "\n\nRun:  scripts/fetch-sherpa-onnx.sh",
+                    "\n\nRun:  tools/fetch-sherpa-onnx.sh",
             )
         }
     }

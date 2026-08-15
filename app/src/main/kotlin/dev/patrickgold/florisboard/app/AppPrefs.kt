@@ -24,11 +24,17 @@ import dev.patrickgold.florisboard.app.settings.theme.DisplayKbdAfterDialogs
 import dev.patrickgold.florisboard.app.settings.theme.SnyggLevel
 import dev.patrickgold.florisboard.app.setup.NotificationPermissionState
 import dev.patrickgold.florisboard.dictate.DictateFloatingButtonDesign
+import dev.patrickgold.florisboard.dictate.DictateLongformMode
+import dev.patrickgold.florisboard.dictate.audio.AudioSpeedUp
 import dev.patrickgold.florisboard.dictate.audio.DictateAudioSource
 import dev.patrickgold.florisboard.dictate.DictateFloatingButtonSize
+import dev.patrickgold.florisboard.dictate.DictateLegacyLayout
 import dev.patrickgold.florisboard.dictate.DictatePromptsLayout
+import dev.patrickgold.florisboard.dictate.DictateRecordingAnimation
 import dev.patrickgold.florisboard.dictate.DictateReasoningEffort
 import dev.patrickgold.florisboard.dictate.data.mappings.DictateMappings
+import dev.patrickgold.florisboard.dictate.gif.GifContentFilter
+import dev.patrickgold.florisboard.dictate.gif.GifHistory
 import dev.patrickgold.florisboard.dictate.provider.DictateProxyType
 import dev.patrickgold.florisboard.dictate.provider.ProviderAccounts
 import dev.patrickgold.florisboard.ime.clipboard.CLIPBOARD_HISTORY_NUM_GRID_COLUMNS_AUTO
@@ -346,10 +352,87 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "dictate__keep_screen_awake",
             default = true,
         )
+        // How the recording indicator moves while dictating — the Smartbar's red dot and the classic
+        // layout's record button (issue #238). Defaults to LEVEL (mic-reactive), which doubles as
+        // feedback that the microphone is hearing something; PULSE restores the pre-rewrite look and
+        // STATIC removes the movement entirely for anyone who finds it distracting while speaking.
+        val recordingAnimation = enum(
+            key = "dictate__recording_animation",
+            default = DictateRecordingAnimation.LEVEL,
+        )
+        // Skip transcription when a local Silero VAD finds no speech in the recording, so silent clips
+        // don't produce "ghost text" hallucinations or waste API credits (issue #93). Default on.
+        val skipSilentRecordings = boolean(
+            key = "dictate__skip_silent_recordings",
+            default = true,
+        )
+        // Trim long internal pauses (> ~2 s of silence) out of a recording before it's uploaded, using the
+        // same local Silero VAD as the silence gate (issue #232). Every spoken segment is kept in full;
+        // only the dead time between them is collapsed, so a dictation with big gaps sends less audio (less
+        // cost/latency) without losing a word. Default on. Ignored while long-form dictation is active — it
+        // does its own segment-cutting.
+        val trimSilentGaps = boolean(
+            key = "dictate__trim_silent_gaps",
+            default = true,
+        )
+        // Play the recording faster before uploading it, without raising its pitch (issue #272). Stored as
+        // a percentage of the original speed: 100 = off, 150 = 1.5x, which bills two thirds of what was
+        // spoken. Where #93 and #232 remove dead time, this shortens the speech itself — so it is off by
+        // default: it is the only one of the three that can change what the model hears.
+        val audioSpeedUpPercent = int(
+            key = "dictate__audio_speed_up_percent",
+            default = AudioSpeedUp.MIN_PERCENT,
+        )
+        // Break long *plain* transcripts into paragraphs (issue #225): once at least this many words have
+        // accumulated, the next sentence end starts a new paragraph. 0 = off (default). Deterministic and
+        // only applied to a pure transcript — never to reworded / auto-formatted output, which already
+        // carries its own paragraphing.
+        val paragraphSplitWords = int(
+            key = "dictate__paragraph_split_words",
+            default = 0,
+        )
+        // Long-press the send (mic) button while recording to transcribe with the on-device model instead
+        // of the configured cloud provider (issue #228), for a quick offline one-off without digging
+        // through the provider settings. Toggled from the on-device model dialog. Off by default. Only
+        // applies to a plain recording — in long-form / streaming there is no plain send button to hold.
+        val longPressSendLocalModel = boolean(
+            key = "dictate__long_press_send_local_model",
+            default = false,
+        )
+        // Hold-to-record instead of tap-to-start/tap-to-stop (issue #235): press and hold the mic, speak,
+        // release to send — slide left to discard, slide up to latch. Off by default because it replaces
+        // the mic's long-press shortcuts (file transcription, send-with-local-model) with the hold
+        // itself. Long-form segmented ignores it: a ten-minute dictation cannot be held down.
+        val pushToTalk = boolean(
+            key = "dictate__push_to_talk",
+            default = false,
+        )
+        // Minutes the on-device model may sit idle before it is unloaded from RAM to free memory (models
+        // are ~100 MB up to ~700 MB). It is always also freed immediately on an Android memory-pressure
+        // signal; this timer additionally covers the "keyboard alive but not dictating" window. 0 = only
+        // on memory pressure (no idle timer). Default 5 minutes.
+        val localModelUnloadMinutes = int(
+            key = "dictate__local_model_unload_minutes",
+            default = 5,
+        )
+        // Haptic feedback on dictation state changes (issue #166): a short buzz on record start/stop, a
+        // double on transcription done, a longer one when a rewording/LLM prompt finished — so the user
+        // knows blindly when to look back at the screen. Off by default. Amplitude honours the system
+        // haptic intensity. Also mirrored on the watch (synced to it via DictateSyncedSettings).
+        val hapticFeedback = boolean(
+            key = "dictate__haptic_feedback",
+            default = false,
+        )
         // Start recording immediately whenever the keyboard opens on a text field (default off).
         val instantRecording = boolean(
             key = "dictate__instant_recording",
             default = false,
+        )
+        // When instant recording is on, still don't auto-start on number-only fields (number, phone, PIN,
+        // date/time), where dictation rarely makes sense (issue #146). Default on.
+        val instantRecordingSkipNumeric = boolean(
+            key = "dictate__instant_recording_skip_numeric",
+            default = true,
         )
         // Floating dictation button (issue #88): the in-app master toggle. The bubble only shows when
         // this is on AND the DictateAccessibilityService is enabled in the system accessibility settings
@@ -411,6 +494,15 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "dictate__floating_button_undo_enabled",
             default = false,
         )
+        // Safety net (issue #214): unconditionally copy every floating-button dictation to the system
+        // clipboard, so nothing is lost if the accessibility insert is silently swallowed (the known
+        // "green check but no text" failure) — the user can then just paste it manually. Off by default
+        // because it overwrites the clipboard on every dictation (and shows a system clipboard toast on
+        // some OEMs like Samsung).
+        val floatingButtonCopyToClipboard = boolean(
+            key = "dictate__floating_button_copy_to_clipboard",
+            default = false,
+        )
         // Whether the user has opened the floating-button screen at least once (clears the "New" badge).
         val floatingButtonHintSeen = boolean(
             key = "dictate__floating_button_hint_seen",
@@ -431,6 +523,35 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val instantOutput = boolean(
             key = "dictate__instant_output",
             default = true,
+        )
+        // Real-time (streaming) transcription (issue #128): show text live while speaking, for providers
+        // that support it (OpenAI realtime, Soniox, Deepgram, …). Global switch; falls back to batch when
+        // the selected provider has no realtime support. Default off.
+        val realtimeTranscription = boolean(
+            key = "dictate__realtime_transcription",
+            default = false,
+        )
+        // --- Long-form segmented dictation (issue #170) ------------------------------------------
+        // Transcribe long dictations segment-by-segment in the background while you keep talking, so you
+        // don't wait for one big upload at the end. OFF by default; MANUAL shows the "Next" button, AUTO
+        // additionally uses Silero VAD + Smart Turn v3 at speech pauses. Keyboard-only, not for realtime /
+        // live-prompt / multimodal.
+        val longformMode = enum(
+            key = "dictate__longform_mode",
+            default = DictateLongformMode.OFF,
+        )
+        // Maximum silence (Pipecat Smart Turn stop_secs fallback) before AUTO mode cuts even when the
+        // semantic classifier says the current thought may be incomplete.
+        val longformAutoSplitSeconds = int(
+            key = "dictate__longform_auto_split_seconds",
+            default = 3,
+        )
+        // Opt-in semantic auto-segmentation: when on (and the model is downloaded), AUTO mode uses the
+        // on-device Smart Turn v3 classifier to cut at completed thoughts instead of only on silence.
+        // Off by default; the ~8 MB model is downloaded on demand, not bundled.
+        val smartTurnEnabled = boolean(
+            key = "dictate__smart_turn_enabled",
+            default = false,
         )
         // Speed of the typewriter animation when instantOutput is off (1 = slow … 10 = fast).
         val outputSpeed = int(
@@ -475,6 +596,37 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "dictate__interrupted_audio_live",
             default = false,
         )
+        // --- Transcription history / activity log (issue #140) -----------------------------------
+        // Keep a rolling, browsable log of finished dictations (transcript + metadata) so they can be
+        // re-inserted, re-transcribed or reviewed later. Supersedes the single lastDictation slot for the
+        // history UI; when off, nothing is logged. Never captured in incognito/password fields.
+        val historyEnabled = boolean(
+            key = "dictate__history_enabled",
+            default = true,
+        )
+        // Additionally keep the source audio (WAV) of each logged dictation so a flaky transcription can be
+        // replayed and re-transcribed. Off by default (privacy + disk: ~1.9 MB per recorded minute); the
+        // audio lives in the app's private storage and is pruned by the byte budget below.
+        val historyAudioRetention = boolean(
+            key = "dictate__history_audio_retention",
+            default = false,
+        )
+        // Cap: how many entries to keep (oldest dropped first).
+        val historyMaxEntries = int(
+            key = "dictate__history_max_entries",
+            default = 50,
+        )
+        // Cap: entries older than this many days are dropped (0 = no age limit).
+        val historyMaxAgeDays = int(
+            key = "dictate__history_max_age_days",
+            default = 30,
+        )
+        // Cap: total megabytes of retained audio; once exceeded, the oldest recordings' audio is dropped
+        // (their transcript text is kept).
+        val historyAudioBudgetMb = int(
+            key = "dictate__history_audio_budget_mb",
+            default = 200,
+        )
         // --- Lifetime dictation statistics (issue #142) ------------------------------------------
         // Never auto-reset (unlike totalAudioSeconds below, which the rate nudge clears); only the user
         // can reset them from the stats screen. Updated centrally after each successful dictation.
@@ -516,6 +668,13 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         // hasRated, so a donor is never asked to rate afterwards (mirrors the legacy behavior).
         val hasDonated = boolean(
             key = "dictate__has_donated",
+            default = false,
+        )
+        // Set once the "credit is running low" nudge has been shown, so it appears once per
+        // depletion rather than on every keyboard open. Cleared again the moment a purchase credits
+        // the wallet (see DictateCloud.store), which makes one nudge per refill cycle.
+        val cloudLowCreditNudged = boolean(
+            key = "dictate__cloud_low_credit_nudged",
             default = false,
         )
         // The app version whose "Dictate was updated" changelog nudge has already been shown on the
@@ -598,6 +757,12 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "dictate__rewording_reasoning_effort",
             default = DictateReasoningEffort.OFF,
         )
+        // The wire value sent as `reasoning_effort` when the setting is CUSTOM (issue #186), e.g. a value
+        // a specific provider expects. Blank → the field is omitted.
+        val rewordingReasoningEffortCustom = string(
+            key = "dictate__rewording_reasoning_effort_custom",
+            default = "",
+        )
         // How the rewording prompt chips are surfaced: a dedicated panel (PANEL) opened from the
         // Smartbar, or an always-on extra row pinned above the Smartbar (ROW). See DictatePromptsLayout.
         // Defaults to ROW so the prompts are immediately visible; existing users are moved to ROW once via
@@ -605,6 +770,31 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val promptsLayout = enum(
             key = "dictate__prompts_layout",
             default = DictatePromptsLayout.ROW,
+        )
+        // Classic keyboard-less "legacy" dictation layout (issue #125): OFF = modern keyboard (default);
+        // LOCKED = only the legacy record-first UI; SWIPE = legacy UI as home, horizontal swipe flips to
+        // the modern typing keyboard and back. See DictateLegacyLayout / LegacyDictateLayout.
+        val legacyLayout = enum(
+            key = "dictate__legacy_layout",
+            default = DictateLegacyLayout.OFF,
+        )
+        // Configurable legacy action row (#183/#194): comma-separated LegacyEditAction names, arranged by
+        // the user via drag-and-drop. Default reproduces the original fixed row.
+        val legacyActionRow = string(
+            key = "dictate__legacy_action_row",
+            default = "SELECT_ALL,UNDO,REDO,CUT,COPY,PASTE,EMOJI,NUMBERS",
+        )
+        // How many rows of prompt/revision buttons the legacy prompt strip shows (1 or 2, issue #194/#8).
+        val legacyPromptRows = int(
+            key = "dictate__legacy_prompt_rows",
+            default = 1,
+        )
+        // Characters offered by the classic layout's Enter-key long-press popup (#196): hold Enter, swipe
+        // left/right to pick one, release to insert. Up to 8 individual characters (whitespace ignored);
+        // empty disables the popup so Enter just inserts a newline as usual.
+        val enterLongPressChars = string(
+            key = "dictate__enter_long_press_chars",
+            default = ".,?!:;-…",
         )
         // Chat (rewording) provider id – any chat-capable ProviderRegistry id ("openai", "groq",
         // "openrouter", … or "custom"). Independent from the transcription provider.
@@ -740,6 +930,34 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val suggestionCandidateMaxCount = int(
             key = "emoji__suggestion_candidate_max_count",
             default = 5,
+        )
+    }
+
+    val gif = Gif()
+    inner class Gif {
+        val enabled = boolean(
+            key = "gif__enabled",
+            default = false,
+        )
+        // Bring-your-own KLIPY API key (see KlipyGifProvider). Empty = GIF search disabled.
+        val klipyApiKey = string(
+            key = "gif__klipy_api_key",
+            default = "",
+        )
+        val contentFilter = enum(
+            key = "gif__content_filter",
+            default = GifContentFilter.HIGH,
+        )
+        // Stable per-install id sent to KLIPY for relevance/localization (generated on first use).
+        val customerId = string(
+            key = "gif__customer_id",
+            default = "",
+        )
+        // Recently searched terms + recently inserted GIFs, for quick re-access.
+        val history = custom(
+            key = "gif__history",
+            default = GifHistory.Empty,
+            serializer = GifHistory.Serializer,
         )
     }
 
@@ -917,6 +1135,12 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "internal__open_floating_button_after_setup",
             default = false,
         )
+        // Newline-separated most-recent settings-search queries (newest first), for the search screen's
+        // recent-search chips (issue #187).
+        val settingsSearchHistory = string(
+            key = "internal__settings_search_history",
+            default = "",
+        )
         val versionOnInstall = string(
             key = "internal__version_on_install",
             default = VersionName.DEFAULT_RAW,
@@ -927,6 +1151,10 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val versionLastChangelog = string(
             key = "internal__version_last_changelog",
+            default = VersionName.DEFAULT_RAW,
+        )
+        val versionLastWhatsNew = string(
+            key = "internal__version_last_whats_new",
             default = VersionName.DEFAULT_RAW,
         )
         val notificationPermissionState = enum(
@@ -1149,15 +1377,31 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val enabled = boolean(
             key = "suggestion__enabled",
+            default = true,
+        )
+        // Autocorrect the typed word on space/punctuation when it looks like a typo (issue #127). Gated by
+        // [enabled]; on by default like other keyboards, with its own switch so suggestions can stay on
+        // without autocorrect.
+        val autoCorrect = boolean(
+            key = "suggestion__auto_correct",
+            default = true,
+        )
+        // Multilingual typing (issue #190): accept words from every configured keyboard language, not just
+        // the active one, so a bilingual's second-language words aren't flagged as typos or autocorrected
+        // away. Opt-in; leaves single-language behavior unchanged when off.
+        val multilingualTyping = boolean(
+            key = "suggestion__multilingual_typing",
             default = false,
+        )
+        // Next-word prediction from the bigram tables (issue #245). Only ever offers words once a previous
+        // word exists — never on an empty field, so opening the keyboard still shows the quick actions.
+        val nextWordPrediction = boolean(
+            key = "suggestion__next_word_prediction",
+            default = true,
         )
         val displayMode = enum(
             key = "suggestion__display_mode",
             default = CandidatesDisplayMode.DYNAMIC_SCROLLABLE,
-        )
-        val blockPossiblyOffensive = boolean(
-            key = "suggestion__block_possibly_offensive",
-            default = true,
         )
         val incognitoMode = enum(
             key = "suggestion__incognito_mode",

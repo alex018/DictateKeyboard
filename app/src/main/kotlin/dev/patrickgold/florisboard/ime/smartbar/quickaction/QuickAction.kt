@@ -90,6 +90,7 @@ fun QuickAction.computeDisplayName(evaluator: ComputingEvaluator): String {
             KeyCode.FORWARD_DELETE -> R.string.quick_action__forward_delete
             KeyCode.IME_UI_MODE_CLIPBOARD -> R.string.quick_action__ime_ui_mode_clipboard
             KeyCode.IME_UI_MODE_MEDIA -> R.string.quick_action__ime_ui_mode_media
+            KeyCode.IME_UI_MODE_GIF -> R.string.quick_action__ime_ui_mode_gif
             KeyCode.IME_UI_MODE_DICTATE -> R.string.quick_action__ime_ui_mode_dictate
             KeyCode.DICTATE_LIVE_PROMPT -> R.string.quick_action__dictate_live_prompt
             KeyCode.DICTATE_PROMPTS -> R.string.quick_action__dictate_prompts
@@ -102,7 +103,6 @@ fun QuickAction.computeDisplayName(evaluator: ComputingEvaluator): String {
             KeyCode.REDO -> R.string.quick_action__redo
             KeyCode.TOGGLE_ACTIONS_OVERFLOW -> R.string.quick_action__toggle_actions_overflow
             KeyCode.TOGGLE_INCOGNITO_MODE -> R.string.quick_action__toggle_incognito_mode
-            KeyCode.TOGGLE_AUTOCORRECT -> R.string.quick_action__toggle_autocorrect
             KeyCode.IME_HIDE_UI -> R.string.quick_action__ime_hide_ui
             KeyCode.TOGGLE_FLOATING_WINDOW -> R.string.quick_action__floating_window_mode
             // TODO: In the future this will be merged into the resize keyboard panel, for now it is a separate action
@@ -135,6 +135,7 @@ fun QuickAction.computeTooltip(evaluator: ComputingEvaluator): String {
             KeyCode.CLIPBOARD_SELECT_ALL -> R.string.quick_action__clipboard_select_all__tooltip
             KeyCode.IME_UI_MODE_CLIPBOARD -> R.string.quick_action__ime_ui_mode_clipboard__tooltip
             KeyCode.IME_UI_MODE_MEDIA -> R.string.quick_action__ime_ui_mode_media__tooltip
+            KeyCode.IME_UI_MODE_GIF -> R.string.quick_action__ime_ui_mode_gif__tooltip
             KeyCode.IME_UI_MODE_DICTATE -> R.string.quick_action__ime_ui_mode_dictate__tooltip
             KeyCode.DICTATE_LIVE_PROMPT -> R.string.quick_action__dictate_live_prompt__tooltip
             KeyCode.DICTATE_PROMPTS -> R.string.quick_action__dictate_prompts__tooltip
@@ -147,7 +148,6 @@ fun QuickAction.computeTooltip(evaluator: ComputingEvaluator): String {
             KeyCode.REDO -> R.string.quick_action__redo__tooltip
             KeyCode.TOGGLE_ACTIONS_OVERFLOW -> R.string.quick_action__toggle_actions_overflow__tooltip
             KeyCode.TOGGLE_INCOGNITO_MODE -> R.string.quick_action__toggle_incognito_mode__tooltip
-            KeyCode.TOGGLE_AUTOCORRECT -> R.string.quick_action__toggle_autocorrect__tooltip
             KeyCode.IME_HIDE_UI -> R.string.quick_action__ime_hide_ui__tooltip
             KeyCode.TOGGLE_FLOATING_WINDOW -> R.string.quick_action__floating_window_mode__tooltip
             // TODO: In the future this will be merged into the resize keyboard panel, for now it is a separate action

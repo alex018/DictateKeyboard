@@ -20,6 +20,7 @@ import android.graphics.PixelFormat
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
+import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.SystemClock
@@ -41,14 +42,21 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.compose.ui.graphics.toArgb
+import android.content.res.ColorStateList
+import android.graphics.Color
 import androidx.core.content.ContextCompat
+import androidx.core.graphics.ColorUtils
 import dev.patrickgold.florisboard.R
 import dev.patrickgold.florisboard.app.FlorisPreferenceStore
 import dev.patrickgold.florisboard.dictate.DictateController
+import dev.patrickgold.florisboard.dictate.recognition.RecognitionBridge
 import dev.patrickgold.florisboard.dictate.DictateFloatingButtonDesign
 import dev.patrickgold.florisboard.dictate.DictateFloatingButtonSize
 import dev.patrickgold.florisboard.dictate.data.prompts.PromptModel
 import dev.patrickgold.florisboard.dictate.data.prompts.PromptsDatabaseHelper
+import dev.patrickgold.florisboard.dictate.ui.AudioReactiveCloudOrbView
+import dev.patrickgold.florisboard.dictate.ui.DictateAuroraOrbView
+import dev.patrickgold.florisboard.dictate.ui.DictateLatticeSphereView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -69,9 +77,9 @@ import kotlin.math.hypot
  * dragged, and routes the result through [DictateController] with [DictateController.OutputTarget.OVERLAY]
  * so the text is injected into the focused field.
  *
- * The visuals are provided by a [BubbleSkin] — either the compact [RingSkin] or the expanding [PillSkin],
- * selected by the `floatingButtonDesign` preference. While recording, a level ticker polls the mic
- * amplitude and feeds a live waveform.
+ * The visuals are provided by a [BubbleSkin] — [RingSkin], [PillSkin], [OrbSkin], or [CloudSkin] — selected by the
+ * `floatingButtonDesign` preference. While recording, a level ticker feeds the chosen skin the shared
+ * normalized microphone level.
  *
  * Created and owned by [DictateAccessibilityService], which also provides the foreground-microphone
  * promotion the recording needs while the app is in the background.
@@ -99,6 +107,15 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
     private var undoParams: WindowManager.LayoutParams? = null
     private var undoAdded = false
     private val undoSize get() = sdp(34)
+
+    /**
+     * Distance between the bubble's visible shape and the cancel/undo button beside it.
+     *
+     * Measured generously on purpose: the orb and cloud designs *grow* while recording — their glow and
+     * their surface reach well past the body they are at rest — and a gap tuned to the resting shape put
+     * the button inside that halo exactly when it was on screen.
+     */
+    private val sideButtonGap get() = sdp(14)
     /** True from when a dictation just finished until the next recording starts or undo is tapped. */
     private var justDictated = false
 
@@ -189,7 +206,7 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
             ) { enabled, showWithKeyboard, focused, dictateKeyboard, state ->
                 Inputs(enabled, showWithKeyboard, focused, dictateKeyboard, state)
             }
-            combine(
+            val emissions = combine(
                 base,
                 prefs.dictate.floatingButtonDesign.asFlow(),
                 prefs.dictate.floatingButtonSize.asFlow(),
@@ -197,7 +214,15 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
                 prefs.dictate.floatingButtonColor.asFlow(),
             ) { inputs, design, size, imeVisible, color ->
                 Emission(inputs, design, size, imeVisible, color.toArgb())
-            }.collect { (inputs, design, size, imeVisible, accent) ->
+            }
+            combine(
+                emissions,
+                RecognitionBridge.active,
+                DictateAccessibilityService.screenOn,
+            ) { emission, recogActive, screenOn ->
+                Triple(emission, recogActive, screenOn)
+            }.collect { (emission, recogActive, screenOn) ->
+                val (inputs, design, size, imeVisible, accent) = emission
                 val (enabled, showWithKeyboard, focused, dictateKeyboard, state) = inputs
                 if (design != currentDesign || size.scale != sizeScale || accent != accentColor) {
                     currentDesign = design
@@ -213,12 +238,25 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
                 // still keeps it shown.
                 val dictateKeyboardShown = dictateKeyboard && imeVisible
                 val hiddenByOwnKeyboard = dictateKeyboardShown && !showWithKeyboard
-                val show = enabled && (focused || active) && !hiddenByOwnKeyboard
+                // Hide the bubble entirely while another keyboard/app drives a system voice-input session
+                // (#67) — its own overlay/panel is showing, and the recording isn't the bubble's (RECOGNITION
+                // target), so a floating mic on top would be confusing.
+                // A dark screen is no place for a floating window (#269). This layer deliberately outlives the
+                // keyguard, so nobody takes the bubble away for us, and an always-on display will happily
+                // draw a button on a phone its owner believes to be off. The window is *removed* rather than
+                // faded: alpha or GONE is a request to a compositor we do not control, and that compositor is
+                // exactly the part behaving unexpectedly here.
+                val show = enabled && (focused || active) && !hiddenByOwnKeyboard && !recogActive && screenOn
                 if (show) ensureShown() else hide()
+                // The rewording menu is a window of its own and does not come down with hide(). Tied to the
+                // screen alone on purpose: taking it away whenever the bubble hides would be a different
+                // change, about focus, not about the screen.
+                if (!screenOn) hidePromptMenu()
                 recordingState = state as? DictateController.UiState.Recording
                 applyState(state)
                 manageForeground(state)
                 manageTicker(state)
+                manageKeepScreenOn(state)
                 manageCancel(state, show)
                 // Track when a dictation just finished so the undo button is offered only in that
                 // window (until the next recording), not perpetually from a stale cached result.
@@ -314,12 +352,7 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
     private fun createCancelView(): View {
         val size = cancelSize
         val pad = sdp(7)
-        val icon = ImageView(context).apply {
-            setImageResource(R.drawable.ic_dictate_overlay_close)
-            setPadding(pad, pad, pad, pad)
-            background = circle(R.color.dictate_overlay_cancel)
-            elevation = sdpf(6f)
-        }
+        val icon = sideButtonIcon(R.drawable.ic_dictate_overlay_close, pad)
         return FrameLayout(context).apply {
             addView(icon, FrameLayout.LayoutParams(size, size))
             setOnClickListener {
@@ -370,12 +403,7 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
     private fun createUndoView(): View {
         val size = undoSize
         val pad = sdp(7)
-        val icon = ImageView(context).apply {
-            setImageResource(R.drawable.ic_dictate_overlay_undo)
-            setPadding(pad, pad, pad, pad)
-            background = circle(R.color.dictate_overlay_cancel)
-            elevation = sdpf(6f)
-        }
+        val icon = sideButtonIcon(R.drawable.ic_dictate_overlay_undo, pad)
         return FrameLayout(context).apply {
             addView(icon, FrameLayout.LayoutParams(size, size))
             setOnClickListener {
@@ -411,11 +439,13 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
         val blp = params ?: return
         val bubble = rootView ?: return
         val uw = undoSize
-        val gap = sdp(6)
+        val gap = sideButtonGap
         ulp.y = (blp.y + (bubble.height - uw) / 2).coerceIn(0, (screenHeight() - uw).coerceAtLeast(0))
-        // Same inward-side logic as the cancel button so it sits beside the bubble and follows drags.
+        // Same inward-side logic as the cancel button so it sits beside the bubble and follows drags, and
+        // measured to the visible shape the same way so the two never sit at different distances.
         val onRight = blp.x + bubble.width / 2 >= screenWidth() / 2
-        val rawX = if (onRight) blp.x - gap - uw else blp.x + bubble.width + gap
+        val inset = skin?.visualInset ?: 0
+        val rawX = if (onRight) blp.x + inset - gap - uw else blp.x + bubble.width - inset + gap
         ulp.x = rawX.coerceIn(0, (screenWidth() - uw).coerceAtLeast(0))
         if (undoAdded) runCatching { windowManager.updateViewLayout(undo, ulp) }
     }
@@ -424,6 +454,19 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
 
     private fun onLongPress() {
         val state = DictateController.state.value
+        // Holding runs the on-device model on this one dictation, exactly as holding the keyboard's key
+        // does — same preference, same guard, so the two buttons never disagree about whether the
+        // shortcut exists: while recording it sends there instead of to the cloud (#228), and while a
+        // cloud request is still running it takes the recording back from it (#270). With no model
+        // downloaded the transcription surfaces the "install one" feedback rather than the hold doing
+        // nothing.
+        if (prefs.dictate.longPressSendLocalModel.get() && DictateController.canLongPressLocal()) {
+            if (prefs.dictate.floatingButtonHaptic.get()) vibrateTap()
+            cancelDim()
+            applyDim(false)
+            DictateController.holdForLocalModel(context)
+            return
+        }
         // Rewording only makes sense when not already recording/transcribing.
         if (state !is DictateController.UiState.Idle && state !is DictateController.UiState.Error) return
         if (prefs.dictate.floatingButtonHaptic.get()) vibrateTap()
@@ -439,10 +482,8 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
                 runCatching { PromptsDatabaseHelper.getInstance(context).getAll() }.getOrDefault(emptyList())
             }.filter { !it.name.isNullOrBlank() }
             if (menuAdded) return@launch
-            if (prompts.isEmpty()) {
-                Toast.makeText(context, context.getString(R.string.dictate__floating_button_no_prompts), Toast.LENGTH_SHORT).show()
-                return@launch
-            }
+            // Always show the menu — the Live Prompt entry (freeform voice command, #230) is always
+            // available even with no saved rewording prompts.
             addPromptMenu(prompts)
         }
     }
@@ -456,25 +497,43 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
             isClickable = true // swallow taps so they don't dismiss via the scrim
             elevation = dpf(8f)
         }
+        fun menuItem(label: String, bold: Boolean, onClick: () -> Unit): TextView = TextView(context).apply {
+            text = label
+            setTextColor(color(R.color.dictate_overlay_icon))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
+            if (bold) setTypeface(typeface, Typeface.BOLD)
+            val hz = dp(20)
+            val vt = dp(12)
+            setPadding(hz, vt, hz, vt)
+            setOnClickListener { onClick() }
+        }
+        val wrapParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+        )
+        // Live Prompt on top (freeform voice command, #230): records a spoken instruction via the floating
+        // button, then rewords it — with the selected text as context, or generating from scratch — and
+        // injects the result. Mirrors the live-prompt chip on the keyboard's prompt bar.
+        card.addView(
+            menuItem(context.getString(R.string.quick_action__dictate_live_prompt), bold = true) {
+                hidePromptMenu()
+                DictateController.startLivePrompt(context, DictateController.OutputTarget.OVERLAY)
+            },
+            wrapParams,
+        )
         prompts.forEach { prompt ->
-            val item = TextView(context).apply {
-                text = prompt.name
-                setTextColor(color(R.color.dictate_overlay_icon))
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-                val hz = dp(20)
-                val vt = dp(12)
-                setPadding(hz, vt, hz, vt)
-                setOnClickListener {
+            card.addView(
+                menuItem(prompt.name.orEmpty(), bold = false) {
                     hidePromptMenu()
                     DictateController.applyPrompt(
                         context, prompt, target = DictateController.OutputTarget.OVERLAY,
                     )
-                }
-            }
-            card.addView(item, LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-            ))
+                },
+                LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                ),
+            )
         }
         val scroll = ScrollView(context).apply {
             addView(card)
@@ -483,7 +542,9 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
             clipToPadding = false
         }
         val scrim = FrameLayout(context).apply {
-            setBackgroundColor(0x66000000.toInt())
+            // Transparent, not a dark full-screen dim: the menu floats over the app without covering the
+            // whole screen; the invisible full-screen layer only catches an outside tap to dismiss.
+            setBackgroundColor(Color.TRANSPARENT)
             setOnClickListener { hidePromptMenu() }
             addView(scroll, FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
@@ -525,12 +586,17 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
         val blp = params ?: return
         val bubble = rootView ?: return
         val cw = cancelSize
-        val gap = sdp(6)
-        clp.y = (blp.y + (bubble.height - cw) / 2).coerceIn(0, (screenHeight() - cw).coerceAtLeast(0))
+        val gap = sideButtonGap
+        // The skin's pinned height when the view has not measured yet: this runs the moment the button is
+        // added, and a height of zero would centre the circle half a diameter above the bubble.
+        val bubbleHeight = bubble.height.takeIf { it > 0 } ?: skin?.fixedHeight ?: cw
+        clp.y = (blp.y + (bubbleHeight - cw) / 2).coerceIn(0, (screenHeight() - cw).coerceAtLeast(0))
         // Put the cancel button on the side that has more room (the inward side), based on the bubble's
         // *current* center — so it follows during a drag and flips when crossing the middle of the screen.
         val onRight = blp.x + bubble.width / 2 >= screenWidth() / 2
-        val rawX = if (onRight) blp.x - gap - cw else blp.x + bubble.width + gap
+        // Also measured to the visible shape, so the gap looks the same whichever design is on.
+        val inset = skin?.visualInset ?: 0
+        val rawX = if (onRight) blp.x + inset - gap - cw else blp.x + bubble.width - inset + gap
         clp.x = rawX.coerceIn(0, (screenWidth() - cw).coerceAtLeast(0))
         if (cancelAdded) runCatching { windowManager.updateViewLayout(cancel, clp) }
     }
@@ -540,6 +606,9 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
             DictateFloatingButtonDesign.RING -> RingSkin(context)
             DictateFloatingButtonDesign.PILL -> PillSkin(context)
             DictateFloatingButtonDesign.ORB -> OrbSkin(context)
+            DictateFloatingButtonDesign.CLOUD -> CloudSkin(context)
+            DictateFloatingButtonDesign.AURORA -> AuroraSkin(context)
+            DictateFloatingButtonDesign.LATTICE -> LatticeSkin(context)
         }
         skin = newSkin
         val root = newSkin.root
@@ -548,15 +617,24 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
         // position change from dragging/snapping also fires this listener, and repositioning then would
         // fight the drag — pulling the bubble back to the edge mid-drag (flicker). The width check ignores
         // those, so dragging is smooth and it only snaps back on release (via snapToEdge).
-        root.addOnLayoutChangeListener { _, left, _, right, _, oldLeft, _, oldRight, _ ->
+        root.addOnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
             if (needsInitialPlacement && right - left > 0) {
                 // First time the bubble has a real size: drop it at the default spot (right edge + margin,
                 // vertically centered). Independent of snap-to-edge so the margin is always there.
                 needsInitialPlacement = false
                 applyInitialPlacement()
-            } else if (right - left != oldRight - oldLeft) {
+            } else if (kotlin.math.abs((right - left) - (oldRight - oldLeft)) > dp(2)) {
+                // Only react to real size changes. The pill's running timer nudges the width by a fraction
+                // of a pixel every second, and repositioning the window on each of those made the whole
+                // bubble visibly flicker (reported on #231).
                 repositionForSize()
                 if (cancelAdded) positionCancel() // keep the cancel button beside the (resized) pill
+                if (undoAdded) positionUndo()
+            } else if ((bottom - top) != (oldBottom - oldTop)) {
+                // Height alone changing never moved the bubble, but the cancel button is centred on that
+                // height — and it is placed before the bubble has measured, so at the larger button sizes
+                // it ended up sitting slightly high beside the pill until something else nudged it.
+                if (cancelAdded) positionCancel()
                 if (undoAdded) positionUndo()
             }
         }
@@ -571,6 +649,13 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
         skin?.destroy()
         skin = null
         rootView = null
+        // The cancel and undo buttons are built once at the scale in force at the time and then cached, so
+        // without dropping them here they kept the size they were born with — which is how a smaller button
+        // ended up beside a cancel circle bigger than itself.
+        cancelView = null
+        cancelParams = null
+        undoView = null
+        undoParams = null
         lastAppliedState = null // fresh skin starts blank; force the next applyState to paint it
         if (wasShown) ensureShown()
     }
@@ -667,12 +752,24 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
         }
     }
 
+    /**
+     * Gap between the screen edge and the shape the user actually sees when the bubble is parked at a side.
+     *
+     * Every caller has to go through here. There used to be two spellings of it — one subtracting the
+     * skin's [BubbleSkin.visualInset] and one not — so the same button sat at two different distances
+     * depending on how it got there: dragged and snapped, or laid out afresh after a design, size or colour
+     * change. It is measured to the visible shape, so the glow designs' empty halo does not count as part
+     * of the gap.
+     */
+    private fun edgeMargin(maxX: Int): Int =
+        (dp(EDGE_MARGIN_DP) - (skin?.visualInset ?: 0)).coerceAtLeast(0).coerceAtMost(maxX / 2)
+
     /** Animates the bubble to whichever side edge is nearer, clamping the vertical position on screen. */
     private fun snapToEdge() {
         val lp = params ?: return
         val v = rootView ?: return
         val maxX = (screenWidth() - v.width).coerceAtLeast(0)
-        val margin = dp(8).coerceAtMost(maxX / 2)
+        val margin = edgeMargin(maxX)
         anchoredToRight = lp.x + v.width / 2 >= screenWidth() / 2
         val targetX = if (anchoredToRight) maxX - margin else margin
         lp.y = lp.y.coerceIn(0, (screenHeight() - v.height).coerceAtLeast(0))
@@ -707,7 +804,7 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
         if (!added) return
         val maxX = (screenWidth() - v.width).coerceAtLeast(0)
         val maxY = (screenHeight() - v.height).coerceAtLeast(0)
-        val margin = dp(8).coerceAtMost(maxX / 2)
+        val margin = edgeMargin(maxX)
         val nx = when {
             !prefs.dictate.floatingButtonSnapToEdge.get() -> lp.x.coerceIn(0, maxX)
             anchoredToRight -> maxX - margin
@@ -728,7 +825,7 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
         val v = rootView ?: return
         val maxX = (screenWidth() - v.width).coerceAtLeast(0)
         val maxY = (screenHeight() - v.height).coerceAtLeast(0)
-        val margin = dp(8).coerceAtMost(maxX / 2)
+        val margin = edgeMargin(maxX)
         anchoredToRight = true
         lp.x = (maxX - margin).coerceAtLeast(0)
         // Vertically center the bubble at ~60% up from the bottom edge (≈40% down from the top).
@@ -818,10 +915,22 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
 
     private fun onTap() {
         if (prefs.dictate.floatingButtonHaptic.get()) vibrateTap()
+        val current = DictateController.state.value
+        // Recovery (#160): if the previous floating-button dictation failed but its recording was kept
+        // (e.g. a flaky signal dropped the upload), a tap re-sends that audio instead of starting a new
+        // recording — so the dictation isn't lost just because the bubble has no resend chip of its own.
+        if (current is DictateController.UiState.Error &&
+            current.action == DictateController.ErrorAction.RESEND
+        ) {
+            service.startMicForeground()
+            weStartedDictation = true
+            DictateController.sendRetainedAudio(context)
+            return
+        }
         // Promote the service to a microphone foreground service *before* recording starts, so the mic
         // capture is allowed while the app is in the background (Android 14+). Demoted again when the
         // dictation finishes (see manageForeground).
-        val starting = DictateController.state.value is DictateController.UiState.Idle
+        val starting = current is DictateController.UiState.Idle
         if (starting) {
             service.startMicForeground()
             weStartedDictation = true
@@ -848,7 +957,13 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
         when (state) {
             is DictateController.UiState.Error -> if (weStartedDictation) {
                 weStartedDictation = false
-                Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
+                // When the recording was kept (#160), tell the user a tap re-sends it.
+                val msg = if (state.action == DictateController.ErrorAction.RESEND) {
+                    context.getString(R.string.dictate__floating_button_retry_hint, state.message)
+                } else {
+                    state.message
+                }
+                Toast.makeText(context, msg, Toast.LENGTH_LONG).show()
                 holdVisual(ERROR_HOLD_MS, FlashKind.ERROR)
             }
             is DictateController.UiState.Idle -> {
@@ -881,6 +996,17 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
         if (!holding && state is DictateController.UiState.Recording) startTicker() else stopTicker()
     }
 
+    /**
+     * Keep the screen awake while dictating from the floating button (issue #231): without physical touch,
+     * Android's screen timeout would otherwise fire and tear down the recording. Honors the same
+     * "keep screen awake" preference the keyboard/legacy recording views use, and only while actually
+     * recording, so the bubble doesn't hold the screen on once dictation finishes.
+     */
+    private fun manageKeepScreenOn(state: DictateController.UiState) {
+        rootView?.keepScreenOn =
+            state is DictateController.UiState.Recording && prefs.dictate.keepScreenAwake.get()
+    }
+
     private fun startTicker() {
         if (tickerJob?.isActive == true) return
         tickerJob = scope.launch {
@@ -889,7 +1015,7 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
                 val level = if (rec?.paused == true) {
                     0f
                 } else {
-                    (DictateController.currentAmplitude() / AMP_FULL).coerceIn(0f, 1f)
+                    DictateController.audioLevel.value
                 }
                 val elapsed = rec?.let { elapsedOf(it) } ?: 0L
                 skin?.onRecordingTick(level, elapsed)
@@ -923,6 +1049,15 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
         setColor(color(colorRes))
     }
 
+    /** The cancel/undo glyph, on whichever disc the current skin wants beside it. */
+    private fun sideButtonIcon(resId: Int, pad: Int): ImageView = ImageView(context).apply {
+        setImageResource(resId)
+        setPadding(pad, pad, pad, pad)
+        background = skin?.sideButtonBackground() ?: circle(R.color.dictate_overlay_cancel)
+        imageTintList = ColorStateList.valueOf(skin?.sideButtonForeground ?: Color.WHITE)
+        elevation = sdpf(6f)
+    }
+
     /**
      * Resolves a color resource — except the accent, which is overridden by the user's chosen button color
      * so every skin's idle/accent visuals follow the preference without each call site needing to change.
@@ -930,6 +1065,30 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
     private fun color(colorRes: Int): Int =
         if (colorRes == R.color.dictate_overlay_accent) accentColor
         else ContextCompat.getColor(context, colorRes)
+
+    /** Mixes [color] towards white by [amount] (0..1) — the light inside the aurora orb (#253). */
+    private fun lighten(color: Int, amount: Float): Int = Color.rgb(
+        (Color.red(color) + (255 - Color.red(color)) * amount).toInt().coerceIn(0, 255),
+        (Color.green(color) + (255 - Color.green(color)) * amount).toInt().coerceIn(0, 255),
+        (Color.blue(color) + (255 - Color.blue(color)) * amount).toInt().coerceIn(0, 255),
+    )
+
+    /** Mixes [color] towards black by [amount] (0..1) — the shaded body behind that light. */
+    private fun darken(color: Int, amount: Float): Int = Color.rgb(
+        (Color.red(color) * (1f - amount)).toInt().coerceIn(0, 255),
+        (Color.green(color) * (1f - amount)).toInt().coerceIn(0, 255),
+        (Color.blue(color) * (1f - amount)).toInt().coerceIn(0, 255),
+    )
+
+    /**
+     * White by default, switching to black only for *very light* button colors, so the glyph stays legible
+     * on a near-white accent without flipping on ordinary colors like the default light-blue. Threshold is
+     * intentionally high (not the WCAG contrast crossover).
+     */
+    private fun contrastForeground(bg: Int): Int {
+        val opaque = bg or 0xFF000000.toInt()
+        return if (ColorUtils.calculateLuminance(opaque) > 0.7) Color.BLACK else Color.WHITE
+    }
 
     private fun dp(value: Int): Int =
         (value * context.resources.displayMetrics.density).toInt()
@@ -950,6 +1109,26 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
         /** A fixed window height in px, or null to size to the content. Pinning it stops the pill from
          *  appearing to grow vertically while its width animates. */
         val fixedHeight: Int?
+
+        /**
+         * Transparent margin between the window edge and the shape the user actually sees, in px.
+         *
+         * The glow designs reserve a ring of empty space for their halo, the pill none at all. Measuring
+         * the wall gap and the cancel button from the window edge therefore parked them at visibly
+         * different distances depending on the design; both subtract this instead.
+         */
+        val visualInset: Int get() = 0
+
+        /**
+         * Fill for the round cancel/undo buttons beside the bubble, and the colour of the glyph on it.
+         *
+         * The flat designs are happy with the shared neutral disc, but beside a cloud, an aurora or a dot
+         * orb that same disc read as a control borrowed from another app. Returning null keeps the shared
+         * one; a design that has a surface of its own cuts the button from it.
+         */
+        fun sideButtonBackground(): GradientDrawable? = null
+        val sideButtonForeground: Int? get() = null
+
         fun applyState(state: DictateController.UiState)
         fun showFlash(kind: FlashKind)
         fun onRecordingTick(level: Float, elapsedMs: Long)
@@ -1005,6 +1184,9 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
         private val ringStrokePx = sdpf(3f)
         private val ringRadiusPx = sdpf(25f)
 
+        /** The ring spans 50dp of the 64dp window; the rest is room for its glow. */
+        override val visualInset: Int = (viewSize - sdp(50)) / 2
+
         private val ring = RingView(context)
         private val core = View(context).apply {
             background = circle(R.color.dictate_overlay_accent)
@@ -1014,6 +1196,7 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
             setImageResource(R.drawable.ic_dictate_overlay_mic)
             setPadding(iconInset, iconInset, iconInset, iconInset)
             elevation = sdpf(6f)
+            imageTintList = ColorStateList.valueOf(contrastForeground(accentColor))
         }
         private val wave = WaveformView(context).apply {
             visibility = View.GONE
@@ -1081,6 +1264,7 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
 
         private fun setCore(colorRes: Int) {
             core.background = circle(colorRes)
+            icon.imageTintList = ColorStateList.valueOf(contrastForeground(color(colorRes)))
         }
 
         private fun showGlyph(resId: Int) {
@@ -1180,6 +1364,15 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
         private val pillHeight = sdp(48)
         private val iconSize = sdp(24)
         private val pad = sdp(12)
+        private val timerWidth = sdp(48)
+        private val waveWidth = sdp(48)
+        private val timerMarginStart = sdp(8)
+        private val waveMarginStart = sdp(8)
+        private val waveMarginEnd = sdp(2)
+        // What the opened pill measures, from the same values the layout below is built with — keep the
+        // two in step. Pinning to this is what stops the timer from ever resizing the overlay window.
+        private val expandedContentWidth =
+            timerMarginStart + timerWidth + waveMarginStart + waveWidth + waveMarginEnd
 
         private val bg = GradientDrawable().apply {
             shape = GradientDrawable.RECTANGLE
@@ -1188,10 +1381,16 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
         }
         private val icon = ImageView(context).apply {
             setImageResource(R.drawable.ic_dictate_overlay_mic)
+            imageTintList = ColorStateList.valueOf(contrastForeground(accentColor))
         }
         private val timer = TextView(context).apply {
             setTextColor(color(R.color.dictate_overlay_icon))
             setTextSize(TypedValue.COMPLEX_UNIT_PX, sdpf(14f))
+            // Tabular figures and an exact width: the reserved minimum from #231 held the ordinary values
+            // steady, but anything wider than it still grew the pill, so the width is fixed outright (#253).
+            fontFeatureSettings = "tnum"
+            isSingleLine = true
+            gravity = Gravity.CENTER
         }
         // Thinner bars: more bars across a similar width than the ring's waveform.
         private val wave = WaveformView(context, barCount = 13)
@@ -1204,17 +1403,18 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
             clipChildren = false
             visibility = View.GONE
             addView(timer, LinearLayout.LayoutParams(
+                timerWidth,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-            ).apply { marginStart = sdp(8) })
-            addView(wave, LinearLayout.LayoutParams(sdp(48), sdp(20)).apply {
-                marginStart = sdp(8)
-                marginEnd = sdp(2)
+            ).apply { marginStart = timerMarginStart })
+            addView(wave, LinearLayout.LayoutParams(waveWidth, sdp(20)).apply {
+                marginStart = waveMarginStart
+                marginEnd = waveMarginEnd
             })
         }
 
         private var spinAnim: ValueAnimator? = null
         private var expandAnim: ValueAnimator? = null
+        private var displayedSecond = -1L
 
         override val fixedHeight: Int = pillHeight
 
@@ -1240,6 +1440,7 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
                     icon.setImageResource(R.drawable.ic_dictate_overlay_stop)
                     wave.reset()
                     timer.text = formatElapsed(0)
+                    displayedSecond = 0L
                     setExpanded(true)
                 }
                 is DictateController.UiState.Transcribing -> busySpinner(R.color.dictate_overlay_accent)
@@ -1273,7 +1474,12 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
 
         override fun onRecordingTick(level: Float, elapsedMs: Long) {
             wave.push(level)
-            timer.text = formatElapsed(elapsedMs)
+            // The tick arrives with the audio level, twenty times a second; the label changes once.
+            val second = elapsedMs / 1000L
+            if (second != displayedSecond) {
+                displayedSecond = second
+                timer.text = formatElapsed(elapsedMs)
+            }
         }
 
         override fun destroy() {
@@ -1302,11 +1508,7 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
             expandAnim?.cancel()
             if (expanded) {
                 expand.visibility = View.VISIBLE
-                expand.measure(
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
-                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
-                )
-                val target = expand.measuredWidth
+                val target = expandedContentWidth
                 expandAnim = ValueAnimator.ofInt(expand.width, target).apply {
                     duration = 240
                     interpolator = DecelerateInterpolator()
@@ -1317,8 +1519,9 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
                     }
                     addListener(object : AnimatorListenerAdapter() {
                         override fun onAnimationEnd(animation: Animator) {
-                            // Let the timer text changes resize the pill naturally once fully open.
-                            setExpandWidth(LinearLayout.LayoutParams.WRAP_CONTENT)
+                            // Stays at the exact width. Handing it back to WRAP_CONTENT was the opening the
+                            // timer could still grow through, once its text outran the reserved minimum.
+                            setExpandWidth(target)
                             expand.alpha = 1f
                         }
                     })
@@ -1363,6 +1566,9 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
 
         private fun setColor(colorRes: Int) {
             bg.setColor(color(colorRes))
+            val fg = contrastForeground(color(colorRes))
+            icon.imageTintList = ColorStateList.valueOf(fg)
+            timer.setTextColor(fg)
         }
 
         private fun formatElapsed(ms: Long): String {
@@ -1375,11 +1581,15 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
 
     private inner class OrbSkin(context: Context) : BubbleSkin {
         private val viewSize = sdp(64)
-        private val coreSize = sdp(44)
+        // The pill's idle circle is the reference every design matches, so they are all the same object
+        // at rest and only their decoration differs.
+        private val coreSize = sdp(48)
         private val iconInset = sdp(11)
         private val coreRadiusPx = coreSize / 2f
         private val minGlowPx = sdpf(2f)
         private val maxGlowPx = sdpf(8f)
+
+        override val visualInset: Int = (viewSize - coreSize) / 2
 
         private val glow = GlowView(context)
         private val core = View(context).apply {
@@ -1390,6 +1600,7 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
             setImageResource(R.drawable.ic_dictate_overlay_mic)
             setPadding(iconInset, iconInset, iconInset, iconInset)
             elevation = sdpf(6f)
+            imageTintList = ColorStateList.valueOf(contrastForeground(accentColor))
         }
         private var breatheAnim: ValueAnimator? = null
         private var smoothed = 0f
@@ -1456,6 +1667,7 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
 
         private fun setCore(colorRes: Int) {
             core.background = circle(colorRes)
+            icon.imageTintList = ColorStateList.valueOf(contrastForeground(color(colorRes)))
         }
 
         private fun setGlyph(resId: Int) {
@@ -1518,14 +1730,302 @@ class DictateBubbleController(private val service: DictateAccessibilityService) 
         }
     }
 
+    // --- Aurora skin (design 5) ------------------------------------------------------------------
+
+    /**
+     * A thinking orb (#253): coloured light moving inside a sphere, in the visual language AI interfaces
+     * have converged on. Every state is the same orb at a different temperament rather than a different
+     * widget — it drifts when idle, swells with the voice while recording, and churns while the transcript
+     * is being worked on, so the button never has to swap in a spinner to say it is busy.
+     *
+     * Drawn rather than composed from views: three blurred blobs orbiting inside a clipped circle is a
+     * handful of drawing calls, where the same look in views would need layers, masks and a blur pass.
+     * The blur wants a software layer, which is why the view asks for one.
+     */
+    private inner class AuroraSkin(context: Context) : BubbleSkin {
+        // Same footprint as the ring, orb and cloud designs: a 64dp window with a 44dp body inside it.
+        // Drawn edge to edge it looked markedly bigger than the rest, since those keep the outer ring for
+        // glow rather than for the shape itself.
+        private val viewSize = sdp(64)
+        private val coreSize = sdp(48)
+        private val iconInset = (viewSize - sdp(22)) / 2
+
+        override val visualInset: Int = (viewSize - coreSize) / 2
+
+        private val orb = DictateAuroraOrbView(context).apply { bodyRadius = coreSize / 2f }
+        // No mic or stop glyph: the orb's temperament already says which state it is in, and a badge on top
+        // only fought the light inside it. Only the terminal marks below still get one.
+        private val icon = ImageView(context).apply {
+            setPadding(iconInset, iconInset, iconInset, iconInset)
+            imageTintList = ColorStateList.valueOf(Color.WHITE)
+            alpha = 0f
+        }
+
+        override val fixedHeight: Int? = null
+
+        override val root: View = FrameLayout(context).apply {
+            addView(orb, FrameLayout.LayoutParams(viewSize, viewSize))
+            addView(icon, FrameLayout.LayoutParams(viewSize, viewSize))
+        }
+
+        /** Lit from up-left and falling off into the shaded body: the orb's own shading, in miniature. */
+        override fun sideButtonBackground(): GradientDrawable = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            gradientType = GradientDrawable.RADIAL_GRADIENT
+            colors = intArrayOf(lighten(accentColor, 0.4f), darken(accentColor, 0.55f))
+            setGradientCenter(0.34f, 0.28f)
+            gradientRadius = cancelSize * 0.9f
+        }
+
+        override fun applyState(state: DictateController.UiState) {
+            icon.alpha = 0f
+            when (state) {
+                is DictateController.UiState.Recording ->
+                    orb.setMood(DictateAuroraOrbView.Mood.RECORDING, color(R.color.dictate_overlay_recording))
+                is DictateController.UiState.Transcribing ->
+                    thinking(R.color.dictate_overlay_accent)
+                is DictateController.UiState.Rewording ->
+                    thinking(R.color.dictate_overlay_rewording)
+                else -> orb.setMood(DictateAuroraOrbView.Mood.IDLE, accentColor)
+            }
+        }
+
+        private fun thinking(colorRes: Int) {
+            orb.setMood(DictateAuroraOrbView.Mood.THINKING, color(colorRes))
+        }
+
+        override fun showFlash(kind: FlashKind) {
+            icon.alpha = 1f
+            when (kind) {
+                FlashKind.ERROR -> {
+                    icon.setImageResource(R.drawable.ic_dictate_overlay_error)
+                    orb.setMood(DictateAuroraOrbView.Mood.IDLE, color(R.color.dictate_overlay_recording))
+                }
+                FlashKind.SUCCESS -> {
+                    icon.setImageResource(R.drawable.ic_dictate_overlay_check)
+                    orb.setMood(DictateAuroraOrbView.Mood.IDLE, color(R.color.dictate_overlay_success))
+                }
+            }
+        }
+
+        override fun onRecordingTick(level: Float, elapsedMs: Long) = orb.pushLevel(level)
+
+        override fun destroy() = orb.stop()
+    }
+
+    // --- Cloud skin (design 4) -------------------------------------------------------------------
+
+    private inner class CloudSkin(context: Context) : BubbleSkin {
+        private val viewSize = sdp(64)
+        private val coreSize = sdp(48)
+        private val idleInset = sdp(13)
+
+        override val visualInset: Int = (viewSize - coreSize) / 2
+
+        private val cloud = AudioReactiveCloudOrbView(context)
+        private val icon = ImageView(context).apply {
+            elevation = sdpf(6f)
+        }
+
+        override val fixedHeight: Int? = null
+
+        override val root: View = FrameLayout(context).apply {
+            // The cloud spans the whole button so it has room to grow while recording; a small glyph
+            // overlays it as the idle/terminal affordance (there is no glyph while recording).
+            addView(cloud, FrameLayout.LayoutParams(viewSize, viewSize, Gravity.CENTER))
+            addView(icon, FrameLayout.LayoutParams(coreSize, coreSize, Gravity.CENTER))
+            minimumWidth = viewSize
+            minimumHeight = viewSize
+        }
+
+        /** Cut from the same sky as the cloud, down to the dark glyph it puts on that surface. */
+        override fun sideButtonBackground(): GradientDrawable = GradientDrawable(
+            GradientDrawable.Orientation.TOP_BOTTOM,
+            AudioReactiveCloudOrbView.SURFACE_GRADIENT,
+        ).apply { shape = GradientDrawable.OVAL }
+
+        override val sideButtonForeground: Int = CLOUD_GLYPH_COLOR
+
+        override fun applyState(state: DictateController.UiState) {
+            when (state) {
+                is DictateController.UiState.Recording -> {
+                    cloud.setPaused(state.paused)
+                    cloud.setLevel(0f) // the shared level ticker takes over immediately after this state update
+                    cloud.setMode(AudioReactiveCloudOrbView.Mode.LISTENING)
+                    icon.visibility = View.INVISIBLE // the growing, turbulent cloud alone signals recording
+                }
+                is DictateController.UiState.Transcribing,
+                is DictateController.UiState.Rewording -> {
+                    cloud.setPaused(false)
+                    cloud.setMode(AudioReactiveCloudOrbView.Mode.THINKING)
+                    icon.visibility = View.INVISIBLE // the cloud draws its own activity spinner
+                }
+                else -> showIdle()
+            }
+        }
+
+        override fun showFlash(kind: FlashKind) {
+            // Keep the cloud alive and tint the whole field, so the terminal feedback stays part of the
+            // same design instead of swapping in a detached colored circle.
+            cloud.setPaused(false)
+            when (kind) {
+                FlashKind.ERROR -> {
+                    cloud.setMode(AudioReactiveCloudOrbView.Mode.ERROR)
+                    showGlyph(R.drawable.ic_dictate_overlay_error, idleInset, Color.WHITE, 0.95f)
+                }
+                FlashKind.SUCCESS -> {
+                    cloud.setMode(AudioReactiveCloudOrbView.Mode.SUCCESS)
+                    showGlyph(R.drawable.ic_dictate_overlay_check, idleInset, Color.WHITE, 0.95f)
+                }
+            }
+        }
+
+        override fun onRecordingTick(level: Float, elapsedMs: Long) {
+            cloud.setLevel(level)
+        }
+
+        override fun destroy() {
+            cloud.stop()
+        }
+
+        // Idle: the cloud itself is the button, with a mic hint so it reads as "tap to dictate".
+        private fun showIdle() {
+            cloud.setPaused(false)
+            cloud.setMode(AudioReactiveCloudOrbView.Mode.IDLE)
+            showGlyph(R.drawable.ic_dictate_overlay_mic, idleInset, CLOUD_GLYPH_COLOR, 0.9f)
+        }
+
+        private fun showGlyph(resId: Int, inset: Int, tint: Int, alpha: Float) {
+            icon.visibility = View.VISIBLE
+            icon.setImageResource(resId)
+            icon.setPadding(inset, inset, inset, inset)
+            icon.imageTintList = ColorStateList.valueOf(tint)
+            icon.alpha = alpha
+        }
+    }
+
+    // --- Lattice skin (design 6) -----------------------------------------------------------------
+
+    /**
+     * A dot orb (#253): a constellation wiring itself while it waits and the same one racing, red and
+     * riding the voice, while recording — then a wave rolling through it while the transcript comes back,
+     * and a sphere twisting itself apart and back together while that text is reworded.
+     *
+     * It carries no mic or stop glyph at all: every state already has its own unmistakable motion, and a
+     * badge on top only fought the dots for the middle of the button. Only the terminal error/success marks
+     * remain, because those say something the motion does not.
+     */
+    private inner class LatticeSkin(context: Context) : BubbleSkin {
+        private val viewSize = sdp(64)
+        private val coreSize = sdp(48)
+        private val iconInset = (viewSize - sdp(22)) / 2
+
+        override val visualInset: Int = (viewSize - coreSize) / 2
+
+        private val sphere = DictateLatticeSphereView(context, sizeScale = sizeScale)
+            .apply { bodyDiameter = coreSize.toFloat() }
+        private val icon = ImageView(context).apply {
+            setPadding(iconInset, iconInset, iconInset, iconInset)
+            imageTintList = ColorStateList.valueOf(Color.WHITE)
+            alpha = 0f
+        }
+
+        override val fixedHeight: Int? = null
+
+        override val root: View = FrameLayout(context).apply {
+            addView(sphere, FrameLayout.LayoutParams(viewSize, viewSize))
+            addView(icon, FrameLayout.LayoutParams(viewSize, viewSize))
+        }
+
+        /**
+         * The same tinted dark substrate the dots sit on — opaque here, unlike the orb itself: the sphere
+         * can afford to be translucent because it is covered in dots, while a lone glyph on a see-through
+         * disc would lose its contrast over a light app.
+         */
+        override fun sideButtonBackground(): GradientDrawable = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(ColorUtils.blendARGB(accentColor, Color.BLACK, 0.58f))
+        }
+
+        override fun applyState(state: DictateController.UiState) {
+            icon.alpha = 0f
+            when (state) {
+                is DictateController.UiState.Recording -> {
+                    sphere.setPaused(state.paused)
+                    // The same constellation as at rest, turned red and run at the tempo the library
+                    // actually ships it at — six times the idle one. Because the mode does not change, the
+                    // motion carries straight on from wherever it was instead of restarting.
+                    sphere.setMode(
+                        DictateLatticeSphereView.Mode.WEB,
+                        color(R.color.dictate_overlay_recording),
+                        speedScale = RECORDING_SPEED_UP,
+                    )
+                }
+                is DictateController.UiState.Transcribing -> {
+                    sphere.setPaused(false)
+                    sphere.setMode(DictateLatticeSphereView.Mode.WAVE, color(R.color.dictate_overlay_accent))
+                }
+                is DictateController.UiState.Rewording -> {
+                    sphere.setPaused(false)
+                    sphere.setMode(DictateLatticeSphereView.Mode.RUBIK, color(R.color.dictate_overlay_rewording))
+                }
+                else -> {
+                    sphere.setPaused(false)
+                    sphere.setMode(DictateLatticeSphereView.Mode.WEB, accentColor)
+                }
+            }
+        }
+
+        /**
+         * The terminal marks stay on the *idle* motion, only recoloured: a flash is the button on its way
+         * back to rest, so putting a different mode on screen for a second read as yet another state.
+         */
+        override fun showFlash(kind: FlashKind) {
+            sphere.setPaused(false)
+            when (kind) {
+                FlashKind.ERROR -> {
+                    showGlyph(R.drawable.ic_dictate_overlay_error)
+                    sphere.setMode(DictateLatticeSphereView.Mode.WEB, color(R.color.dictate_overlay_recording))
+                }
+                FlashKind.SUCCESS -> {
+                    showGlyph(R.drawable.ic_dictate_overlay_check)
+                    sphere.setMode(DictateLatticeSphereView.Mode.WEB, color(R.color.dictate_overlay_success))
+                }
+            }
+        }
+
+        override fun onRecordingTick(level: Float, elapsedMs: Long) = sphere.pushLevel(level)
+
+        override fun destroy() = sphere.stop()
+
+        private fun showGlyph(resId: Int) {
+            icon.alpha = 1f
+            icon.setImageResource(resId)
+        }
+    }
+
     private companion object {
         private const val ERROR_HOLD_MS = 1800L
         private const val SUCCESS_HOLD_MS = 1700L
         private const val TICK_MS = 50L
         private const val AUTO_DIM_DELAY_MS = 3500L
+
+        /**
+         * How far the bubble's visible shape parks from the screen edge, in dp. The wider of the two gaps
+         * the code used to produce by accident: pressed right up against the edge it read as something the
+         * system had shoved aside rather than something placed there.
+         */
+        private const val EDGE_MARGIN_DP = 16
+
+        /** Aurora orb (#253): three blobs, started apart and orbiting at rates that never quite repeat. */
+        private const val FULL_TURN = 6.2831855f
+        private val BLOB_ANGLES = floatArrayOf(0f, 2.1f, 4.2f)
+        private val BLOB_RATES = floatArrayOf(1f, -0.62f, 0.41f)
+        private val BLOB_TINTS = floatArrayOf(0.45f, 0.18f, 0.68f)
         private const val WAVE_BARS = 7
-        // MediaRecorder.getMaxAmplitude tops out at 32767; speech rarely peaks there, so normalize to a
-        // lower full-scale to keep the waveform lively without constantly clipping at the top.
-        private const val AMP_FULL = 16000f
+        private const val CLOUD_GLYPH_COLOR = 0xFF343B8F.toInt()
+
+        /** Lattice (#253): recording runs its idle constellation at the tempo the library ships it at. */
+        private const val RECORDING_SPEED_UP = 6f
     }
 }

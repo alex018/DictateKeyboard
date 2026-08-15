@@ -73,7 +73,9 @@ import dev.patrickgold.florisboard.ime.keyboard.LayoutArrangementComponent
 import dev.patrickgold.florisboard.ime.keyboard.LayoutType
 import dev.patrickgold.florisboard.ime.keyboard.extCorePopupMapping
 import dev.patrickgold.florisboard.ime.nlp.han.HanShapeBasedLanguageProvider
+import dev.patrickgold.florisboard.ime.nlp.latin.GlideDictionaryCatalog
 import dev.patrickgold.florisboard.ime.nlp.latin.LatinLanguageProvider
+import dev.patrickgold.florisboard.extensionManager
 import dev.patrickgold.florisboard.keyboardManager
 import dev.patrickgold.florisboard.lib.FlorisLocale
 import dev.patrickgold.florisboard.lib.compose.FlorisScreen
@@ -87,6 +89,7 @@ import dev.patrickgold.jetpref.material.ui.JetPrefListItem
 import org.florisboard.lib.compose.FlorisButtonBar
 import org.florisboard.lib.compose.FlorisDropdownLikeButton
 import org.florisboard.lib.compose.florisScrollbar
+import org.florisboard.lib.compose.florisDialogScroll
 import org.florisboard.lib.compose.stringRes
 
 
@@ -195,6 +198,11 @@ fun SubtypeEditorScreen(id: Long?) = FlorisScreen {
     val lifecycleOwner = LocalLifecycleOwner.current
     val keyboardManager by context.keyboardManager()
     val subtypeManager by context.subtypeManager()
+    val extensionManager by context.extensionManager()
+
+    // Installed downloadable dictionaries (language packs), read reactively so the missing-dictionary
+    // banner below disappears the moment the required one is installed (issue #123).
+    val installedLanguagePacks by extensionManager.languagePacks.collectAsState()
 
     val displayLanguageNamesIn by prefs.localization.displayLanguageNamesIn.collectAsState()
     val composers by keyboardManager.resources.composers.collectAsState()
@@ -295,6 +303,86 @@ fun SubtypeEditorScreen(id: Long?) = FlorisScreen {
 
     content {
         Column(modifier = Modifier.padding(8.dp)) {
+            // Missing-dictionary warning (issue #123): some subtypes (e.g. Japanese/CJK) rely on the
+            // shape-based NLP provider, whose word suggestion / Romaji→Kana conversion silently does
+            // nothing until the matching downloadable dictionary (a language pack) is installed. Detect
+            // that state and offer a one-tap jump to the download screen, so it no longer looks broken.
+            val needsMissingLanguagePack = nlpProviders.suggestion == HanShapeBasedLanguageProvider.ProviderId &&
+                primaryLocale != SelectLocale &&
+                installedLanguagePacks.none { pack ->
+                    pack.items.any { it.locale.language == primaryLocale.language }
+                }
+            if (needsMissingLanguagePack) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                    ),
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = stringRes(R.string.settings__localization__subtype_missing_language_pack_title),
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringRes(R.string.settings__localization__subtype_missing_language_pack_message),
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            modifier = Modifier.align(Alignment.End),
+                            onClick = {
+                                navController.navigate(
+                                    Routes.Settings.LanguagePackManager(LanguagePackManagerScreenAction.MANAGE),
+                                )
+                            },
+                        ) {
+                            Text(stringRes(R.string.settings__localization__subtype_missing_language_pack_action))
+                        }
+                    }
+                }
+            }
+            // No word list at all for this language (issue #265). Until then a missing dictionary meant
+            // the English one, so the strip looked merely empty rather than absent, and nothing anywhere
+            // said why — which is what turned a gap into a one-star review. Stated plainly, and without
+            // a download button, because there is nothing to download: the data does not exist yet.
+            //
+            // Informational, not an error card: typing, dictation and rewording are unaffected, and the
+            // user did nothing wrong by choosing this language.
+            val hasNoWordList = nlpProviders.suggestion == LatinLanguageProvider.ProviderId &&
+                primaryLocale != SelectLocale &&
+                !GlideDictionaryCatalog.isSupported(
+                    LatinLanguageProvider.normalizeLang(primaryLocale.language),
+                )
+            if (hasNoWordList) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    ),
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = stringRes(R.string.settings__localization__subtype_no_word_list_title),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Bold,
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = stringRes(R.string.settings__localization__subtype_no_word_list_message),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                    }
+                }
+            }
             if (id == null) {
                 Card(modifier = Modifier
                     .fillMaxWidth()
@@ -517,6 +605,7 @@ fun SubtypeEditorScreen(id: Long?) = FlorisScreen {
 
         errorDialogStrId?.let { strId ->
             JetPrefAlertDialog(
+                scrollModifier = florisDialogScroll(),
                 title = stringRes(R.string.error__title),
                 confirmLabel = stringRes(android.R.string.ok),
                 onConfirm = {

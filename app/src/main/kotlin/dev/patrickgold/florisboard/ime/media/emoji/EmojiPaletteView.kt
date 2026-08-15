@@ -106,8 +106,9 @@ import org.florisboard.lib.snygg.ui.rememberSnyggThemeQuery
 import kotlin.math.ceil
 
 private val EmojiCategoryValues = EmojiCategory.entries
-private val EmojiBaseWidth = 42.dp
-private val EmojiDefaultFontSize = 22.sp
+// Tighter cells + a larger glyph so emojis look bigger with less gap between them (issue #148).
+internal val EmojiBaseWidth = 38.dp
+private val EmojiDefaultFontSize = 26.sp
 
 private val VariantsTriangleShapeLtr = GenericShape { size, _ ->
     moveTo(x = size.width, y = 0f)
@@ -394,7 +395,7 @@ fun EmojiPaletteView(
 }
 
 @Composable
-private fun EmojiKey(
+internal fun EmojiKey(
     emojiSet: EmojiSet,
     emojiCompatInstance: EmojiCompat?,
     preferredSkinTone: EmojiSkinTone,

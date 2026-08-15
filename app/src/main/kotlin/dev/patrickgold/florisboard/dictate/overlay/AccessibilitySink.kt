@@ -19,9 +19,8 @@ import dev.patrickgold.florisboard.dictate.DictationSink
  * service is not running or no editable field is focused.
  */
 class AccessibilitySink : DictationSink {
-    override fun commitText(text: String) {
-        DictateAccessibilityService.injectText(text)
-    }
+    override fun commitText(text: String, verify: Boolean): Boolean =
+        DictateAccessibilityService.injectText(text, verify)
 
     override fun selectedText(): String = DictateAccessibilityService.selectedText()
 
@@ -31,10 +30,22 @@ class AccessibilitySink : DictationSink {
         DictateAccessibilityService.selectAll()
     }
 
-    override fun performEnter() {
-        DictateAccessibilityService.performEnter()
-    }
+    override fun performEnter(): Boolean = DictateAccessibilityService.performEnter()
 
     override fun deleteLastText(text: String): Boolean =
         DictateAccessibilityService.deleteLastText(text)
+
+    // Real-time overlay preview (#128): the service tracks what it injected and applies a throttled minimal
+    // diff (so live streaming into another app doesn't flood the accessibility channel). It keeps its own
+    // shown-text state, so the sink's prevText is unused here.
+    override fun setDictationPreview(newText: String, prevText: String) {
+        DictateAccessibilityService.setPreview(newText)
+    }
+
+    override fun commitDictationFinal(finalText: String, prevText: String): Boolean =
+        DictateAccessibilityService.commitPreviewFinal(finalText)
+
+    override fun clearDictationPreview(prevText: String) {
+        DictateAccessibilityService.clearPreview()
+    }
 }

@@ -1,7 +1,11 @@
 /*
- * Copyright (C) 2026 The Dictate Contributors
+ * Copyright (C) 2026 DevEmperor (Dictate)
  *
- * Licensed under the Apache License, Version 2.0 (the "License").
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
  */
 
 package net.devemperor.dictate.wear.transcribe
@@ -17,6 +21,7 @@ import dev.patrickgold.florisboard.dictate.provider.TranscriptionRequest
 import dev.patrickgold.florisboard.dictate.sync.DictateSyncedSettings
 import dev.patrickgold.florisboard.dictate.sync.DictateWearProtocol
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withTimeout
 import net.devemperor.dictate.wear.R
@@ -52,14 +57,17 @@ object WearTranscription {
             "provider=${settings.transcriptionProviderId}, model=${settings.model}, bytes=${audio.length()}")
 
         if (phoneNode != null) {
-            // Phone in range: tether through it. Fall back to a direct call only if tethering fails and
-            // we actually have a usable key (e.g. phone reachable over BT but has no internet itself).
-            return try {
-                tether(context, phoneNode, audio)
+            // Phone in range: tether through it. Fall back to a direct call ONLY when the tether transport
+            // itself fails (phone reachable over BT but e.g. has no internet) — not when the phone answers
+            // with a definitive status (bad key / quota / no speech), which we surface as-is so we don't
+            // silently re-run and double-charge the request.
+            val response = try {
+                tetherWithRetry(context, phoneNode, audio)
             } catch (e: Exception) {
-                Log.w(TAG, "tether failed (${e.message}); standalone=${settings.canStandalone}", e)
-                if (settings.canStandalone) standalone(settings, audio, onRewording) else throw e
+                Log.w(TAG, "tether transport failed (${e.message}); standalone=${settings.canStandalone}", e)
+                return if (settings.canStandalone) standalone(settings, audio, onRewording) else throw e
             }
+            return response.toTranscriptOrThrow(context)
         }
 
         // No phone: go solo if we can, otherwise tell the user why nothing happened.
@@ -124,13 +132,37 @@ object WearTranscription {
         )
     }
 
-    /** Stream the audio to the phone and await its transcript over the Data Layer. */
-    private suspend fun tether(context: Context, nodeId: String, audio: File): String {
+    /**
+     * [tether] with a couple of retries. Bluetooth between watch and phone drops out for a moment far more
+     * often than a phone's Wi-Fi does, and a single hiccup while opening the channel or streaming the audio
+     * used to fail the whole dictation (#218). Definitive answers from the phone (bad key, quota, no speech)
+     * are returned immediately and never retried, so a request is never paid for twice.
+     */
+    private suspend fun tetherWithRetry(
+        context: Context,
+        nodeId: String,
+        audio: File,
+    ): DictateWearProtocol.TranscribeResponse {
+        var last: Exception? = null
+        repeat(TETHER_ATTEMPTS) { attempt ->
+            try {
+                return tether(context, nodeId, audio)
+            } catch (e: Exception) {
+                last = e
+                Log.w(TAG, "tether attempt ${attempt + 1}/$TETHER_ATTEMPTS failed: ${e.message}")
+                if (attempt < TETHER_ATTEMPTS - 1) delay(TETHER_RETRY_DELAY_MS * (attempt + 1))
+            }
+        }
+        throw last ?: IllegalStateException("tether failed")
+    }
+
+    /** Stream the audio to the phone and await its structured response over the Data Layer. */
+    private suspend fun tether(context: Context, nodeId: String, audio: File): DictateWearProtocol.TranscribeResponse {
         val messageClient = Wearable.getMessageClient(context)
-        val result = CompletableDeferred<String>()
+        val result = CompletableDeferred<DictateWearProtocol.TranscribeResponse>()
         val listener = MessageClient.OnMessageReceivedListener { event ->
             if (event.path == DictateWearProtocol.PATH_TRANSCRIBE_RESPONSE) {
-                result.complete(String(event.data, Charsets.UTF_8))
+                result.complete(DictateWearProtocol.parseTranscribeResponse(event.data))
             }
         }
         messageClient.addListener(listener).await()
@@ -141,9 +173,9 @@ object WearTranscription {
                 val output = channelClient.getOutputStream(channel).await()
                 output.use { os -> audio.inputStream().use { it.copyTo(os) } }
                 Log.i(TAG, "tether: audio sent to $nodeId, awaiting response…")
-                val text = withTimeout(TRANSCRIBE_TIMEOUT_MS) { result.await() }
-                Log.i(TAG, "tether: response received, len=${text.length}")
-                return text.trim()
+                val response = withTimeout(TRANSCRIBE_TIMEOUT_MS) { result.await() }
+                Log.i(TAG, "tether: response status=${response.status}, len=${response.text.length}")
+                return response
             } finally {
                 channelClient.close(channel)
             }
@@ -152,5 +184,24 @@ object WearTranscription {
         }
     }
 
+    /** Maps the phone's status to the transcript, or throws a [TetherResultError] carrying a short reason. */
+    private fun DictateWearProtocol.TranscribeResponse.toTranscriptOrThrow(context: Context): String = when (status) {
+        DictateWearProtocol.RESP_OK -> text.trim()
+        DictateWearProtocol.RESP_NO_SPEECH -> throw TetherResultError(context.getString(R.string.wear_err_no_speech))
+        DictateWearProtocol.RESP_BAD_KEY -> throw TetherResultError(context.getString(R.string.wear_err_bad_key))
+        DictateWearProtocol.RESP_OFFLINE -> throw TetherResultError(context.getString(R.string.wear_err_offline))
+        DictateWearProtocol.RESP_QUOTA -> throw TetherResultError(context.getString(R.string.wear_err_quota))
+        // Prefer the phone's actual provider error ("model not found", "insufficient quota", …) so the
+        // user can fix their setup instead of staring at a generic failure (#218).
+        else -> throw TetherResultError(text.trim().ifBlank { context.getString(R.string.wear_err_transcribe_failed) })
+    }
+
+    /** A definitive phone-side failure with a ready-to-show short reason (no standalone fallback). */
+    class TetherResultError(message: String) : Exception(message)
+
     private const val TRANSCRIBE_TIMEOUT_MS = 120_000L
+
+    /** Retries for the watch↔phone transport (not for definitive phone answers). */
+    private const val TETHER_ATTEMPTS = 3
+    private const val TETHER_RETRY_DELAY_MS = 500L
 }

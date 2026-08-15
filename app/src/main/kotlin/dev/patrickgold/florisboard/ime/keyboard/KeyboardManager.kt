@@ -46,6 +46,7 @@ import dev.patrickgold.florisboard.ime.input.InputShiftState
 import dev.patrickgold.florisboard.ime.nlp.ClipboardSuggestionCandidate
 import dev.patrickgold.florisboard.ime.nlp.PunctuationRule
 import dev.patrickgold.florisboard.ime.nlp.SuggestionCandidate
+import dev.patrickgold.florisboard.ime.nlp.latin.TouchTrace
 import dev.patrickgold.florisboard.ime.popup.PopupMappingComponent
 import dev.patrickgold.florisboard.ime.text.composing.Composer
 import dev.patrickgold.florisboard.ime.text.gestures.SwipeAction
@@ -56,7 +57,9 @@ import dev.patrickgold.florisboard.ime.text.keyboard.TextKeyData
 import dev.patrickgold.florisboard.ime.text.keyboard.TextKeyboardCache
 import dev.patrickgold.florisboard.lib.devtools.LogTopic
 import dev.patrickgold.florisboard.lib.devtools.flogError
+import dev.patrickgold.florisboard.lib.FlorisLocale
 import dev.patrickgold.florisboard.lib.ext.ExtensionComponentName
+import dev.patrickgold.florisboard.lib.lowercase
 import dev.patrickgold.florisboard.lib.titlecase
 import dev.patrickgold.florisboard.lib.uppercase
 import dev.patrickgold.florisboard.lib.util.InputMethodUtils
@@ -108,6 +111,13 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      * intercepted in [onInputKeyUp] and folded into this query instead of being committed to the editor.
      */
     val emojiSearchQuery = MutableStateFlow<String?>(null)
+
+    // GIF search (KLIPY). [gifSearchQuery] is non-null while the user is TYPING a query (keyboard shown,
+    // keystrokes folded into it instead of the editor; a search bar shows above the keyboard). Pressing
+    // Enter submits: [gifSearchQuery] clears and [gifSearchSubmit] holds the committed query, which makes
+    // the full-panel GifPanel show a large results grid. [gifSearchSubmit] null = the panel's home view.
+    val gifSearchQuery = MutableStateFlow<String?>(null)
+    val gifSearchSubmit = MutableStateFlow<String?>(null)
 
     private val activeEvaluatorGuard = Mutex(locked = false)
     private var activeEvaluatorVersion = AtomicInteger(0)
@@ -294,6 +304,9 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         scope.launch {
             candidate.sourceProvider?.notifySuggestionAccepted(subtypeManager.activeSubtype, candidate)
         }
+        // The composing word is being replaced wholesale, so its tap evidence no longer describes what is
+        // in the editor (issue #242).
+        TouchTrace.reset()
         when (candidate) {
             is ClipboardSuggestionCandidate -> editorInstance.commitClipboardItem(candidate.clipboardItem)
             else -> editorInstance.commitCompletion(candidate)
@@ -301,6 +314,8 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     }
 
     fun commitGesture(word: String) {
+        // A glide produces a whole word at once, so there are no per-character taps to reason about (#242).
+        TouchTrace.reset()
         editorInstance.commitGesture(fixCase(word))
     }
 
@@ -432,6 +447,9 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             it.isManualSelectionModeEnd = false
         }
         revertPreviouslyAcceptedCandidate()
+        // Keep the tap evidence aligned with the word: a single-character backspace drops the last tap,
+        // anything coarser (a whole word) invalidates the trace entirely (issue #242).
+        if (unit == OperationUnit.CHARACTERS) TouchTrace.pop() else TouchTrace.reset()
         editorInstance.deleteBackwards(unit)
     }
 
@@ -452,6 +470,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      * Handles a [KeyCode.ENTER] event.
      */
     private fun handleEnter() {
+        TouchTrace.reset() // word boundary (issue #242)
         val info = editorInstance.activeInfo
         val isShiftPressed = inputEventDispatcher.isPressed(KeyCode.SHIFT)
         if (editorInstance.tryPerformEnterCommitRaw()) {
@@ -482,7 +501,17 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         when (prefs.keyboard.utilityKeyAction.get()) {
             UtilityKeyAction.DYNAMIC_SWITCH_LANGUAGE_EMOJIS,
             UtilityKeyAction.SWITCH_LANGUAGE -> subtypeManager.switchToNextSubtype()
-            else -> FlorisImeService.switchToNextInputMethod()
+            // The utility key is explicitly configured to jump to the next keyboard app, so honour that.
+            UtilityKeyAction.SWITCH_KEYBOARD_APP -> FlorisImeService.switchToNextInputMethod()
+            // Remaining cases (utility key set to emojis / disabled) can only reach here via the Smartbar
+            // "Switch language" quick action — which should switch language regardless of the utility-key
+            // setting. Cycle the configured layouts when there is more than one, and only fall back to the
+            // next keyboard app when there is nothing to cycle (issue #200).
+            else -> if (subtypeManager.subtypes.size >= 2) {
+                subtypeManager.switchToNextSubtype()
+            } else {
+                FlorisImeService.switchToNextInputMethod()
+            }
         }
     }
 
@@ -490,6 +519,9 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      * Handles a [KeyCode.SHIFT] down event.
      */
     private fun handleShiftDown(data: KeyData) {
+        // Gboard-style: when text is selected, Shift cycles the selection's capitalization
+        // (Title case → UPPERCASE → lowercase → …) and keeps it selected, instead of toggling the shift state.
+        if (cycleSelectionCapitalization()) return
         val prefs = prefs.keyboard.capitalizationBehavior
         when (prefs.get()) {
             CapitalizationBehavior.CAPSLOCK_BY_DOUBLE_TAP -> {
@@ -522,6 +554,57 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             !inputEventDispatcher.isUninterruptedEventSequence(data)) {
             activeState.inputShiftState = InputShiftState.UNSHIFTED
         }
+    }
+
+    /**
+     * Gboard-style Shift-on-selection: if there is a non-empty text selection, cycle its capitalization
+     * (Title case → UPPERCASE → lowercase → …), keep it selected, and report that Shift was consumed. Handy
+     * for fixing a name/word the dictation mis-cased without repositioning the cursor.
+     */
+    private fun cycleSelectionCapitalization(): Boolean {
+        val content = editorInstance.activeContent
+        val selection = content.selection
+        if (selection.isNotValid || !selection.isSelectionMode) return false
+        val selected = content.selectedText
+        if (selected.isEmpty() || selected.none { it.isLetter() }) return false
+        val locale = subtypeManager.activeSubtype.primaryLocale
+        val next = nextCapitalization(selected, locale)
+        if (next != selected) {
+            val start = selection.start
+            editorInstance.commitTextRaw(next)
+            editorInstance.setSelection(start, start + next.length)
+        }
+        return true
+    }
+
+    /** Next state in the Title → UPPER → lower cycle for [text] (falls back to Title for mixed input). */
+    private fun nextCapitalization(text: String, locale: FlorisLocale): String {
+        val lower = text.lowercase(locale)
+        val upper = text.uppercase(locale)
+        val title = titlecaseWords(text, locale)
+        return when {
+            text == upper && upper != lower -> lower
+            text == title && title != upper -> upper
+            text == lower -> title
+            else -> title
+        }
+    }
+
+    /** Capitalizes the first letter of every whitespace-separated word and lowercases the rest. */
+    private fun titlecaseWords(text: String, locale: FlorisLocale): String {
+        val sb = StringBuilder(text.length)
+        var atWordStart = true
+        for (ch in text) {
+            when {
+                ch.isLetter() -> {
+                    sb.append(if (atWordStart) ch.toString().uppercase(locale) else ch.toString().lowercase(locale))
+                    atWordStart = false
+                }
+                ch.isWhitespace() -> { sb.append(ch); atWordStart = true }
+                else -> sb.append(ch)
+            }
+        }
+        return sb.toString()
     }
 
     /**
@@ -560,6 +643,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     private fun handleSpace(data: KeyData) {
         val candidate = nlpManager.getAutoCommitCandidate()
         candidate?.let { commitCandidate(it) }
+        TouchTrace.reset() // word boundary (issue #242)
         if (prefs.keyboard.spaceBarSwitchesToCharacters.get()) {
             when (activeState.keyboardMode) {
                 KeyboardMode.NUMERIC_ADVANCED,
@@ -607,16 +691,6 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                     "app_name" to appContext.getString(R.string.floris_app_name),
                 )
             }
-        )
-    }
-
-    /**
-     * Handles a [KeyCode.TOGGLE_AUTOCORRECT] event.
-     */
-    private fun handleToggleAutocorrect() {
-        lastToastReference.get()?.cancel()
-        lastToastReference = WeakReference(
-            appContext.showLongToastSync("Autocorrect toggle is a placeholder and not yet implemented")
         )
     }
 
@@ -725,6 +799,69 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         return true
     }
 
+    /** Empties the emoji query without leaving the search — the ✕ inside the search bar. */
+    fun clearEmojiSearch() {
+        if (emojiSearchQuery.value == null) return
+        emojiSearchQuery.value = ""
+    }
+
+    /** Empties the GIF query without leaving the search — the ✕ inside the search bar. */
+    fun clearGifSearch() {
+        if (gifSearchQuery.value == null) return
+        gifSearchQuery.value = ""
+    }
+
+    /** Starts a GIF search: shows the text keyboard so the user can type the query. */
+    fun activateGifSearch() {
+        gifSearchQuery.value = ""
+        activeState.imeUiMode = ImeUiMode.TEXT
+    }
+
+    /**
+     * Commits the typed GIF query (on Enter or the search button): hides the keyboard and switches the
+     * full GifPanel to its results view for [query]. A blank query returns to the panel's home view.
+     */
+    fun submitGifSearch(query: String) {
+        val q = query.trim()
+        gifSearchQuery.value = null
+        gifSearchSubmit.value = q.ifBlank { null }
+        activeState.imeUiMode = ImeUiMode.GIF
+    }
+
+    /**
+     * Closes the GIF search. When [returnToPanel] is set the user is taken back to the GIF panel, which is
+     * the natural "back" destination since search is launched from there.
+     */
+    fun closeGifSearch(returnToPanel: Boolean = true) {
+        if (gifSearchQuery.value == null) return
+        gifSearchQuery.value = null
+        if (returnToPanel) activeState.imeUiMode = ImeUiMode.GIF
+    }
+
+    /**
+     * While a GIF search is active, folds typing keys into the query instead of the editor. Mirrors
+     * [handleEmojiSearchKey]: backspace on an empty query exits, Enter is swallowed.
+     */
+    private fun handleGifSearchKey(data: KeyData): Boolean {
+        val current = gifSearchQuery.value ?: return false
+        when (data.code) {
+            KeyCode.SPACE -> gifSearchQuery.value = "$current "
+            KeyCode.ENTER -> submitGifSearch(current) // Enter runs the search → full results page.
+            KeyCode.DELETE, KeyCode.DELETE_WORD -> {
+                if (current.isEmpty()) {
+                    closeGifSearch()
+                } else {
+                    gifSearchQuery.value = current.dropLast(1)
+                }
+            }
+            else -> {
+                if (data.type != KeyType.CHARACTER) return false
+                gifSearchQuery.value = current + data.asString(isForDisplay = false)
+            }
+        }
+        return true
+    }
+
     override fun onInputKeyDown(data: KeyData) {
         val windowController = FlorisImeService.windowControllerOrNull()
         windowController?.editor?.disableIfNoGestureInProgress()
@@ -748,6 +885,9 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         if (emojiSearchQuery.value != null && handleEmojiSearchKey(data)) {
             return@batchEdit
         }
+        if (gifSearchQuery.value != null && handleGifSearchKey(data)) {
+            return@batchEdit
+        }
         when (data.code) {
             KeyCode.ARROW_DOWN,
             KeyCode.ARROW_LEFT,
@@ -768,7 +908,14 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             KeyCode.CLIPBOARD_COPY -> editorInstance.performClipboardCopy()
             KeyCode.CLIPBOARD_PASTE -> editorInstance.performClipboardPaste()
             KeyCode.CLIPBOARD_SELECT -> handleClipboardSelect()
-            KeyCode.CLIPBOARD_SELECT_ALL -> editorInstance.performClipboardSelectAll()
+            KeyCode.CLIPBOARD_SELECT_ALL -> {
+                // Toggle (issue #152): select all when nothing is selected, otherwise clear the selection.
+                if (editorInstance.activeContent.selection.isSelectionMode) {
+                    editorInstance.performClipboardDeselect()
+                } else {
+                    editorInstance.performClipboardSelectAll()
+                }
+            }
             KeyCode.CLIPBOARD_CLEAR_HISTORY -> clipboardManager.clearHistory()
             KeyCode.CLIPBOARD_CLEAR_FULL_HISTORY -> clipboardManager.clearFullHistory()
             KeyCode.CLIPBOARD_CLEAR_PRIMARY_CLIP -> {
@@ -795,13 +942,22 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             KeyCode.IME_UI_MODE_TEXT -> { closeEmojiSearch(returnToMedia = false); activeState.imeUiMode = ImeUiMode.TEXT }
             KeyCode.IME_UI_MODE_MEDIA -> { closeEmojiSearch(returnToMedia = false); activeState.imeUiMode = ImeUiMode.MEDIA }
             KeyCode.IME_UI_MODE_CLIPBOARD -> { closeEmojiSearch(returnToMedia = false); activeState.imeUiMode = ImeUiMode.CLIPBOARD }
+            // Opens the KLIPY GIF search panel (its own ImeUiMode, like the media/history panels); resets
+            // any previous search so it opens on the home view (recent GIFs + trending).
+            KeyCode.IME_UI_MODE_GIF -> {
+                closeEmojiSearch(returnToMedia = false)
+                gifSearchSubmit.value = null
+                activeState.imeUiMode = ImeUiMode.GIF
+            }
             KeyCode.IME_UI_MODE_DICTATE -> dev.patrickgold.florisboard.dictate.DictateController.onMicClick(appContext)
             KeyCode.DICTATE_LIVE_PROMPT -> dev.patrickgold.florisboard.dictate.DictateController.startLivePrompt(appContext)
             KeyCode.DICTATE_PROMPTS -> {
                 dev.patrickgold.florisboard.dictate.DictateController.refreshPrompts(appContext)
                 activeState.imeUiMode = ImeUiMode.DICTATE
             }
-            KeyCode.DICTATE_REINSERT -> dev.patrickgold.florisboard.dictate.DictateController.reinsertLastDictation(appContext)
+            // Repurposed for the transcription history panel (issue #140): opens the browsable list of
+            // recent dictations to quickly re-insert or re-transcribe, superseding the one-shot reinsert.
+            KeyCode.DICTATE_REINSERT -> { activeState.imeUiMode = ImeUiMode.HISTORY }
             KeyCode.KANA_SWITCHER -> handleKanaSwitch()
             KeyCode.KANA_HIRA -> handleKanaHira()
             KeyCode.KANA_KATA -> handleKanaKata()
@@ -827,7 +983,6 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                 activeState.isActionsEditorVisible = !activeState.isActionsEditorVisible
             }
             KeyCode.TOGGLE_INCOGNITO_MODE -> scope.launch { handleToggleIncognitoMode() }
-            KeyCode.TOGGLE_AUTOCORRECT -> handleToggleAutocorrect()
             KeyCode.UNDO -> editorInstance.performUndo()
             KeyCode.VIEW_CHARACTERS -> activeState.keyboardMode = KeyboardMode.CHARACTERS
             KeyCode.VIEW_NUMERIC -> activeState.keyboardMode = KeyboardMode.NUMERIC
@@ -865,6 +1020,10 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                             val text = data.asString(isForDisplay = false)
                             if (!UCharacter.isUAlphabetic(UCharacter.codePointAt(text, 0))) {
                                 nlpManager.getAutoCommitCandidate()?.let { commitCandidate(it) }
+                                // Punctuation ends the word — drop the tap evidence for it (issue #242).
+                                TouchTrace.reset()
+                            } else {
+                                TouchTrace.commit(text)
                             }
                             editorInstance.commitChar(text)
                         }
@@ -1017,6 +1176,9 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         override val subtype: Subtype,
     ) : ComputingEvaluator {
 
+        override val isGifSearchActive: Boolean
+            get() = gifSearchQuery.value != null
+
         override fun context(): Context = appContext
 
         val androidKeyguardManager = context().systemService(AndroidKeyguardManager::class)
@@ -1049,9 +1211,9 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                     subtypeManager.subtypes.size > 1
                 }
                 KeyCode.DICTATE_REINSERT -> {
-                    // Greyed out unless a last dictation is actually cached (and the feature is enabled),
-                    // so the button visibly reflects whether there is anything to re-insert.
-                    dev.patrickgold.florisboard.dictate.DictateController.hasLastDictation()
+                    // Opens the transcription history panel (issue #140); greyed out only when the history
+                    // feature itself is turned off, since the panel is otherwise always available.
+                    dev.patrickgold.florisboard.dictate.DictateController.isHistoryEnabled()
                 }
                 else -> true
             }

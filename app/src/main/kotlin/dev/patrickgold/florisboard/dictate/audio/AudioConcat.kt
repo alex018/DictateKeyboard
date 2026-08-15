@@ -12,8 +12,6 @@ package dev.patrickgold.florisboard.dictate.audio
 
 import java.io.File
 import java.io.RandomAccessFile
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 
 /**
  * Concatenates several PCM **WAV** segments (as produced by [RecordingController]) into a single WAV
@@ -29,8 +27,6 @@ import java.nio.ByteOrder
  */
 object AudioConcat {
 
-    private const val WAV_HEADER_SIZE = 44
-
     private class WavFmt(val sampleRate: Int, val channels: Int, val bitsPerSample: Int)
 
     /**
@@ -38,7 +34,7 @@ object AudioConcat {
      * [output] is removed and false is returned, so the caller can fall back to a single segment.
      */
     fun concat(segments: List<File>, output: File): Boolean {
-        val usable = segments.filter { it.exists() && it.length() > WAV_HEADER_SIZE }
+        val usable = segments.filter { it.exists() && it.length() > AudioWav.HEADER_SIZE }
         if (usable.isEmpty()) return false
         output.delete()
         var fmt: WavFmt? = null
@@ -46,13 +42,16 @@ object AudioConcat {
         try {
             RandomAccessFile(output, "rw").use { out ->
                 out.setLength(0)
-                out.write(ByteArray(WAV_HEADER_SIZE)) // placeholder; patched once totals are known
+                out.write(ByteArray(AudioWav.HEADER_SIZE)) // placeholder; patched once totals are known
                 for (segment in usable) {
-                    val bytes = segment.readBytes()
-                    val parsed = parseWav(bytes) ?: continue
+                    val parsed = RandomAccessFile(segment, "r").use { input ->
+                        parseWav(input)?.also {
+                            if (fmt == null) fmt = it.fmt
+                            input.seek(it.dataOffset)
+                            dataBytes += copy(input, out, it.dataLength)
+                        }
+                    } ?: continue
                     if (fmt == null) fmt = parsed.fmt
-                    out.write(bytes, parsed.dataOffset, parsed.dataLength)
-                    dataBytes += parsed.dataLength
                 }
                 val format = fmt
                 if (format == null || dataBytes <= 0L) {
@@ -60,66 +59,85 @@ object AudioConcat {
                     return false
                 }
                 out.seek(0)
-                out.write(wavHeader(format, dataBytes))
+                out.write(
+                    AudioWav.header(format.sampleRate, format.channels, format.bitsPerSample, dataBytes),
+                )
             }
         } catch (_: Throwable) {
             output.delete()
             return false
         }
-        return output.exists() && output.length() > WAV_HEADER_SIZE
+        return output.exists() && output.length() > AudioWav.HEADER_SIZE
     }
 
-    private class ParsedWav(val fmt: WavFmt, val dataOffset: Int, val dataLength: Int)
+    private class ParsedWav(val fmt: WavFmt, val dataOffset: Long, val dataLength: Long)
 
-    /** Parses a PCM WAV's `fmt `/`data` chunks, or returns null if [bytes] is not a usable WAV. */
-    private fun parseWav(bytes: ByteArray): ParsedWav? {
-        if (bytes.size < WAV_HEADER_SIZE) return null
-        fun tag(off: Int) = String(bytes, off, 4, Charsets.US_ASCII)
-        if (tag(0) != "RIFF" || tag(8) != "WAVE") return null
-        fun le16(off: Int) = (bytes[off].toInt() and 0xff) or ((bytes[off + 1].toInt() and 0xff) shl 8)
-        fun le32(off: Int) = (bytes[off].toInt() and 0xff) or ((bytes[off + 1].toInt() and 0xff) shl 8) or
-            ((bytes[off + 2].toInt() and 0xff) shl 16) or ((bytes[off + 3].toInt() and 0xff) shl 24)
+    /** Parses a PCM WAV's `fmt `/`data` chunks, or returns null if [input] is not a usable WAV. */
+    private fun parseWav(input: RandomAccessFile): ParsedWav? {
+        if (input.length() < AudioWav.HEADER_SIZE) return null
+        val header = ByteArray(12)
+        input.readFully(header)
+        if (!header.hasTag(0, "RIFF") || !header.hasTag(8, "WAVE")) return null
 
         var fmt: WavFmt? = null
-        var p = 12 // after "RIFF"<size>"WAVE"
-        while (p + 8 <= bytes.size) {
-            val id = tag(p)
-            val size = le32(p + 4)
-            val body = p + 8
-            when (id) {
-                "fmt " -> fmt = WavFmt(
-                    sampleRate = le32(body + 4),
-                    channels = le16(body + 2).coerceAtLeast(1),
-                    bitsPerSample = le16(body + 14),
-                )
-                "data" -> {
-                    val len = size.coerceAtMost(bytes.size - body)
+        val chunkHeader = ByteArray(8)
+        while (input.filePointer + chunkHeader.size <= input.length()) {
+            input.readFully(chunkHeader)
+            val size = chunkHeader.le32(4).toLong() and 0xffff_ffffL
+            val body = input.filePointer
+            when {
+                chunkHeader.hasTag(0, "fmt ") -> {
+                    if (size >= 16L && body + 16L <= input.length()) {
+                        val bytes = ByteArray(16)
+                        input.readFully(bytes)
+                        fmt = WavFmt(
+                            sampleRate = bytes.le32(4),
+                            channels = bytes.le16(2).coerceAtLeast(1),
+                            bitsPerSample = bytes.le16(14),
+                        )
+                    }
+                }
+                chunkHeader.hasTag(0, "data") -> {
                     val f = fmt ?: return null
-                    if (len <= 0) return null
+                    val len = size.coerceAtMost(input.length() - body)
+                    if (len <= 0L) return null
                     return ParsedWav(f, body, len)
                 }
             }
-            p = body + size + (size and 1) // chunks are word-aligned
+            val next = (body + size + (size and 1L)).coerceAtMost(input.length())
+            input.seek(next)
         }
         return null
     }
 
-    private fun wavHeader(fmt: WavFmt, dataLen: Long): ByteArray {
-        val byteRate = fmt.sampleRate * fmt.channels * fmt.bitsPerSample / 8
-        return ByteBuffer.allocate(WAV_HEADER_SIZE).order(ByteOrder.LITTLE_ENDIAN).apply {
-            put("RIFF".toByteArray(Charsets.US_ASCII))
-            putInt((36 + dataLen).toInt())
-            put("WAVE".toByteArray(Charsets.US_ASCII))
-            put("fmt ".toByteArray(Charsets.US_ASCII))
-            putInt(16)                  // PCM subchunk size
-            putShort(1)                 // audio format = PCM
-            putShort(fmt.channels.toShort())
-            putInt(fmt.sampleRate)
-            putInt(byteRate)
-            putShort((fmt.channels * fmt.bitsPerSample / 8).toShort()) // block align
-            putShort(fmt.bitsPerSample.toShort())
-            put("data".toByteArray(Charsets.US_ASCII))
-            putInt(dataLen.toInt())
-        }.array()
+    private fun copy(input: RandomAccessFile, output: RandomAccessFile, length: Long): Long {
+        val buffer = ByteArray(COPY_BUFFER_SIZE)
+        var remaining = length
+        var written = 0L
+        while (remaining > 0L) {
+            val read = input.read(buffer, 0, minOf(buffer.size.toLong(), remaining).toInt())
+            if (read < 0) break
+            output.write(buffer, 0, read)
+            written += read
+            remaining -= read
+        }
+        return written
     }
+
+    private fun ByteArray.hasTag(offset: Int, tag: String): Boolean =
+        this[offset] == tag[0].code.toByte() &&
+            this[offset + 1] == tag[1].code.toByte() &&
+            this[offset + 2] == tag[2].code.toByte() &&
+            this[offset + 3] == tag[3].code.toByte()
+
+    private fun ByteArray.le16(offset: Int): Int =
+        (this[offset].toInt() and 0xff) or ((this[offset + 1].toInt() and 0xff) shl 8)
+
+    private fun ByteArray.le32(offset: Int): Int =
+        (this[offset].toInt() and 0xff) or
+            ((this[offset + 1].toInt() and 0xff) shl 8) or
+            ((this[offset + 2].toInt() and 0xff) shl 16) or
+            ((this[offset + 3].toInt() and 0xff) shl 24)
+
+    private const val COPY_BUFFER_SIZE = 64 * 1024
 }

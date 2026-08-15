@@ -1,7 +1,11 @@
 /*
- * Copyright (C) 2026 The Dictate Contributors
+ * Copyright (C) 2026 DevEmperor (Dictate)
  *
- * Licensed under the Apache License, Version 2.0 (the "License").
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
  */
 
 package dev.patrickgold.florisboard.dictate.wear
@@ -82,6 +86,7 @@ object PhoneWearSettingsResolver {
             rewordingApi = rewordingPreset.transcriptionApi,
             systemPrompt = systemPrompt(prefs),
             autoApplyPrompts = autoApply,
+            hapticFeedback = prefs.dictate.hapticFeedback.get(),
         )
     }
 
@@ -93,7 +98,7 @@ object PhoneWearSettingsResolver {
     }.takeIf { it.isNotBlank() }
 
     private fun presetFor(account: ProviderAccount) = when {
-        account.isCustom -> ProviderRegistry.custom(account.customBaseUrl)
+        account.isCustom -> ProviderRegistry.custom(account.customBaseUrl, realtime = account.customRealtime)
         else -> ProviderRegistry.byId(account.providerId) ?: ProviderRegistry.OPENAI
     }
 

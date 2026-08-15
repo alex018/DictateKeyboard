@@ -50,7 +50,9 @@ import dev.patrickgold.florisboard.app.ext.ExtensionListScreen
 import dev.patrickgold.florisboard.app.ext.ExtensionListScreenType
 import dev.patrickgold.florisboard.app.ext.ExtensionViewScreen
 import dev.patrickgold.florisboard.app.settings.HomeScreen
+import dev.patrickgold.florisboard.app.settings.search.SettingsSearchScreen
 import dev.patrickgold.florisboard.app.settings.about.AboutScreen
+import dev.patrickgold.florisboard.app.settings.about.DataAttributionsScreen
 import dev.patrickgold.florisboard.app.settings.about.ProjectLicenseScreen
 import dev.patrickgold.florisboard.app.settings.about.ThirdPartyLicensesScreen
 import dev.patrickgold.florisboard.app.settings.advanced.BackupScreen
@@ -60,13 +62,20 @@ import dev.patrickgold.florisboard.app.settings.advanced.RestoreScreen
 import dev.patrickgold.florisboard.app.settings.clipboard.ClipboardScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictateLanguagesScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictateMappingsScreen
+import dev.patrickgold.florisboard.app.settings.dictate.DictateCloudScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictateProvidersScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictateProxyScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictateWearScreen
+import dev.patrickgold.florisboard.app.settings.dictate.DictatePromptLibraryScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictatePromptsScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictateFloatingButtonScreen
+import dev.patrickgold.florisboard.app.settings.dictate.DictateFormattingScreen
+import dev.patrickgold.florisboard.app.settings.dictate.DictateLayoutScreen
+import dev.patrickgold.florisboard.app.settings.dictate.DictateOutputScreen
+import dev.patrickgold.florisboard.app.settings.dictate.DictateRecordingScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictateRewordingScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictateScreen
+import dev.patrickgold.florisboard.app.settings.dictate.DictateHistoryScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictateStatsScreen
 import dev.patrickgold.florisboard.app.settings.dictionary.DictionaryScreen
 import dev.patrickgold.florisboard.app.settings.dictionary.UserDictionaryScreen
@@ -119,6 +128,10 @@ object Routes {
         object Home
 
         @Serializable
+        @Deeplink("settings/search")
+        object Search
+
+        @Serializable
         @Deeplink("settings/dictate")
         object Dictate
 
@@ -133,6 +146,10 @@ object Routes {
         @Serializable
         @Deeplink("settings/dictate/mappings")
         object DictateMappings
+
+        @Serializable
+        @Deeplink("settings/dictate/cloud")
+        object DictateCloud
 
         @Serializable
         @Deeplink("settings/dictate/proxy")
@@ -151,12 +168,36 @@ object Routes {
         object DictateStats
 
         @Serializable
+        @Deeplink("settings/dictate/history")
+        object DictateHistory
+
+        @Serializable
         @Deeplink("settings/dictate/floating-button")
         object DictateFloatingButton
 
         @Serializable
+        @Deeplink("settings/dictate/formatting")
+        object DictateFormatting
+
+        @Serializable
+        @Deeplink("settings/dictate/recording")
+        object DictateRecording
+
+        @Serializable
+        @Deeplink("settings/dictate/output")
+        object DictateOutput
+
+        @Serializable
+        @Deeplink("settings/dictate/layout")
+        object DictateLayout
+
+        @Serializable
         @Deeplink("settings/dictate/prompts")
         data class DictatePrompts(val editPromptId: Int = -1)
+
+        @Serializable
+        @Deeplink("settings/dictate/prompts/library")
+        object DictatePromptLibrary
 
         @Serializable
         @Deeplink("settings/localization")
@@ -249,6 +290,10 @@ object Routes {
         @Serializable
         @Deeplink("settings/about/third-party-licenses")
         object ThirdPartyLicenses
+
+        @Serializable
+        @Deeplink("settings/about/data-attributions")
+        object DataAttributions
     }
 
     object Devtools {
@@ -326,20 +371,28 @@ object Routes {
             composable<Setup.Screen> { SetupScreen() }
 
             composableWithDeepLink(Settings.Home::class) { HomeScreen() }
+            composableWithDeepLink(Settings.Search::class) { SettingsSearchScreen() }
 
             composableWithDeepLink(Settings.Dictate::class) { DictateScreen() }
             composableWithDeepLink(Settings.DictateLanguages::class) { DictateLanguagesScreen() }
             composableWithDeepLink(Settings.DictateProviders::class) { DictateProvidersScreen() }
             composableWithDeepLink(Settings.DictateMappings::class) { DictateMappingsScreen() }
+            composableWithDeepLink(Settings.DictateCloud::class) { DictateCloudScreen() }
             composableWithDeepLink(Settings.DictateProxy::class) { DictateProxyScreen() }
             composableWithDeepLink(Settings.DictateWear::class) { DictateWearScreen() }
             composableWithDeepLink(Settings.DictateRewording::class) { DictateRewordingScreen() }
+            composableWithDeepLink(Settings.DictateFormatting::class) { DictateFormattingScreen() }
+            composableWithDeepLink(Settings.DictateRecording::class) { DictateRecordingScreen() }
+            composableWithDeepLink(Settings.DictateOutput::class) { DictateOutputScreen() }
+            composableWithDeepLink(Settings.DictateLayout::class) { DictateLayoutScreen() }
             composableWithDeepLink(Settings.DictateStats::class) { DictateStatsScreen() }
+            composableWithDeepLink(Settings.DictateHistory::class) { DictateHistoryScreen() }
             composableWithDeepLink(Settings.DictateFloatingButton::class) { DictateFloatingButtonScreen() }
             composableWithDeepLink(Settings.DictatePrompts::class) { navBackStack ->
                 val payload = navBackStack.toRoute<Settings.DictatePrompts>()
                 DictatePromptsScreen(editPromptId = payload.editPromptId)
             }
+            composableWithDeepLink(Settings.DictatePromptLibrary::class) { DictatePromptLibraryScreen() }
 
             composableWithDeepLink(Settings.Localization::class) { LocalizationScreen() }
             composableWithDeepLink(Settings.SelectLocale::class) { SelectLocaleScreen() }
@@ -386,6 +439,7 @@ object Routes {
             composableWithDeepLink(Settings.About::class) { AboutScreen() }
             composableWithDeepLink(Settings.ProjectLicense::class) { ProjectLicenseScreen() }
             composableWithDeepLink(Settings.ThirdPartyLicenses::class) { ThirdPartyLicensesScreen() }
+            composableWithDeepLink(Settings.DataAttributions::class) { DataAttributionsScreen() }
 
             composableWithDeepLink(Devtools.Home::class) { DevtoolsScreen() }
             composableWithDeepLink(Devtools.AndroidLocales::class) { AndroidLocalesScreen() }

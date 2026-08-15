@@ -36,6 +36,12 @@ data class ProviderAccount(
     val customBaseUrl: String = "",
     val transcriptionModel: String = "",
     val chatModel: String = "",
+    /**
+     * Chosen real-time streaming model for this provider (issue #128); empty = use the preset's
+     * defaultRealtimeModel. Additive field, defaults empty for older stored accounts. Only meaningful
+     * when the provider supports realtime and global real-time mode is on.
+     */
+    val realtimeModel: String = "",
     val cachedModels: List<String> = emptyList(),
     val cachedModelsAt: Long = 0L,
     /**
@@ -45,16 +51,63 @@ data class ProviderAccount(
      */
     val cachedAudioModels: List<String> = emptyList(),
     /**
+     * Ids from [cachedModels] that are DEDICATED speech-to-text models (audio in → transcription out, e.g.
+     * OpenRouter's MAI-Transcribe / Whisper / Parakeet). Surfaced in the transcription picker but kept
+     * separate from [cachedAudioModels] so they're never mistaken for chat-audio (#130) models (issue #157).
+     * Additive field, defaults empty; repopulated on the next live model fetch.
+     */
+    val cachedTranscriptionModels: List<String> = emptyList(),
+    /**
      * Single-call multimodal transcription (issue #130): when on, this provider's transcription model is
      * an audio-capable chat model and dictation is sent to `chat/completions` with `input_audio` in one
      * request (transcribe + format together) instead of using the dedicated STT endpoint plus a separate
      * rewording call. Additive field, defaults off for older stored accounts.
      */
     val transcriptionViaChat: Boolean = false,
+    /**
+     * Self-hosted streaming (issue #249): this endpoint speaks the OpenAI realtime protocol under
+     * `/v1/realtime`, so live transcription can run against it instead of a cloud provider. Nothing in an
+     * HTTP catalog says whether a server does, so the user tells us. Additive field, defaults off.
+     */
+    val customRealtime: Boolean = false,
+    /**
+     * Wake-on-demand support (issue #189): send a throwaway `/models` request as soon as a rewording is
+     * known to be coming, so a machine that only wakes on network traffic has the dictation's length as a
+     * head start instead of the user waiting out its boot.
+     *
+     * A common self-hosting shape is a small always-on box in front of a GPU machine that sleeps between
+     * jobs. Only ever useful for an endpoint of the user's own, and nothing about a server says whether it
+     * sleeps, so this is theirs to state. Additive field, defaults off.
+     */
+    val customWarmUp: Boolean = false,
+    /**
+     * Dictate Cloud only — the credit account this device talks to. The wallet's bearer token is not
+     * stored here but in [apiKey]: it is what the server authenticates, so putting it anywhere else
+     * would mean teaching every call site about a second kind of credential.
+     *
+     * [walletRecoveryCode] is kept because the server hands it out exactly once, when the account is
+     * created, and only ever stores its hash. If it is not written down here at that moment it
+     * cannot be recovered later — and it is the only thing standing between a factory reset and
+     * lost credit, since Google does not restore a consumed one-time product.
+     */
+    val walletId: String = "",
+    val walletRecoveryCode: String = "",
+    /**
+     * Last balance the server reported, in seconds and included rewordings; -1 means never fetched.
+     * A cache for display only — every request is metered server-side, so this may lag behind and
+     * nothing is ever decided from it.
+     */
+    val balanceSeconds: Int = -1,
+    val balanceRewords: Int = -1,
+    val balanceCheckedAt: Long = 0L,
 ) {
     /** True once the user has supplied a usable key (or this is a keyless endpoint like Ollama). */
     val hasKey: Boolean
         get() = apiKey.isNotBlank()
+
+    /** True once a Dictate Cloud credit account exists on this device (see [walletId]). */
+    val hasWallet: Boolean
+        get() = walletId.isNotBlank() && apiKey.isNotBlank()
 
     /** True for user-defined endpoints (the legacy singular "custom" id or a "custom:<uuid>" one). */
     val isCustom: Boolean

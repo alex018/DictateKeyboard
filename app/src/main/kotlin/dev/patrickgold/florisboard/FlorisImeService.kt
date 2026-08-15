@@ -41,7 +41,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
+import android.view.WindowManager
 import androidx.lifecycle.lifecycleScope
+import dev.patrickgold.florisboard.dictate.DictateController
 import dev.patrickgold.florisboard.app.FlorisAppActivity
 import dev.patrickgold.florisboard.app.FlorisPreferenceStore
 import dev.patrickgold.florisboard.ime.ImeUiMode
@@ -279,6 +281,30 @@ class FlorisImeService : LifecycleInputMethodService() {
             updateInputViewShown()
         }
 
+        // Keep the screen on for the whole dictation (issue #231), applied to the IME window itself.
+        // This used to live in the Smartbar's recording UI, but that composable is not composed while a
+        // panel (prompts / history / GIF) is open — so the flag silently dropped mid-dictation, and with
+        // no recent touch input the screen then turned off almost immediately, killing the recording.
+        // Driving it from the controller state at window level makes it independent of what UI is shown.
+        // Also held through transcribing/rewording so the finished text can't be lost to a sleeping screen.
+        combine(
+            DictateController.state,
+            prefs.dictate.keepScreenAwake.asFlow(),
+        ) { state, keepAwake ->
+            keepAwake && (
+                state is DictateController.UiState.Recording ||
+                    state is DictateController.UiState.Transcribing ||
+                    state is DictateController.UiState.Rewording
+                )
+        }.collectIn(lifecycleScope) { keepOn ->
+            val imeWindow = window?.window ?: return@collectIn
+            if (keepOn) {
+                imeWindow.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            } else {
+                imeWindow.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            }
+        }
+
         @Suppress("DEPRECATION") // We do not retrieve the wallpaper but only listen to changes
         registerReceiver(wallpaperChangeReceiver, IntentFilter(Intent.ACTION_WALLPAPER_CHANGED))
     }
@@ -323,6 +349,9 @@ class FlorisImeService : LifecycleInputMethodService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        // If the service is torn down mid-recording, finalize and keep the audio and release the mic
+        // instead of leaking the (process-scoped) recorder (issue #147). No-op when not recording.
+        dev.patrickgold.florisboard.dictate.DictateController.stashRecordingOnHide(this)
         unregisterReceiver(wallpaperChangeReceiver)
         FlorisImeServiceReference = WeakReference(null)
     }
@@ -358,6 +387,15 @@ class FlorisImeService : LifecycleInputMethodService() {
 
         val instantRecordingOn = prefs.dictate.instantRecording.get()
 
+        // Don't auto-start on number-only fields (number/phone/PIN/date-time), where dictation rarely
+        // makes sense, when the user opted to skip them (issue #146).
+        val isNumericField = editorInfo.inputAttributes.type in setOf(
+            dev.patrickgold.florisboard.ime.editor.InputAttributes.Type.NUMBER,
+            dev.patrickgold.florisboard.ime.editor.InputAttributes.Type.PHONE,
+            dev.patrickgold.florisboard.ime.editor.InputAttributes.Type.DATETIME,
+        )
+        val skipInstantForNumeric = isNumericField && prefs.dictate.instantRecordingSkipNumeric.get()
+
         // Interrupted recording: if a recording was finalized because the keyboard closed mid-recording,
         // offer to send it now. This recovery feature is mutually exclusive with instant recording: when
         // instant recording is on we never offer (and never stash — see stashRecordingOnHide), so opening
@@ -371,6 +409,7 @@ class FlorisImeService : LifecycleInputMethodService() {
             !offeredInterrupted &&
             !restarting &&
             instantRecordingOn &&
+            !skipInstantForNumeric &&
             dev.patrickgold.florisboard.dictate.DictateController.state.value is
                 dev.patrickgold.florisboard.dictate.DictateController.UiState.Idle &&
             androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO) ==

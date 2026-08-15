@@ -41,6 +41,16 @@ data class ProviderPreset(
     /** Wire format of this provider's speech-to-text endpoint (OpenRouter differs – see [TranscriptionApi]). */
     val transcriptionApi: TranscriptionApi = TranscriptionApi.OPENAI_MULTIPART,
     /**
+     * Real-time streaming transcription (issue #128). [supportsRealtime] gates whether the global
+     * real-time mode applies to this provider; [realtimeApi] picks the WebSocket wire format;
+     * [defaultRealtimeModel] is the streaming model used unless the user chooses another from
+     * [curatedRealtimeModels]. Left off for batch-only providers (Groq, OpenRouter, …).
+     */
+    val supportsRealtime: Boolean = false,
+    val realtimeApi: RealtimeApi? = null,
+    val defaultRealtimeModel: String? = null,
+    val curatedRealtimeModels: List<String> = emptyList(),
+    /**
      * True for a built-in provider whose base URL is user-editable (issue #136): the editor shows a base
      * URL field pre-filled with [baseUrl], so e.g. Ollama can point at a LAN server instead of localhost.
      * Distinct from [isCustom] (a fully user-defined endpoint with its own name).
@@ -65,13 +75,54 @@ object ProviderRegistry {
         supportsDynamicModels = true,
         apiKeyUrl = "https://platform.openai.com/api-keys",
         defaultChatModel = "gpt-4o-mini",
-        defaultTranscriptionModel = "gpt-4o-mini-transcribe",
+        // gpt-transcribe (2026-07) is both cheaper than gpt-4o-transcribe ($0.0045 vs $0.006 per minute)
+        // and markedly more accurate, so it is the default. This applies to everyone who never chose a
+        // model — the account stores an empty string in that case and resolves through here on every
+        // call, so existing installs move to it too. An explicit choice is stored verbatim and untouched.
+        defaultTranscriptionModel = "gpt-transcribe",
         curatedChatModels = listOf(
             "gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-4.1", "gpt-4.1-nano",
         ),
         curatedTranscriptionModels = listOf(
-            "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "whisper-1",
+            "gpt-transcribe", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "whisper-1",
         ),
+        // Realtime (#128): wss /v1/realtime?intent=transcription. gpt-live-transcribe is the streaming
+        // model of the gpt-transcribe generation and emits deltas like gpt-realtime-whisper did, at the
+        // same $0.017/min but a lower word error rate (11.65% -> 9.60%), so it is the default. The
+        // "-transcribe" models are more accurate still but final-only, with no interim text.
+        supportsRealtime = true,
+        realtimeApi = RealtimeApi.OPENAI,
+        defaultRealtimeModel = "gpt-live-transcribe",
+        curatedRealtimeModels = listOf(
+            "gpt-live-transcribe", "gpt-realtime-whisper", "gpt-transcribe",
+            "gpt-4o-transcribe", "gpt-4o-mini-transcribe",
+        ),
+    )
+
+    /**
+     * Dictate Cloud — credit bought inside the app instead of an API key of one's own.
+     *
+     * Technically the least remarkable entry in this list: the server speaks the same OpenAI formats
+     * as everything else, so [OpenAiCompatibleClient] reaches it unchanged and the wallet token
+     * simply sits where an API key would, in [ProviderAccount.apiKey]. What differs is who decides.
+     * The model is not the user's pick but the server's, because the price is calculated from it —
+     * so there is nothing for the picker to offer and [supportsDynamicModels] is false. The ids
+     * below travel with the request and are overwritten upstream; they exist so the request stays
+     * well-formed, not because they name anything real.
+     *
+     * Realtime stays off on purpose rather than by omission: streaming costs nearly four times a
+     * dictated minute, and the on-device engine already does it for nothing.
+     */
+    val CLOUD = ProviderPreset(
+        id = "cloud",
+        displayName = "Dictate Cloud",
+        baseUrl = "https://api.dictatekeyboard.com/v1/",
+        capabilities = CHAT_AND_STT,
+        supportsDynamicModels = false,
+        apiKeyUrl = null,
+        defaultChatModel = "dictate-cloud",
+        defaultTranscriptionModel = "dictate-cloud",
+        supportsRealtime = false,
     )
 
     val GROQ = ProviderPreset(
@@ -96,18 +147,23 @@ object ProviderRegistry {
         displayName = "OpenRouter",
         baseUrl = "https://openrouter.ai/api/v1/",
         // OpenRouter routes both chat and speech-to-text (its STT endpoint fronts Whisper, Voxtral,
-        // MAI-Transcribe, …) – but via a JSON/base64 body, not the OpenAI multipart upload.
+        // MAI-Transcribe, …). Its endpoint currently accepts OpenAI-compatible multipart; streaming the
+        // file avoids the extra base64 copy and oversized JSON body. The client retains documented JSON
+        // as a compatibility fallback if OpenRouter explicitly rejects multipart.
         capabilities = CHAT_AND_STT,
-        transcriptionApi = TranscriptionApi.OPENROUTER_JSON,
+        transcriptionApi = TranscriptionApi.OPENROUTER_MULTIPART,
         supportsDynamicModels = true,
         apiKeyUrl = "https://openrouter.ai/keys",
         // OpenRouter exposes hundreds of models (incl. Claude, Gemini, Llama …); users pick from the
         // live catalog. This is just a safe default to start with and is fully user-overridable.
         defaultChatModel = "openai/gpt-4o-mini",
         defaultTranscriptionModel = "openai/whisper-large-v3",
-        // Verified against OpenRouter's STT docs; the live picker adds the rest (Voxtral, MAI, …).
+        // Dedicated STT models (MAI-Transcribe, Whisper, Parakeet, …) are discovered live now: the picker
+        // queries /models?output_modalities=all and classifies audio→transcription entries (issue #157).
+        // This short curated list is just an offline baseline shown before a catalog fetch / without a key.
         curatedTranscriptionModels = listOf(
-            "openai/whisper-large-v3", "openai/whisper-1",
+            "microsoft/mai-transcribe-1.5",
+            "openai/gpt-4o-transcribe", "openai/whisper-large-v3",
         ),
         // Attribution headers recommended by OpenRouter: both are used for app ranking and some routes
         // reject requests without an HTTP-Referer. The value is a stable identifier, not a real URL.
@@ -140,6 +196,39 @@ object ProviderRegistry {
         curatedTranscriptionModels = listOf(
             "gemini-2.5-flash", "gemini-3.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro",
         ),
+        // Realtime (#128): Live API (BidiGenerateContent) with input_audio_transcription. Live models are
+        // a distinct family — the exact id is verified when the Gemini Live session is built (later phase).
+        // Realtime disabled: the Live API connects but never acks `setup` (no setupComplete) with our
+        // config — the bidirectional Live protocol needs verified model id + setup shape (#128). Keep the
+        // wiring so it can be re-enabled once confirmed; until then Gemini uses batch transcription.
+        supportsRealtime = false,
+        realtimeApi = RealtimeApi.GEMINI,
+        defaultRealtimeModel = "gemini-live-2.5-flash-preview",
+        curatedRealtimeModels = listOf("gemini-live-2.5-flash-preview"),
+    )
+
+    /**
+     * Anthropic Claude — rewording only (issue: Anthropic provider). Anthropic has no speech-to-text or
+     * realtime-audio API, so this is [CHAT_ONLY]; Claude is excellent for rewording, translation and tone
+     * changes. It is reached through Anthropic's OpenAI-compatible endpoint (`POST {baseUrl}chat/completions`
+     * with an `Authorization: Bearer <key>` header), so the standard [OpenAiCompatibleClient] works
+     * unchanged. `GET {baseUrl}models` also accepts that same Bearer key and returns the Claude models in
+     * the OpenAI `{ data: [{ id }] }` shape, so [supportsDynamicModels] = true keeps the picker current when
+     * Anthropic adds/renames models — no app update needed; [curatedChatModels] is only the offline baseline
+     * shown before a catalog fetch / without a key. Default is the fast/cheap Haiku, mirroring the mini/flash
+     * defaults of the other providers. Verify ids against Anthropic's model list when editing – never guess.
+     */
+    val ANTHROPIC = ProviderPreset(
+        id = "anthropic",
+        displayName = "Anthropic (Claude)",
+        baseUrl = "https://api.anthropic.com/v1/",
+        capabilities = CHAT_ONLY,
+        supportsDynamicModels = true,
+        apiKeyUrl = "https://console.anthropic.com/settings/keys",
+        defaultChatModel = "claude-haiku-4-5-20251001",
+        curatedChatModels = listOf(
+            "claude-haiku-4-5-20251001", "claude-sonnet-5", "claude-opus-4-8",
+        ),
     )
 
     val TOGETHER = ProviderPreset(
@@ -170,6 +259,13 @@ object ProviderRegistry {
         apiKeyUrl = "https://console.mistral.ai/api-keys",
         defaultTranscriptionModel = "voxtral-mini-latest",
         curatedTranscriptionModels = listOf("voxtral-mini-latest"),
+        // Realtime (#128): Voxtral realtime (/v1/realtime, vLLM-style). Model id verified when built.
+        // Realtime disabled: Mistral's raw WS returns 403 and the protocol is SDK-only/unverified (#128).
+        // Keep the wiring (RealtimeApi + session) so it can be re-enabled once the protocol is confirmed.
+        supportsRealtime = false,
+        realtimeApi = RealtimeApi.MISTRAL_VOXTRAL,
+        defaultRealtimeModel = "voxtral-mini-transcribe-realtime-2602",
+        curatedRealtimeModels = listOf("voxtral-mini-transcribe-realtime-2602"),
     )
 
     val SONIOX = ProviderPreset(
@@ -186,6 +282,11 @@ object ProviderRegistry {
         defaultTranscriptionModel = "stt-async-v5",
         // Verified against Soniox's model catalog; the live picker adds any newer async models.
         curatedTranscriptionModels = listOf("stt-async-v5"),
+        // Realtime (#128): wss stt-rt.soniox.com/transcribe-websocket, model stt-rt-v5.
+        supportsRealtime = true,
+        realtimeApi = RealtimeApi.SONIOX,
+        defaultRealtimeModel = "stt-rt-v5",
+        curatedRealtimeModels = listOf("stt-rt-v5"),
     )
 
     /**
@@ -204,6 +305,11 @@ object ProviderRegistry {
         apiKeyUrl = "https://elevenlabs.io/app/settings/api-keys",
         defaultTranscriptionModel = "scribe_v2",
         curatedTranscriptionModels = listOf("scribe_v2"),
+        // Realtime (#128): Scribe v2 Realtime WebSocket (~150ms). Model id verified when the session is built.
+        supportsRealtime = true,
+        realtimeApi = RealtimeApi.ELEVENLABS,
+        defaultRealtimeModel = "scribe_v2_realtime",
+        curatedRealtimeModels = listOf("scribe_v2_realtime"),
     )
 
     /**
@@ -221,6 +327,11 @@ object ProviderRegistry {
         apiKeyUrl = "https://console.deepgram.com/",
         defaultTranscriptionModel = "nova-3",
         curatedTranscriptionModels = listOf("nova-3", "nova-2"),
+        // Realtime (#128): wss /v1/listen?encoding=linear16&sample_rate=16000&interim_results=true.
+        supportsRealtime = true,
+        realtimeApi = RealtimeApi.DEEPGRAM,
+        defaultRealtimeModel = "nova-3",
+        curatedRealtimeModels = listOf("nova-3", "nova-2"),
     )
 
     /**
@@ -237,6 +348,12 @@ object ProviderRegistry {
         apiKeyUrl = "https://www.assemblyai.com/app/api-keys",
         defaultTranscriptionModel = "universal-3-pro",
         curatedTranscriptionModels = listOf("universal-3-pro", "universal-2"),
+        // Realtime (#128): Universal-Streaming wss streaming.assemblyai.com/v3/ws (~300ms). Model ids
+        // verified when the session is built (billed by connection-open duration).
+        supportsRealtime = true,
+        realtimeApi = RealtimeApi.ASSEMBLYAI,
+        defaultRealtimeModel = "universal-streaming",
+        curatedRealtimeModels = listOf("universal-streaming"),
     )
 
     val XAI = ProviderPreset(
@@ -294,17 +411,23 @@ object ProviderRegistry {
 
     /** All built-in presets in display order. The custom option is added by the UI on top of these. */
     val presets: List<ProviderPreset> = listOf(
-        OPENAI, GROQ, OPENROUTER, GEMINI, TOGETHER, DEEPINFRA, MISTRAL, SONIOX,
+        CLOUD, OPENAI, GROQ, OPENROUTER, GEMINI, ANTHROPIC, TOGETHER, DEEPINFRA, MISTRAL, SONIOX,
         ELEVENLABS, DEEPGRAM, ASSEMBLYAI, XAI, DEEPSEEK, OLLAMA, LOCAL,
     )
 
     fun byId(id: String): ProviderPreset? = presets.firstOrNull { it.id == id }
 
     /** Builds a preset for a user-defined OpenAI-compatible endpoint. */
+    /**
+     * [realtime] marks a server the user has told us speaks the OpenAI realtime protocol under
+     * `/v1/realtime` (#249). Several self-hosted transcription servers do; there is no way to detect it
+     * without connecting, so it is a switch in the editor rather than a guess.
+     */
     fun custom(
         baseUrl: String,
         displayName: String = "Custom server",
         capabilities: ProviderCapabilities = CHAT_AND_STT,
+        realtime: Boolean = false,
     ): ProviderPreset = ProviderPreset(
         id = "custom",
         displayName = displayName,
@@ -312,5 +435,7 @@ object ProviderRegistry {
         capabilities = capabilities,
         supportsDynamicModels = true,
         isCustom = true,
+        supportsRealtime = realtime,
+        realtimeApi = if (realtime) RealtimeApi.OPENAI else null,
     )
 }

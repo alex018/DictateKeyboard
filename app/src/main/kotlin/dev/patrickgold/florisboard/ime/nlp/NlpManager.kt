@@ -22,11 +22,14 @@ import android.util.LruCache
 import dev.patrickgold.florisboard.app.FlorisPreferenceStore
 import dev.patrickgold.florisboard.clipboardManager
 import dev.patrickgold.florisboard.editorInstance
+import dev.patrickgold.florisboard.glideTypingManager
 import dev.patrickgold.florisboard.ime.clipboard.provider.ClipboardItem
 import dev.patrickgold.florisboard.ime.clipboard.provider.ItemType
 import dev.patrickgold.florisboard.ime.core.Subtype
 import dev.patrickgold.florisboard.ime.editor.EditorContent
 import dev.patrickgold.florisboard.ime.editor.EditorRange
+import dev.patrickgold.florisboard.ime.dictionary.DictionaryManager
+import dev.patrickgold.florisboard.ime.dictionary.UserDictionaryEntry
 import dev.patrickgold.florisboard.ime.media.emoji.EmojiSuggestionProvider
 import dev.patrickgold.florisboard.ime.nlp.han.HanShapeBasedLanguageProvider
 import dev.patrickgold.florisboard.ime.nlp.latin.LatinLanguageProvider
@@ -50,6 +53,10 @@ import kotlin.properties.Delegates
 
 private const val BLANK_STR_PATTERN = "^\\s*$"
 
+// Frequency stored for a word learned from the suggestion strip (issue #241) — the maximum, matching what
+// the user dictionary settings screen assigns to a hand-added word.
+private const val USER_DICTIONARY_FREQ = 255
+
 class NlpManager(context: Context) {
     private val blankStrRegex = Regex(BLANK_STR_PATTERN)
 
@@ -58,6 +65,9 @@ class NlpManager(context: Context) {
     private val editorInstance by context.editorInstance()
     private val keyboardManager by context.keyboardManager()
     private val subtypeManager by context.subtypeManager()
+    // Kept as the Lazy rather than unwrapped with `by`: the glide manager reaches back for this very
+    // NlpManager, so it must not be built while this one is still being constructed.
+    private val glideTypingManager = context.glideTypingManager()
 
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
     private val clipboardSuggestionProvider = ClipboardSuggestionProvider(context)
@@ -166,7 +176,7 @@ class NlpManager(context: Context) {
             precedingWords = precedingWords,
             followingWords = followingWords,
             maxSuggestionCount = maxSuggestionCount,
-            allowPossiblyOffensive = !prefs.suggestion.blockPossiblyOffensive.get(),
+            allowPossiblyOffensive = true,
             isPrivateSession = keyboardManager.activeState.isIncognitoMode,
         )
     }
@@ -193,7 +203,17 @@ class NlpManager(context: Context) {
             || prefs.emoji.suggestionEnabled.get()
             || providerForcesSuggestionOn(subtypeManager.activeSubtype)
 
+    // Set by a glide-typing commit: the word commit itself triggers one resetSuggestions → suggest() that
+    // would immediately wipe the just-shown glide alternatives. This one-shot flag makes that next suggest()
+    // a no-op so the alternatives stay in the strip until the user's next input (issue #127).
+    @Volatile
+    private var holdNextSuggest = false
+
     fun suggest(subtype: Subtype, content: EditorContent) {
+        if (holdNextSuggest) {
+            holdNextSuggest = false
+            return
+        }
         val reqTime = SystemClock.uptimeMillis()
         scope.launch {
             val emojiSuggestions = when {
@@ -202,7 +222,7 @@ class NlpManager(context: Context) {
                         subtype = subtype,
                         content = content,
                         maxCandidateCount = prefs.emoji.suggestionCandidateMaxCount.get(),
-                        allowPossiblyOffensive = !prefs.suggestion.blockPossiblyOffensive.get(),
+                        allowPossiblyOffensive = true,
                         isPrivateSession = keyboardManager.activeState.isIncognitoMode,
                     )
                 }
@@ -217,7 +237,7 @@ class NlpManager(context: Context) {
                         subtype = subtype,
                         content = content,
                         maxCandidateCount = 8,
-                        allowPossiblyOffensive = !prefs.suggestion.blockPossiblyOffensive.get(),
+                        allowPossiblyOffensive = true,
                         isPrivateSession = keyboardManager.activeState.isIncognitoMode,
                     )
                 }
@@ -233,8 +253,9 @@ class NlpManager(context: Context) {
         }
     }
 
-    fun suggestDirectly(suggestions: List<SuggestionCandidate>) {
+    fun suggestDirectly(suggestions: List<SuggestionCandidate>, holdNext: Boolean = false) {
         val reqTime = SystemClock.uptimeMillis()
+        holdNextSuggest = holdNext
         runBlocking {
             internalSuggestions = reqTime to suggestions
         }
@@ -249,6 +270,45 @@ class NlpManager(context: Context) {
 
     fun getAutoCommitCandidate(): SuggestionCandidate? {
         return activeCandidates.firstOrNull { it.isEligibleForAutoCommit }
+    }
+
+    /** Outcome of [addToUserDictionary], so the caller knows what (if anything) to tell the user. */
+    enum class AddToDictionaryResult { ADDED, ALREADY_PRESENT, UNAVAILABLE }
+
+    /**
+     * Adds [candidate]'s word to the personal dictionary for [subtype]'s language (issue #241) and re-runs
+     * the suggestions so it is treated as known from the very next keystroke — which is the point of the
+     * feature: [LatinLanguageProvider] consults the user dictionary in `isKnownWord`, so a learned word is
+     * never autocorrected again.
+     *
+     * Stored at the maximum frequency, matching what the settings screen uses when a word is added by hand.
+     */
+    fun addToUserDictionary(subtype: Subtype, candidate: SuggestionCandidate): AddToDictionaryResult {
+        val word = candidate.text.toString().trim()
+        if (word.isEmpty()) return AddToDictionaryResult.UNAVAILABLE
+        val dao = DictionaryManager.default().florisUserDictionaryDao()
+            ?: return AddToDictionaryResult.UNAVAILABLE // the personal dictionary is switched off
+        val locale = subtype.primaryLocale
+        return runCatching {
+            if (dao.queryExactFuzzyLocale(word, locale).isNotEmpty()) {
+                AddToDictionaryResult.ALREADY_PRESENT
+            } else {
+                dao.insert(
+                    UserDictionaryEntry(
+                        id = 0,
+                        word = word,
+                        freq = USER_DICTIONARY_FREQ,
+                        locale = locale.localeTag(),
+                        shortcut = null,
+                    )
+                )
+                scope.launch { suggest(subtypeManager.activeSubtype, editorInstance.activeContent) }
+                // Glide builds its index up front, so a word added mid-session would otherwise be typable
+                // but not swipeable until the next subtype change (issue #263).
+                glideTypingManager.value.invalidateWordData()
+                AddToDictionaryResult.ADDED
+            }
+        }.getOrDefault(AddToDictionaryResult.UNAVAILABLE)
     }
 
     fun removeSuggestion(subtype: Subtype, candidate: SuggestionCandidate): Boolean {
@@ -282,7 +342,7 @@ class NlpManager(context: Context) {
                         subtype = Subtype.DEFAULT,
                         content = editorInstance.activeContent,
                         maxCandidateCount = 8,
-                        allowPossiblyOffensive = !prefs.suggestion.blockPossiblyOffensive.get(),
+                        allowPossiblyOffensive = true,
                         isPrivateSession = keyboardManager.activeState.isIncognitoMode,
                     ).ifEmpty {
                         buildList {
@@ -314,9 +374,15 @@ class NlpManager(context: Context) {
         }*/
         val isSelection = editorInstance.activeContent.selection.isSelectionMode
         val isExpanded = list1.isNullOrEmpty() && list2.isNullOrEmpty() || isSelection
-        scope.launch {
-            prefs.smartbar.sharedActionsExpandWithAnimation.set(false)
-            prefs.smartbar.sharedActionsExpanded.set(isExpanded)
+        // Only write when the expanded state actually changes. This runs on every keystroke (via
+        // assembleCandidates); the state usually stays the same while typing a word, so the guard avoids
+        // two redundant pref writes per character that would otherwise bounce the Smartbar flows into a
+        // recomposition (and schedule a datastore persist) each time — a contributor to the typing jank.
+        if (prefs.smartbar.sharedActionsExpanded.get() != isExpanded) {
+            scope.launch {
+                prefs.smartbar.sharedActionsExpandWithAnimation.set(false)
+                prefs.smartbar.sharedActionsExpanded.set(isExpanded)
+            }
         }
     }
 

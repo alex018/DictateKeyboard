@@ -9,7 +9,7 @@
     <string name="one_handed__move_start_btn_content_description" comment="Content description for the one-handed move to left button">Toetsenbord naar links verplaatsen.</string>
     <string name="one_handed__move_end_btn_content_description" comment="Content description for the one-handed move to right button">Toetsenbord naar rechts verplaatsen.</string>
     <!-- Media strings -->
-    <string name="settings__media__title">Emoji\'s</string>
+    <string name="settings__media__title">Emoji\'s &amp; GIFs</string>
     <string name="media__tab__emojis" comment="Tab description for emojis in the media UI">Emoji\'s</string>
     <string name="media__tab__emoticons" comment="Tab description for emoticons in the media UI">Emoticons</string>
     <string name="media__tab__kaomoji" comment="Tab description for kaomoji in the media UI">Kaomoji</string>
@@ -112,13 +112,19 @@
     <string name="settings__home__title" comment="Title of the Home screen">Welkom bij {app_name}</string>
     <string name="settings__home__ime_not_enabled" comment="Error message shown in Home fragment when Dictate Keyboard is not enabled in the system">{app_name} is niet ingeschakeld in het systeem en zal dus niet beschikbaar zijn als een invoermethode in de invoermethode-kiezer. Klik hier om dit probleem op te lossen.</string>
     <string name="settings__home__ime_not_selected" comment="Warning message shown in Home fragment when Dictate Keyboard is not selected as the default keyboard">{app_name} is niet geselecteerd als de standaard invoermethode. Klik hier om dit probleem op te lossen.</string>
+    <string name="settings__search__title" comment="Title of the settings search screen">Instellingen doorzoeken</string>
+    <string name="settings__search__placeholder" comment="Placeholder in the settings search field">Instellingen doorzoeken…</string>
+    <string name="settings__search__recent" comment="Header above recently used search terms">Recente zoekopdrachten</string>
+    <string name="settings__search__clear_recent" comment="Button to clear the recent searches">Recente zoekopdrachten wissen</string>
+    <string name="settings__search__popular" comment="Header above a small list of popular settings shortcuts">Populair</string>
+    <string name="settings__search__no_results" comment="Shown when a settings search returns nothing">Geen instellingen gevonden</string>
     <string name="settings__localization__title" comment="Title of languages and Layout screen">Talen &amp; Indelingen</string>
     <string name="settings__localization__display_language_names_in__label" comment="Label of Display language names in preference">Taalnamen weergeven in</string>
     <string name="settings__localization__display_keyboard_labels_in_subtype_language" comment="Label of Display keyboard labels in subtype language preference">Toetsenbordlabels weergeven in subtypetaal</string>
     <string name="settings__localization__group_subtypes__label" comment="Label of subtypes group">Indelingen</string>
     <string name="settings__localization__subtype_add_title" comment="Title of subtype dialog when adding a new subtype">Indeling toevoegen</string>
     <string name="settings__localization__language_pack_title" comment="Title of the language pack manager screen for managing installed and custom language packs">Geïnstalleerde taalpakketten beheren</string>
-    <string name="settings__localization__language_pack_summary" comment="Summary of preference item for adding a new language pack">Experimenteel: extensies beheren die ondersteuning toevoegen voor specifieke talen (Chinese karakterinvoer voor nu)</string>
+    <string name="settings__localization__language_pack_summary" comment="Summary of preference item for adding a new language pack">Experimenteel: extensies die specifieke talen toevoegen (voorlopig vormgebaseerd Chinees).</string>
     <string name="settings__localization__subtype_edit_title" comment="Title of subtype dialog when editing an existing subtype">Indeling bewerken</string>
     <string name="settings__localization__subtype_locale" comment="Label for locale dropdown in subtype dialog">Voorkeurstaal</string>
     <string name="settings__localization__subtype_popup_mapping" comment="Label for popup mapping dropdown in subtype screen">Popup-indeling</string>
@@ -146,6 +152,9 @@
     <string name="settings__localization__subtype_error_already_exists" comment="Error message shown in subtype dialog when a subtype to add already exists">Deze indeling bestaat al!</string>
     <string name="settings__localization__subtype_error_fields_no_value" comment="Error message shown in subtype editor if at least one field is set to '- select -' (means no value specified)">Één of meer velden zijn nog niet ingevuld. Kies een optie voor deze velden.</string>
     <string name="settings__localization__subtype_error_layout_not_installed" comment="Error message shown in subtype list when a layout is not installed, where %s will be replaced by the layout ID">{layout_id} (niet geïnstalleerd)</string>
+    <string name="settings__localization__subtype_missing_language_pack_title">Woordenboek vereist</string>
+    <string name="settings__localization__subtype_missing_language_pack_message">Deze taal heeft een downloadbaar woordenboek nodig voor woordsuggesties en conversie (bijv. Romaji → Kana). Totdat het is geïnstalleerd, werkt typen wel, maar doet conversie niets.</string>
+    <string name="settings__localization__subtype_missing_language_pack_action">Woordenboek downloaden</string>
     <string name="settings__localization__group_layouts__label" comment="Label of layouts group">Indelingen</string>
     <string name="settings__localization__subtype_delete_confirmation_title" comment="Title of the subtype delete confirmation dialog">Bevestiging verwijderen</string>
     <string name="settings__localization__subtype_delete_confirmation_warning" comment="Warning message in the confirmation dialog to confirm the user's intent to delete">Weet je zeker dat je deze indeling wilt verwijderen?</string>
@@ -155,8 +164,7 @@
     <string name="pref__theme__sunset_time__label" comment="Label of the sunset time preference">Zonsondergang</string>
     <string name="pref__theme__day" comment="Label of the day group (day means light theme)">Dagthema</string>
     <string name="pref__theme__night" comment="Label of the night group (night means dark theme)">Nachtthema</string>
-    <string name="pref__theme__theme_accent_color__label" comment="Label of accent color preference in Theme">        Accentkleur (Material You-thema\'s)
-    </string>
+    <string name="pref__theme__theme_accent_color__label" comment="Label of accent color preference in Theme">Accentkleur (Material You)</string>
     <string name="settings__theme_manager__title_manage" comment="Title of the theme manager screen for managing installed and custom themes">Geïnstalleerde thema\'s beheren</string>
     <string name="pref__theme__source_assets" comment="Label for the theme source field">{app_name} Apponderdelen</string>
     <string name="pref__theme__source_internal" comment="Label for the theme source field">Intern geheugen</string>
@@ -345,8 +353,8 @@
     <string name="pref__keyboard__merge_hint_popups_enabled__label" comment="Preference title">Accenten zijn pop-ups van symbolen</string>
     <string name="pref__keyboard__merge_hint_popups_enabled__summary" comment="Preference summary">Voegt symboolpop-ups toe aan de accenten van de standaardlay-out</string>
     <string name="pref__keyboard__long_press_delay__label" comment="Preference title">Lange toetsaanslagvertraging</string>
-    <string name="pref__keyboard__space_bar_switches_to_characters__label" comment="Preference title">Spatiebalk schakelt over naar tekens</string>
-    <string name="pref__keyboard__space_bar_switches_to_characters__summary" comment="Preference summary">Schakelt automatisch terug naar tekens in symbolen of cijfers</string>
+    <string name="pref__keyboard__space_bar_switches_to_characters__label" comment="Preference title">Spatiebalk keert terug naar letters</string>
+    <string name="pref__keyboard__space_bar_switches_to_characters__summary" comment="Preference summary">In de symbolen-/cijferindeling keert de spatiebalk terug naar het lettertoetsenbord.</string>
     <string name="pref__keyboard__incognito_indicator__label" comment="Preference title">Incognito-indicator</string>
     <!-- Smartbar strings -->
     <string name="settings__smartbar__title" comment="Title of Smartbar screen">Slimme Balk</string>
@@ -424,11 +432,12 @@
     <string name="pref__glide_trail_fade_duration">Vervaagtijd veegspoor</string>
     <string name="pref__glide_preview_refresh_delay">Vertraging vernieuwing voorbeeld</string>
     <string name="pref__glide__show_preview">Toon voorbeeld tijdens vegend typen</string>
+    <string name="pref__glide__show_preview__summary">Toon het beste woord in de suggestiebalk tijdens het glijden</string>
     <string name="pref__glide__immediate_backspace_deletes_word__label">Altijd woord verwijderen</string>
     <string name="pref__glide__immediate_backspace_deletes_word__summary">Door direct na het glijden op verwijderen te drukken, wordt het hele woord verwijderd</string>
     <string name="pref__gestures__general_title" comment="Preference group title">Algemene gebaren</string>
     <string name="pref__gestures__space_bar_title" comment="Preference group title">Spatiebalkgebaren</string>
-    <string name="pref__gestures__other_title" comment="Preference group title">Andere gebaren /Drempelwaardes voor gebaren</string>
+    <string name="pref__gestures__other_title" comment="Preference group title">Andere gebaren</string>
     <string name="pref__gestures__swipe_up__label" comment="Preference title">Omhoog scrollen</string>
     <string name="pref__gestures__swipe_down__label" comment="Preference title">Naar beneden vegen</string>
     <string name="pref__gestures__swipe_left__label" comment="Preference title">Naar links vegen</string>
@@ -459,6 +468,8 @@
     <string name="about__view_privacy_policy" comment="Label of View privacy policy button in About">Privacybeleid</string>
     <string name="about__view_source_code" comment="Label of View source code button in About">Broncode</string>
     <string name="about__license__title" comment="Title of Open-source licenses dialog">Open source-licenties</string>
+    <string name="about__data_attributions__title">Licenties van gegevens en modellen</string>
+    <string name="about__data_attributions__summary">Licenties van de modellen op het apparaat, woordenboeken en taalgegevens</string>
     <string name="about__version__title" comment="Preference title">Versie</string>
     <string name="about__version_copied__title" comment="Title of the toast for copying the version string">Appversie gekopieerd naar klembord</string>
     <string name="about__version_copied__error" comment="Title of the error toast for copying the version string">Er is iets misgegaan: {error_message}</string>
@@ -495,7 +506,7 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="setup__finish_up__finish_btn">Begin met aanpassen</string>
     <!-- Physical keyboard -->
     <string name="physical_keyboard__title">Fysiek toetsenbord</string>
-    <string name="physical_keyboard__system_settings__title">Systeeminstellingen fysiek toetsenbord</string>
+    <string name="physical_keyboard__system_settings__title">Instellingen fysiek toetsenbord</string>
     <string name="physical_keyboard__system_settings__summary_not_attached">Enkel beschikbaar wanneer toetsenbord is aangesloten</string>
     <string name="physical_keyboard__show_on_screen_keyboard__title">Schermtoetsenbord weergeven</string>
     <string name="physical_keyboard__show_on_screen_keyboard__summary">Toetsenbord op het scherm weergeven tijdens het gebruik van een fysiek toetsenbord</string>
@@ -591,7 +602,7 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="pref__clipboard__max_history_size__label">Maximale grootte geschiedenis</string>
     <string name="pref__clipboard__history_hide_on_paste__label">Geschiedenis verbergen bij plakken</string>
     <string name="pref__clipboard__history_hide_on_next_text_field__label">Geschiedenis verbergen bij volgende tekstveld</string>
-    <string name="pref__clipboard__clear_primary_clip_affects_history_if_unpinned__label">Primaire clip wissen beïnvloedt geschiedenis</string>
+    <string name="pref__clipboard__clear_primary_clip_affects_history_if_unpinned__label">Clip wissen beïnvloedt geschiedenis</string>
     <string name="pref__clipboard__clear_primary_clip_affects_history_if_unpinned__summary">Het wissen van de clip verwijdert het ook uit de geschiedenis, indien niet vastgepind</string>
     <string name="send_to_clipboard__unknown_error">Een onbekende fout is opgetreden. Probeer het alstublieft opnieuw!</string>
     <string name="send_to_clipboard__type_not_supported_error">Dit mediatype wordt niet ondersteund.</string>
@@ -725,6 +736,7 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="action__apply">Van toepassing zijn</string>
     <string name="action__back_up">Back-up</string>
     <string name="action__cancel">Annuleren</string>
+    <string name="action__clear">Wissen</string>
     <string name="action__create">Creëren</string>
     <string name="action__default">Standaard</string>
     <string name="action__delete">Verwijderen</string>
@@ -958,13 +970,21 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="quick_action__dictate_prompts">AI-prompts</string>
     <string name="quick_action__dictate_prompts__tooltip">De AI-herformuleringsprompts openen</string>
     <string name="about__based_on_floris__title">Gebaseerd op FlorisBoard</string>
-    <string name="about__based_on_floris__summary">Een fork van FlorisBoard door Patrick Goldinger en bijdragers, gelicentieerd onder Apache 2.0. Tik om het oorspronkelijke project te openen.</string>
+    <string name="about__based_on_floris__summary">Een fork van FlorisBoard door Patrick Goldinger en bijdragers, Apache 2.0. Tik om te openen.</string>
     <string name="about__made_by">Gemaakt met ❤️ door DevEmperor\nSoli deo gloria ✝️</string>
     <string name="about__feedback__title">Feedback en ondersteuning</string>
     <string name="about__feedback__summary">Stuur een e-mail met vragen, bugs of ideeën</string>
     <string name="about__feedback__email">contact@devemperor.net</string>
     <string name="about__feedback__subject">Dictate Feedback</string>
-    <string name="setup__provider__title">Verbind een gratis AI-dienst</string>
+    <string name="setup__provider__title">Kies hoe Dictate transcribeert</string>
+    <string name="setup__provider__choose_intro">Dictate zet je spraak om in tekst met een AI-dienst. Dat kan op twee manieren, en beide worden volledig ondersteund — kies wat je het beste uitkomt.</string>
+    <string name="setup__provider__choice_cloud_title">Tegoed kopen in de app</string>
+    <string name="setup__provider__choice_cloud_body">Dictate Cloud: nergens een account, geen API-sleutel. Je koopt dicteerminuten via Google Play en ze verlopen nooit. De makkelijke weg — en wat duurder dan rechtstreeks naar een aanbieder gaan.</string>
+    <string name="setup__provider__choice_cloud_btn">Tegoedpakketten tonen</string>
+    <string name="setup__provider__choice_own_title">Je eigen AI-aanbieder gebruiken</string>
+    <string name="setup__provider__choice_own_body">Maak een sleutel aan bij een aanbieder naar keuze — Groq is gratis voor dagelijks dicteren. Je houdt je eigen account en betaalt de aanbieder rechtstreeks tegen diens prijzen. Duurt zo\'n twee minuten.</string>
+    <string name="setup__provider__choice_own_btn">Mijn eigen sleutel instellen</string>
+    <string name="setup__provider__back_to_choice">Terug naar beide mogelijkheden</string>
     <string name="setup__provider__intro">Dictate zet je spraak om in tekst met behulp van een online AI-dienst. Om het te gebruiken heb je je eigen persoonlijke sleutel voor zo\'n dienst nodig.</string>
     <string name="setup__provider__what_is_key">Een API-sleutel is als een persoonlijk wachtwoord waarmee Dictate de dienst voor je kan gebruiken. Er een aanmaken is gratis en duurt ongeveer twee minuten.</string>
     <string name="setup__provider__recommended">We raden <b>Groq</b> aan: snel en gratis voor dagelijks dicteren.</string>
@@ -1018,6 +1038,12 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="dictate__floating_button_color_title">Knopkleur</string>
     <string name="dictate__floating_button_design_orb">Bol</string>
     <string name="dictate__floating_button_design_orb_summary">Een massieve bol die gloeit en pulseert met je stem tijdens het opnemen.</string>
+    <string name="dictate__floating_button_design_cloud">Wolk</string>
+    <string name="dictate__floating_button_design_cloud_summary">Een vloeiende wolkbol die beweegt en op je stem reageert tijdens het opnemen.</string>
+    <string name="dictate__floating_button_design_aurora">Aurora</string>
+    <string name="dictate__floating_button_design_aurora_summary">Licht in een bol: het beweegt tijdens opnemen en kolkt tijdens verwerken</string>
+    <string name="dictate__floating_button_design_lattice">Raster</string>
+    <string name="dictate__floating_button_design_lattice_summary">Een bol van punten: verbindt zich in rust, golft met je stem en draait tijdens verwerken</string>
     <string name="dictate__floating_button_design_pill">Pil</string>
     <string name="dictate__floating_button_design_pill_summary">Klapt uit wanneer actief om een timer en een live golfvorm te tonen.</string>
     <string name="dictate__floating_button_design_ring">Ring</string>
@@ -1039,7 +1065,7 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="dictate__floating_button_snap_title">Aan rand vastklikken</string>
     <string name="dictate__interrupted_recording">Onderbroken ({time})</string>
     <string name="dictate__providers_summary_both">Transcriptie: {transcription} · Herformulering: {rewording}</string>
-    <string name="dictate__remember_last_dictation_summary">Bewaart je laatste geslaagde dictaat zodat je het opnieuw kunt invoegen met de knop „Opnieuw invoegen” op de Smartbar — een vangnet als het tekstveld wordt gewist door een schermrotatie of het wisselen van app. Voeg de knop toe via de Smartbar-editor. Wordt alleen op dit apparaat bewaard tot je volgende dictaat.</string>
+    <string name="dictate__remember_last_dictation_summary">Bewaart je laatste dictaat zodat je het opnieuw kunt invoegen met de knop Opnieuw invoegen op de Smartbar.</string>
     <string name="dictate__remember_last_dictation_title">Laatste dictaat onthouden</string>
     <string name="changelog__v4_2_0">• NIEUW: zwevende dicteerknop — dicteer rechtstreeks in elke app, zelfs met een ander toetsenbord actief. Kies uit drie stijlen (Pil, Ring, Bol), zie een live golfvorm terwijl je praat, sleep hem overal heen met randmagnetisme, stel kleur en grootte in en houd ingedrukt om te herformuleren. Schakel hem in via Instellingen ▸ Dictate ▸ Zwevende knop.\n• NIEUW: Google Gemini — gebruik je eigen AI Studio-API-sleutel voor transcriptie en herformuleren.\n• Prompts verschijnen nu standaard in een vaste rij boven de toetsen.\n• Betrouwbaardere tekstinvoer in apps, inclusief browsers en andere toetsenborden.</string>
     <string name="dictate__promo_floating_button_message">Nieuw: overal dicteren</string>
@@ -1063,16 +1089,25 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="dictate__status_idle">Tik om te dicteren</string>
     <string name="dictate__status_recording">Opnemen – tik om te stoppen</string>
     <string name="dictate__status_transcribing">Transcriberen…</string>
+    <string name="dictate__status_transcribing_local">Transcriberen op apparaat…</string>
     <string name="dictate__back_to_keyboard">Terug naar toetsenbord</string>
     <string name="dictate__error_recording_failed">Opname mislukt – verleen de microfoontoestemming. (%s)</string>
     <string name="dictate__error_no_audio">Geen opname gedetecteerd – spreek wat langer.</string>
+    <string name="dictate__no_speech_detected">Geen spraak gedetecteerd</string>
+    <string name="dictate__voice_input_listening">Aan het luisteren…</string>
+    <string name="dictate__voice_input_transcribing">Transcriberen…</string>
+    <string name="dictate__voice_input_stop">Klaar</string>
+    <string name="dictate__voice_input_hint">Tik om te verzenden</string>
+    <string name="dictate__voice_ime_label">Dictate spraakinvoer</string>
     <string name="dictate__error_no_api_key">Geen API-sleutel ingesteld – stel deze in via de Dictate-instellingen.</string>
     <string name="dictate__error_transcription_failed">Transcriptie mislukt.</string>
     <string name="dictate__error_unknown">Onbekende fout tijdens de transcriptie.</string>
     <string name="dictate__error_rewording_failed">Herformulering mislukt.</string>
+    <string name="dictate__error_overlay_insert_clipboard">Deze app accepteerde de tekst niet. Hij staat op het klembord — houd het veld ingedrukt en plak.</string>
     <string name="dictate__error_invalid_api_key">Controleer je API-sleutel</string>
     <string name="dictate__error_quota_exceeded">Quotum of limiet bereikt</string>
     <string name="dictate__error_content_size_limit">Opname te lang of te groot</string>
+    <string name="dictate__error_text_size_limit">Tekst te lang om te herformuleren</string>
     <string name="dictate__error_format_not_supported">Audioformaat niet ondersteund</string>
     <string name="dictate__error_timeout">Time-out van verzoek</string>
     <string name="dictate__error_network">Geen internetverbinding</string>
@@ -1085,6 +1120,7 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="dictate__status_retrying">Opnieuw proberen… ({attempt})</string>
     <string name="dictate__action_cancel">Opname annuleren</string>
     <string name="dictate__action_pause">Opname pauzeren</string>
+    <string name="dictate__action_next_segment">Volgend segment</string>
     <string name="dictate__action_resume">Opname hervatten</string>
     <string name="dictate__action_resend">Opnieuw proberen</string>
     <string name="dictate__action_dismiss">Negeren</string>
@@ -1161,6 +1197,53 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="dictate__bluetooth_mic_summary">Opnemen via een verbonden Bluetooth-headset indien beschikbaar</string>
     <string name="dictate__keep_screen_awake_title">Scherm aan houden</string>
     <string name="dictate__keep_screen_awake_summary">Voorkomen dat het scherm uitgaat tijdens het opnemen</string>
+    <string name="dictate__push_to_talk_title">Ingedrukt houden om op te nemen</string>
+    <string name="dictate__push_to_talk_summary">Houd de microfoon ingedrukt, laat los om te verzenden</string>
+    <string name="dictate__push_to_talk_summary_off">Uit — de microfoon ingedrukt houden transcribeert in plaats daarvan een audiobestand</string>
+    <string name="dictate__push_to_talk_slide_cancel">Veeg om te annuleren</string>
+    <string name="dictate__recording_animation_title">Opname-indicator</string>
+    <string name="dictate__recording_animation_static_label">Geen animatie</string>
+    <string name="dictate__recording_animation_static_description">Blijft tijdens het opnemen een effen rode stip</string>
+    <string name="dictate__recording_animation_pulse_label">Pulserend</string>
+    <string name="dictate__recording_animation_pulse_description">Pulseert in een gelijkmatig tempo</string>
+    <string name="dictate__recording_animation_level_label">Volgt je stem</string>
+    <string name="dictate__recording_animation_level_description">Reageert op het microfoonniveau en laat zien dat de mic je hoort</string>
+    <string name="dictate__skip_silent_title">Stille opnames overslaan</string>
+    <string name="dictate__skip_silent_summary">Voorkomt gehallucineerde tekst en overbodige API-aanroepen bij stille audio</string>
+    <string name="dictate__trim_silent_gaps_title">Lange pauzes inkorten</string>
+    <string name="dictate__trim_silent_gaps_summary">Knipt lange pauzes weg vóór verzenden — sneller uploaden, lagere kosten</string>
+    <string name="dictate__speed_up_title">Audio versnellen</string>
+    <string name="dictate__speed_up_off">Uit</string>
+    <string name="dictate__speed_up_value">{rate}×</string>
+    <string name="dictate__speed_up_summary_off">Wordt verstuurd op de snelheid waarop je sprak</string>
+    <string name="dictate__speed_up_summary">Dezelfde woorden, dezelfde toonhoogte — ongeveer {percent} % minder audio om te betalen</string>
+    <string name="dictate__speed_up_summary_caution">Ongeveer {percent} % minder audio om te betalen, maar zo snel zijn de woorden lastiger te herkennen</string>
+    <string name="dictate__paragraph_split_title">In alinea\'s opsplitsen</string>
+    <string name="dictate__paragraph_split_off">Uit</string>
+    <string name="dictate__paragraph_split_value">Na {n} woorden</string>
+    <string name="dictate__realtime_title">Realtime-transcriptie</string>
+    <string name="dictate__realtime_summary">Toont tekst live terwijl je spreekt, voor providers die dit ondersteunen</string>
+    <string name="dictate__longform_title">Lange dictaten</string>
+    <string name="dictate__longform_summary">Transcribeer lange dictaten op de achtergrond, deel voor deel terwijl je blijft praten — tik tijdens het opnemen op Volgende om het huidige deel te versturen, zodat er aan het eind geen lange wachttijd is.</string>
+    <string name="dictate__longform_autosplit_title">Slim automatisch splitsen</string>
+    <string name="dictate__longform_autosplit_summary">Silero detecteert pauzes, daarna controleert Smart Turn of je gedachte compleet is. Aanhoudende stilte gebruikt de maximale pauze als terugval.</string>
+    <string name="dictate__longform_autosplit_threshold_title">Maximale pauze</string>
+    <string name="dictate__longform_pause_length_title">Pauzelengte</string>
+    <string name="dictate__longform_autosplit_value">{seconds} s</string>
+    <string name="dictate__smart_turn_title">Smart Turn-segmentatie</string>
+    <string name="dictate__smart_turn_summary">Knip bij voltooide gedachten met een model op het apparaat, niet alleen bij pauzes. Downloadt ongeveer 8 MB.</string>
+    <string name="dictate__smart_turn_downloading">Model downloaden… {percent}%</string>
+    <string name="dictate__smart_turn_download_failed">Downloaden mislukt — tik om opnieuw te proberen.</string>
+    <string name="dictate__longform_mode_off">Uit</string>
+    <string name="dictate__longform_mode_off_summary">Eén keer transcriberen aan het einde (standaard).</string>
+    <string name="dictate__longform_mode_manual">Volgend segment</string>
+    <string name="dictate__longform_mode_manual_summary">Verstuur elk deel met “Volgend segment” tijdens het opnemen.</string>
+    <string name="dictate__providers_field_realtime_model">Realtimemodel</string>
+    <string name="dictate__providers_custom_realtime">Realtime streamen</string>
+    <string name="dictate__providers_custom_realtime_summary">Deze server spreekt het OpenAI-realtimeprotocol op /v1/realtime</string>
+    <string name="dictate__providers_custom_warm_up">Wekken vóór herformuleren</string>
+    <string name="dictate__providers_custom_warm_up_summary">Benadert de server vroeg, zodat een slapende machine kan opstarten</string>
+    <string name="dictate__providers_realtime_model_default">Standaard</string>
     <string name="dictate__instant_recording_title">Direct opnemen</string>
     <string name="dictate__instant_recording_summary">Automatisch beginnen met opnemen wanneer het toetsenbord wordt geopend</string>
     <string name="dictate__instant_recording_info_title">Let op</string>
@@ -1175,18 +1258,26 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="dictate__resend_button_title">Opnieuw-verzenden-knop</string>
     <string name="dictate__resend_button_summary">Als de transcriptie mislukt, een knop tonen om het opnieuw te proberen met dezelfde opname</string>
     <string name="dictate__transcription_group">Transcriptie (spraak → tekst)</string>
+    <string name="dictate__formatting_title">Opmaak &amp; woordenschat</string>
+    <string name="dictate__formatting_menu_summary">Stijlprompt, aangepaste woorden, vervangingen</string>
+    <string name="dictate__recording_menu_summary">Realtime, audiobron, direct opnemen</string>
+    <string name="dictate__output_menu_summary">Auto-enter, typesnelheid, opnieuw verzenden</string>
+    <string name="dictate__layout_title">Dicteerindeling</string>
+    <string name="dictate__layout_menu_summary">Klassieke indeling en uiterlijk van toetsenbord</string>
     <string name="dictate__languages_group">Talen</string>
     <string name="dictate__languages_title">Transcriptietalen</string>
     <string name="dictate__languages_summary">Kies de talen waarin je dicteert. Wissel er snel tussen via de opnamebalk.</string>
     <string name="dictate__language_detect">Automatisch detecteren</string>
+    <string name="dictate__languages_active_title">Actieve taal</string>
     <string name="dictate__prompt_selection_none">Geen</string>
     <string name="dictate__prompt_selection_predefined">Standaard</string>
     <string name="dictate__prompt_selection_custom">Aangepast</string>
     <string name="dictate__style_prompt_title">Interpunctie en stijl</string>
     <string name="dictate__style_prompt_custom_title">Aangepaste stijlprompt</string>
-    <string name="dictate__style_prompt_custom_placeholder">bv. Deze zin heeft hoofdletters en interpunctie.</string>
+    <string name="dictate__style_prompt_custom_placeholder">bijv. Hallo. Hartelijk dank.</string>
     <string name="dictate__style_prompt_info_title">Standaardvoorbeeld bekijken</string>
     <string name="dictate__style_prompt_info_description">Deze voorbeeldzin wordt met elke transcriptie meegestuurd om het model richting correct hoofdlettergebruik en interpunctie te sturen. Hij past zich automatisch aan de taal aan waarin je dicteert.</string>
+    <string name="dictate__style_prompt_info_none">Deze taal heeft nog geen voorbeeldzin, dus er wordt er geen meegestuurd. De transcriptie volgt nog steeds de taal die je hebt gekozen.</string>
     <string name="dictate__custom_words_title">Aangepaste woorden</string>
     <string name="dictate__custom_words_summary_empty">Voeg namen of vaktermen toe die correct gespeld moeten worden</string>
     <string name="dictate__custom_words_placeholder">bv. FlorisBoard, Kubernetes, Renée, OAuth, Anthropic</string>
@@ -1223,6 +1314,8 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="dictate__prompt_requires_selection_summary">Werkt op de geselecteerde tekst en vervangt deze</string>
     <string name="dictate__prompt_auto_apply_title">Automatisch toepassen</string>
     <string name="dictate__prompt_auto_apply_summary">Deze prompt automatisch op elke transcriptie uitvoeren</string>
+    <string name="dictate__prompt_reasoning_title">Redeneren</string>
+    <string name="dictate__prompt_reasoning_default">Standaard</string>
     <string name="dictate__prompt_badge_selection">Vereist selectie</string>
     <string name="dictate__prompt_badge_auto">Wordt automatisch toegepast</string>
     <string name="dictate__example_prompt_fix_grammar_name">Grammatica corrigeren</string>
@@ -1258,6 +1351,23 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="dictate__prompts_import_mode_message">Je bestaande prompts vervangen of de geïmporteerde toevoegen?</string>
     <string name="dictate__prompts_import_mode_replace">Vervangen</string>
     <string name="dictate__prompts_import_mode_add">Toevoegen</string>
+    <string name="dictate__prompt_library_title">Communitybibliotheek</string>
+    <string name="dictate__prompt_library_menu">Communitybibliotheek doorbladeren</string>
+    <string name="dictate__prompt_library_search">Prompts zoeken</string>
+    <string name="dictate__prompt_library_all">Alles</string>
+    <string name="dictate__prompt_library_add">Toevoegen</string>
+    <string name="dictate__prompt_library_added">Toegevoegd</string>
+    <string name="dictate__prompt_library_empty">Geen prompts komen overeen met je zoekopdracht.</string>
+    <string name="dictate__prompt_library_error">Kan de communitybibliotheek niet laden. Controleer je verbinding en probeer het opnieuw.</string>
+    <string name="dictate__prompt_library_retry">Opnieuw proberen</string>
+    <string name="dictate__prompt_library_close">Sluiten</string>
+    <string name="dictate__prompt_library_author">door {author}</string>
+    <string name="dictate__prompt_share_title">Delen met de community</string>
+    <string name="dictate__prompt_share_message">Hiermee wordt GitHub in je browser geopend met je prompt al ingevuld als inzending. Meld je aan en bevestig om een pull request te openen die deze aan de communitybibliotheek toevoegt. Een gratis GitHub-account is vereist; er wordt niets geüpload totdat je op GitHub bevestigt.</string>
+    <string name="dictate__prompt_share_continue">GitHub openen</string>
+    <string name="dictate__prompt_share_category">Categorie (optioneel)</string>
+    <string name="dictate__prompt_share_description">Beschrijving (optioneel)</string>
+    <string name="dictate__prompt_share_description_placeholder">bijv. Corrigeert de grammatica zonder de betekenis te wijzigen</string>
     <string name="dictate__file_preparing">Bestand voorbereiden…</string>
     <string name="dictate__file_too_large">Bestand is te groot – de aanbieder accepteert maximaal 25 MB.</string>
     <string name="dictate__file_read_error">Kan het geselecteerde bestand niet lezen.</string>
@@ -1276,6 +1386,12 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="changelog__v4_1_1">• Oplossing: de accentkleur kon op sommige apparaten groen lijken; toetsen en knoppen zijn weer Dictate-blauw.</string>
     <!-- Dictate on-device (offline) models -->
     <string name="dictate__local_models_header">Draait op je apparaat — er wordt geen audio verzonden. Download een model om te beginnen.</string>
+    <string name="dictate__local_models_live_header">Live (streaming)</string>
+    <string name="dictate__local_models_live_summary">Ze typen terwijl je praat. Zet “Realtime-transcriptie” aan onder Opname om ze te gebruiken.</string>
+    <string name="dictate__local_longpress_send_title">Verzenden ingedrukt houden voor lokaal model</string>
+    <string name="dictate__local_longpress_send_summary">Houd verzenden ingedrukt tijdens opnemen — of stoppen tijdens uploaden — om dit model te gebruiken i.p.v. de cloud.</string>
+    <string name="dictate__local_unload_after">Inactief model na {n} min ontladen</string>
+    <string name="dictate__local_unload_pressure">Inactief model alleen bij geheugendruk ontladen</string>
     <string name="dictate__local_model_status_active">Actief</string>
     <string name="dictate__local_model_status_installed">Geïnstalleerd · tik om te gebruiken</string>
     <string name="dictate__local_model_action_install">Downloaden</string>
@@ -1283,6 +1399,10 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="dictate__local_model_action_cancel">Annuleren</string>
     <string name="dictate__local_model_downloading">Downloaden… {percent}%</string>
     <string name="dictate__local_model_download_failed">Downloaden mislukt — probeer het opnieuw</string>
+    <string name="dictate__local_model_download_background">Downloaden op de achtergrond — je kunt de app verlaten.</string>
+    <string name="dictate__local_model_notif_channel_name">Modeldownloads</string>
+    <string name="dictate__local_model_notif_title">{model} downloaden</string>
+    <string name="dictate__local_model_notif_title_multi">{count} modellen downloaden</string>
     <string name="dictate__local_model_none_selected">Nog geen model gedownload</string>
     <string name="dictate__local_model_delete_confirm">“{model}” verwijderen? Je kunt het later opnieuw downloaden.</string>
     <string name="dictate__local_model_not_installed_error">Geen lokaal model gedownload</string>
@@ -1290,12 +1410,15 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="dictate__local_fallback_summary">Offline transcriberen op het apparaat met het gedownloade model nadat de provider faalt</string>
     <string name="backup_and_restore__back_up__files_dictate_prompts">Opgeslagen herformuleerprompts</string>
     <string name="dictate__floating_button_undo_failed">Ongedaan maken mislukt — de tekst is mogelijk gewijzigd.</string>
+    <string name="dictate__floating_button_copy_to_clipboard_title">Elk dictaat naar klembord kopiëren</string>
+    <string name="dictate__floating_button_copy_to_clipboard_summary_on">Elk dictaat wordt ook naar het klembord gekopieerd, zodat je het handmatig kunt plakken als invoegen mislukt. Kan op sommige telefoons een klembordmelding tonen.</string>
+    <string name="dictate__floating_button_copy_to_clipboard_summary_off">Dictaten worden alleen ingevoegd, niet naar het klembord gekopieerd.</string>
     <string name="dictate__floating_button_undo_summary_off">Geen knop voor ongedaan maken weergegeven.</string>
     <string name="dictate__floating_button_undo_summary_on">Na een dictaat verschijnt er een knop voor ongedaan maken naast de knop om de ingevoegde tekst met één tik te verwijderen.</string>
     <string name="dictate__floating_button_undo_title">Knop voor ongedaan maken</string>
     <string name="dictate__mappings_add">Toewijzing toevoegen</string>
     <string name="dictate__mappings_editor_title">Toewijzing</string>
-    <string name="dictate__mappings_empty_summary">Voeg een regel toe om automatisch woorden of zinnen in elk transcript te vervangen — exact en zonder AI-tokens te gebruiken.</string>
+    <string name="dictate__mappings_empty_summary">Voeg een regel toe om woorden of zinnen in elk transcript automatisch te vervangen — exact, zonder AI-tokens.</string>
     <string name="dictate__mappings_empty_title">Nog geen toewijzingen</string>
     <string name="dictate__mappings_entry_summary">Zoek-en-vervangregels toegepast op het transcript</string>
     <string name="dictate__mappings_field_from">Vervang</string>
@@ -1318,8 +1441,8 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="emoji__search__no_results">Geen overeenkomende emoji</string>
     <string name="pref__suggestion__api30_inline_suggestions_enabled__label">Suggesties voor automatisch invullen van systeem</string>
     <string name="pref__suggestion__block_possibly_offensive__summary">Voorkomt dat mogelijk aanstootgevende woorden worden voorgesteld terwijl je typt</string>
-    <string name="quick_action__dictate_reinsert">Opnieuw invoegen</string>
-    <string name="quick_action__dictate_reinsert__tooltip">Voeg je laatste dictaat opnieuw in</string>
+    <string name="quick_action__dictate_reinsert">Geschiedenis</string>
+    <string name="quick_action__dictate_reinsert__tooltip">Open je dicteergeschiedenis</string>
 
     <string name="dictate__providers_field_transcription_rewording_model">Model voor transcriptie en herformulering</string>
     <string name="dictate__providers_single_call_title">Eén multimodale aanroep</string>
@@ -1328,6 +1451,8 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="dictate__providers_rewording_single_call_note">Wordt nu niet gebruikt — je transcriptieprovider doet de herformulering in zijn enkele aanroep.</string>
     <string name="dictate__wear_title">Wear OS</string>
     <string name="dictate__wear_summary">Opties voor dicteren vanaf een gekoppeld horloge</string>
+    <string name="dictate__wear_install_title">Dictate op je horloge installeren</string>
+    <string name="dictate__wear_install_summary">Opent de Play Store — kies op een gekoppeld Wear OS 3+-horloge je horloge als doel.</string>
     <string name="dictate__wear_auto_rewording_title">Horlogedictaten automatisch herformuleren</string>
     <string name="dictate__wear_auto_rewording_summary">Herformuleer dictaten vanaf het horloge, net als op de telefoon.</string>
     <string name="quick_action__system_prev_input_method">Toetsenbord wisselen</string>
@@ -1343,10 +1468,37 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="dictate__audio_source_unprocessed">Onverwerkt (ruw)</string>
     <string name="dictate__audio_source_unprocessed_summary">Helemaal geen verwerking; valt terug op Spraakherkenning als je telefoon het niet ondersteunt</string>
     <string name="dictate__security_group">Beveiliging</string>
-    <string name="dictate__trust_user_certs_title">Door gebruiker geïnstalleerde certificaten vertrouwen</string>
-    <string name="dictate__trust_user_certs_summary">Vertrouw CA-certificaten die je zelf hebt geïnstalleerd, voor zelf-gehoste eindpunten achter een privé-CA.</string>
+    <string name="dictate__trust_user_certs_title">Gebruikerscertificaten vertrouwen</string>
+    <string name="dictate__trust_user_certs_summary">Vertrouw CA-certificaten die je hebt geïnstalleerd, voor zelf-gehoste eindpunten achter een privé-CA.</string>
     <string name="dictate__stats_title">Statistieken</string>
     <string name="dictate__stats_menu_summary">Woorden, bespaarde tijd, reeks en meer</string>
+    <string name="dictate__history_title">Geschiedenis</string>
+    <string name="dictate__history_original">Origineel</string>
+    <string name="dictate__history_result">Resultaat</string>
+    <string name="dictate__history_hold_for_original">houd ingedrukt voor origineel</string>
+    <string name="dictate__history_menu_summary">Vorige dictaten afspelen, opnieuw invoegen en beheren</string>
+    <string name="dictate__history_empty">Nog geen dictaten — je recente dictaten verschijnen hier.</string>
+    <string name="dictate__history_enable_title">Geschiedenis bijhouden</string>
+    <string name="dictate__history_enable_summary">Dictaten vastleggen om ze later opnieuw in te voegen of te bekijken.</string>
+    <string name="dictate__history_audio_title">Audio bewaren</string>
+    <string name="dictate__history_audio_summary">Afspelen en opnieuw transcriberen (~1,9 MB/min).</string>
+    <string name="dictate__history_retention_title">Opslaglimieten</string>
+    <string name="dictate__history_max_entries_title">Maximum aantal items</string>
+    <string name="dictate__history_max_age_title">Automatisch verwijderen na</string>
+    <string name="dictate__history_audio_budget_title">Opslaglimiet voor audio</string>
+    <string name="dictate__history_age_days">{days} dagen</string>
+    <string name="dictate__history_age_never">Geen limiet</string>
+    <string name="dictate__history_failed">Transcriptie mislukt — transcribeer opnieuw om het nogmaals te proberen</string>
+    <string name="dictate__history_search">Geschiedenis doorzoeken</string>
+    <string name="dictate__history_disk_usage">Bewaarde audio: {size}</string>
+    <string name="dictate__history_audio_missing">Opname is niet meer beschikbaar.</string>
+    <string name="dictate__history_copied">Gekopieerd naar klembord</string>
+    <string name="dictate__history_play">Opname afspelen</string>
+    <string name="dictate__history_copy">Transcriptie kopiëren</string>
+    <string name="dictate__history_delete">Item verwijderen</string>
+    <string name="dictate__history_clear_title">Geschiedenis wissen?</string>
+    <string name="dictate__history_clear_message">Hiermee worden alle geschiedenisitems en alle bewaarde audio permanent verwijderd.</string>
+    <string name="dictate__history_clear_confirm">Alles wissen</string>
     <string name="dictate__stats_empty">Nog geen dictaten — je statistieken verschijnen hier zodra je begint te dicteren.</string>
     <string name="dictate__stats_time_saved">Bespaarde tijd</string>
     <string name="dictate__stats_time_saved_sub">t.o.v. typen</string>
@@ -1387,4 +1539,290 @@ Deze toestemming kan op elk moment worden gewijzigd in de systeeminstellingen.  
     <string name="dictate__reasoning_effort_medium_summary">Balans tussen nadenken en snelheid</string>
     <string name="dictate__reasoning_effort_high">Hoog</string>
     <string name="dictate__reasoning_effort_high_summary">Meest nadenken, langzamer</string>
+    <string name="dictate__reasoning_effort_custom">Aangepast</string>
+    <string name="dictate__action_save_audio">Audio opslaan</string>
+    <string name="dictate__audio_saved">Audio opgeslagen in Downloads/Dictate: %s</string>
+    <string name="dictate__audio_save_failed">Kan de audio niet opslaan</string>
+    <string name="dictate__instant_recording_skip_numeric_title">Numerieke velden overslaan</string>
+    <string name="dictate__instant_recording_skip_numeric_summary">Niet automatisch starten bij cijfer-, telefoon- of pinvelden</string>
+    <string name="settings__localization__subtype_status_words">Suggesties</string>
+    <string name="settings__localization__subtype_no_word_list_title">Geen woordenlijst voor deze taal</string>
+    <string name="settings__localization__subtype_no_word_list_message">Woordsuggesties, autocorrectie en veegtypen blijven uit voor deze taal zolang er geen woordenlijst voor bestaat. Typen, dicteren en herformuleren werken gewoon.</string>
+    <string name="settings__localization__subtype_status_context">Context</string>
+    <string name="pref__suggestion__auto_correct__label">Autocorrectie</string>
+    <string name="pref__suggestion__auto_correct__summary">Typefouten automatisch corrigeren bij een spatie</string>
+    <string name="pref__suggestion__multilingual_typing__label">Meertalig typen</string>
+    <string name="pref__suggestion__multilingual_typing__summary">Woorden uit al je toetsenbordtalen accepteren</string>
+    <string name="pref__suggestion__next_word_prediction__label">Suggesties voor volgend woord</string>
+    <string name="pref__suggestion__next_word_prediction__summary">Stelt waarschijnlijke volgende woorden voor zodra een woord af is</string>
+    <string name="suggestion__added_to_dictionary">\"{word}\" toegevoegd aan je woordenboek</string>
+    <string name="suggestion__already_in_dictionary">\"{word}\" staat al in je woordenboek</string>
+    <string name="dictate__legacy_record">Opnemen</string>
+    <string name="dictate__legacy_stop">Stoppen</string>
+    <string name="dictate__legacy_switch_keyboard">Toetsenbord wisselen</string>
+    <string name="dictate__legacy_space">Spatie</string>
+    <string name="dictate__legacy_enter">Enter</string>
+    <string name="dictate__legacy_backspace">Backspace</string>
+    <string name="dictate__legacy_emoji">Emoji</string>
+    <string name="dictate__legacy_numbers">Cijfers</string>
+    <string name="dictate__legacy_close">Sluiten</string>
+    <string name="dictate__legacy_emoji_title">Kies een emoji</string>
+    <string name="dictate__legacy_numbers_title">Numeriek toetsenblok</string>
+    <string name="dictate__legacy_layout_title">Klassieke dicteerindeling</string>
+    <string name="dictate__legacy_layout_off_label">Uit (modern toetsenbord)</string>
+    <string name="dictate__legacy_layout_locked_label">Alleen klassieke indeling</string>
+    <string name="dictate__legacy_layout_swipe_label">Klassieke indeling, veeg voor toetsenbord</string>
+    <string name="dictate__legacy_select_all">Alles selecteren</string>
+    <string name="dictate__floating_button_retry_hint">%1$s — tik om opnieuw te proberen</string>
+    <string name="dictate__haptic_feedback_title">Haptische feedback</string>
+    <string name="dictate__haptic_feedback_summary">Trilt bij start/stop van opname, wanneer een transcriptie klaar is en bij herformuleren.</string>
+    <string name="dictate__audio_source_voice_communication">Spraakcommunicatie</string>
+    <string name="dictate__audio_source_voice_communication_summary">Hoogste microfoonprioriteit — werkt als een andere app de microfoon gebruikt, maar kan de nauwkeurigheid verlagen.</string>
+    <string name="about__whats_new__title">Wat is er nieuw</string>
+    <string name="about__whats_new__versioned">Wat is er nieuw in {version}</string>
+    <string name="about__whats_new__summary">De functietour opnieuw bekijken</string>
+    <string name="apptour__skip">Overslaan</string>
+    <string name="apptour__next">Volgende</string>
+    <string name="apptour__start">Aan de slag</string>
+    <string name="apptour__done">Klaar</string>
+    <string name="apptour__badge_highlight">★ Uitgelicht</string>
+    <string name="apptour__intro_eyebrow">Version 5.0</string>
+    <string name="apptour__intro_title">Een korte rondleiding</string>
+    <string name="apptour__intro_body">Dit is nieuw in Dictate 5.0 — de hoogtepunten in minder dan een minuut. Tik op elke pagina op ‘Uitproberen’ om meteen naar die instelling te springen.</string>
+    <string name="apptour__glide_eyebrow">Toetsenbord</string>
+    <string name="apptour__glide_title">Veeg om te typen</string>
+    <string name="apptour__glide_body">Veeg met je vinger van toets naar toets en Dictate maakt van het pad hele woorden. Elke taal heeft een eigen woordenboek dat op verzoek wordt gedownload — zet het aan bij Gebaren.</string>
+    <string name="apptour__glide_cta">Veegtypen instellen</string>
+    <string name="apptour__suggestions_eyebrow">Toetsenbord</string>
+    <string name="apptour__suggestions_title">Autocorrectie &amp; suggesties</string>
+    <string name="apptour__suggestions_body">Terwijl je typt, stelt Dictate passende woorden voor en corrigeert het typfouten ongemerkt. Het woord dat je echt typte blijft in de suggestiebalk staan, zodat één tik elke correctie ongedaan maakt.</string>
+    <string name="apptour__suggestions_cta">Suggesties aanpassen</string>
+    <string name="apptour__realtime_eyebrow">Transcriptie</string>
+    <string name="apptour__realtime_title">Realtime transcriptie</string>
+    <string name="apptour__realtime_body">Zie je woorden live verschijnen terwijl je nog praat, zonder te wachten tot de opname klaar is. Werkt met OpenAI, Deepgram, Soniox, AssemblyAI en ElevenLabs.</string>
+    <string name="apptour__realtime_cta">Realtime inschakelen</string>
+    <string name="apptour__providers_eyebrow">Transcriptie</string>
+    <string name="apptour__providers_title">Drie nieuwe cloudaanbieders</string>
+    <string name="apptour__providers_body">ElevenLabs Scribe, Deepgram en AssemblyAI komen erbij als transcriptiediensten — kies degene die het beste past bij je taal, nauwkeurigheid, snelheid en budget.</string>
+    <string name="apptour__providers_cta">Kies een aanbieder</string>
+    <string name="apptour__legacy_eyebrow">Een klassieker keert terug</string>
+    <string name="apptour__legacy_title">Klassieke dicteerindeling</string>
+    <string name="apptour__legacy_body">Liever spreken dan typen? Het toetsenbordloze scherm uit Dictate 3 is terug — maak het je standaard of houd het op één veeg afstand van het volledige toetsenbord.</string>
+    <string name="apptour__legacy_cta">Kies een indeling</string>
+    <string name="apptour__library_eyebrow">Community</string>
+    <string name="apptour__library_title">Promptbibliotheek</string>
+    <string name="apptour__library_body">Blader door herformuleringsprompts die de community deelt en installeer ze met één tik — of publiceer je eigen prompts voor anderen.</string>
+    <string name="apptour__library_cta">Bibliotheek openen</string>
+    <string name="apptour__stats_eyebrow">Inzichten</string>
+    <string name="apptour__stats_title">Je dicteerstatistieken</string>
+    <string name="apptour__stats_body">Houd bij hoeveel je in de loop van de tijd hebt gedicteerd en getypt, bereik mijlpalen en zie een korte samenvatting op het startscherm.</string>
+    <string name="apptour__stats_cta">Statistieken bekijken</string>
+    <string name="apptour__offline_eyebrow">Geen cloud</string>
+    <string name="apptour__offline_title">Offline transcriberen</string>
+    <string name="apptour__offline_body">Draai het NVIDIA Parakeet-model volledig op je telefoon — geen internet, niets verlaat het apparaat. Een stiltefilter slaat ook lege opnames over, zodat je nooit losse tekst krijgt.</string>
+    <string name="apptour__offline_cta">Het offline-model ophalen</string>
+    <string name="apptour__outro_eyebrow">En meer</string>
+    <string name="apptour__outro_title">Overal verfijnd</string>
+    <string name="apptour__outro_body">Meer onder de motorkap: een stabielere zwevende knop, een instelling voor de redeneerinspanning bij herformuleren, haptische feedback, een nieuw E-Reader-thema en tientallen verbeteringen.</string>
+    <string name="apptour51__cta_try">Uitproberen</string>
+    <string name="apptour51__continue_to">Doorgaan naar {version}</string>
+    <string name="apptour51__intro_eyebrow">Version 5.1</string>
+    <string name="apptour51__intro_title">Wat is er nieuw in 5.1</string>
+    <string name="apptour51__intro_body">Dictate is sinds 5.0 flink gegroeid. Dit zijn de hoogtepunten van 5.1 — tik op elke pagina op ‘Uitproberen’ om meteen naar die functie te springen.</string>
+    <string name="apptour51__history_eyebrow">Transcriptie</string>
+    <string name="apptour51__history_title">Transcriptiegeschiedenis</string>
+    <string name="apptour51__history_body">Elk dictaat wordt nu bewaard in een doorzoekbare geschiedenis. Voeg elke eerdere transcriptie met één tik opnieuw in, speel de originele audio af, transcribeer opnieuw of zet degene vast die je het vaakst hergebruikt. Op een apart scherm beheer je alles, inclusief hoelang audio-opnames bewaard blijven.</string>
+    <string name="apptour51__longform_eyebrow">Transcriptie</string>
+    <string name="apptour51__longform_title">Langdurig dicteren</string>
+    <string name="apptour51__longform_body">Praat zo lang als je wilt. Lange opnames worden automatisch in segmenten gesplitst en op de achtergrond getranscribeerd terwijl je doorgaat, zodat je je tekst sneller krijgt en nooit tegen een lengtelimiet aanloopt. Knip zelf een segment af, of laat Dictate natuurlijke pauzes herkennen.</string>
+    <string name="apptour51__gif_eyebrow">Toetsenbord</string>
+    <string name="apptour51__gif_title">GIF-zoeken</string>
+    <string name="apptour51__gif_body">Vind en verstuur GIFs zonder Dictate ooit te verlaten. Open het GIF-paneel, zoek naar van alles en plaats het meteen in je chat — een snelle kiezer in Gboard-stijl, direct ingebouwd.</string>
+    <string name="apptour51__classic_eyebrow">Klassieke indeling</string>
+    <string name="apptour51__classic_title">Klassieke indeling, vernieuwd</string>
+    <string name="apptour51__classic_body">Het toetsenbordloze dicteerscherm kreeg een flinke upgrade: een vrij in te delen actiebalk die je met slepen en neerzetten samenstelt, bediening voor langdurige opnames, één of twee promptrijen, een altijd beschikbare backspace, een tekenpop-up op de Enter-toets en een optionele tweede knop ‘toetsenbord wisselen’ voor eenvoudiger bediening met één hand.</string>
+    <string name="apptour51__search_eyebrow">Instellingen</string>
+    <string name="apptour51__search_title">Doorzoek de instellingen</string>
+    <string name="apptour51__search_body">Weet je niet meer waar een optie staat? Zoek er gewoon naar. De nieuwe instellingenzoekfunctie vindt elke instelling op naam, springt er meteen naartoe en markeert de rij kort — geen gespit meer door menu\'s.</string>
+    <string name="apptour51__models_eyebrow">Modellen &amp; aanbieders</string>
+    <string name="apptour51__models_title">Duits offline-model &amp; Claude</string>
+    <string name="apptour51__models_body">Twee toevoegingen voor hoe je spraak wordt verwerkt: een op Duits gespecialiseerd model op het apparaat zelf (Parakeet German van primeline) dat volledig offline op je telefoon transcribeert, en Claude van Anthropic komt erbij als nieuwe provider om je dictaten te herformuleren en op te maken.</string>
+    <string name="apptour51__more_eyebrow">En meer</string>
+    <string name="apptour51__more_title">Nog veel meer verbeteringen</string>
+    <string name="apptour51__more_body">Ook talloze kleinere verbeteringen: kies de actieve transcriptietaal in de instellingen, de stopknop annuleert nu echt een lopend verzoek, een schakelaar om API-sleutels te tonen/verbergen en meertalig typen zonder autocorrectie tussen talen — plus vele oplossingen in de klassieke indeling, het numerieke toetsenblok en daarbuiten.</string>
+    <string name="apptour51__outro_eyebrow">Dat is 5.1</string>
+    <string name="apptour51__outro_title">Veel plezier met de update</string>
+    <string name="apptour51__outro_body">Bedankt dat je Dictate gebruikt! Als het je elke dag helpt, houdt een kleine donatie het project draaiende. Je kunt al deze rondleidingen altijd opnieuw bekijken via Instellingen › Over.</string>
+    <string name="apptour52__cta_try">Proberen</string>
+    <string name="apptour52__intro_eyebrow">Dictate 5.2</string>
+    <string name="apptour52__intro_title">Overal dicteren</string>
+    <string name="apptour52__intro_body">Deze versie tilt Dictate voorbij het eigen toetsenbord: als spraakinvoer van je telefoon, voor gesproken opdrachten vanaf elke plek en om lange dictaten netjes op te maken. Dit is nieuw.</string>
+    <string name="apptour52__voiceinput_eyebrow">Spraakinvoer van het systeem</string>
+    <string name="apptour52__voiceinput_title">Dictate vanuit elk toetsenbord</string>
+    <string name="apptour52__voiceinput_body">Dictate meldt zich nu aan als systeemspraakinvoer: de microfoontoets van andere toetsenborden en apps transcribeert via Dictate — met jouw provider, jouw prompts en jouw lokale modellen. Zet „Dictate spraakinvoer” aan in je toetsenbordlijst en kies het als spraakinvoermethode. (Gboard houdt zijn microfoon aan Google gekoppeld: gebruik een toetsenbord dat de systeeminstelling respecteert.)</string>
+    <string name="apptour52__liveprompt_eyebrow">Vrije spraakopdracht</string>
+    <string name="apptour52__liveprompt_title">Zeg de AI wat te doen — overal</string>
+    <string name="apptour52__liveprompt_body">Houd de zwevende knop ingedrukt om het menu te openen, tik op „Live prompt” en zeg gewoon wat je wilt: „schrijf een beleefde afzegging voor de afspraak morgen”, „vertaal de tekst hierboven naar het Spaans”. Geselecteerde tekst dient als context; zonder selectie schrijft de AI vanaf nul.</string>
+    <string name="apptour52__ondevice_eyebrow">Offline op verzoek</string>
+    <string name="apptour52__ondevice_title">Houd verzenden vast voor het lokale model</string>
+    <string name="apptour52__ondevice_body">Moet één dictaat op je toestel blijven? Houd tijdens het opnemen de verzendknop ingedrukt: dan transcribeert je gedownloade model in plaats van de cloud, zonder van provider te wisselen. Aan te zetten in het venster voor het lokale model, dat nu bovenaan de providerlijst staat.</string>
+    <string name="apptour52__trim_eyebrow">Sneller en goedkoper</string>
+    <string name="apptour52__trim_title">Lange pauzes worden weggeknipt</string>
+    <string name="apptour52__trim_body">Even nadenken midden in een zin? Stiltes van meer dan een paar seconden worden vóór het verzenden weggeknipt — elk gesproken woord blijft, alleen de dode tijd verdwijnt. Kortere uploads betekenen minder wachten en lagere kosten.</string>
+    <string name="apptour52__paragraphs_eyebrow">Leesbare lange dictaten</string>
+    <string name="apptour52__paragraphs_title">Automatische alinea\'s</string>
+    <string name="apptour52__paragraphs_body">Lange dictaten komen niet meer als één muur tekst binnen. Stel een aantal woorden in en Dictate begint bij het volgende zinseinde een nieuwe alinea — deterministisch en alleen bij kale transcripties, nooit bij door AI opgemaakte tekst.</string>
+    <string name="apptour52__smartturn_eyebrow">Slimmer long-form</string>
+    <string name="apptour52__smartturn_title">Knipt bij afgeronde gedachten</string>
+    <string name="apptour52__smartturn_body">Long-form dicteren kan nu het lokale Smart Turn v3-model gebruiken om te bepalen wanneer je een gedachte echt hebt afgerond, in plaats van bij elke pauze te knippen. Optioneel en op verzoek gedownload.</string>
+    <string name="apptour52__orb_eyebrow">Nieuwe look</string>
+    <string name="apptour52__orb_title">De wolk-orb</string>
+    <string name="apptour52__orb_body">Een vierde skin voor de zwevende knop: een zachte wolk die met je stem groeit en wervelt en elke fase toont — luisteren, denken, klaar. Te kiezen in de instellingen van de zwevende knop.</string>
+    <string name="apptour52__outro_eyebrow">Dat is 5.2</string>
+    <string name="apptour52__outro_title">Veel dicteerplezier</string>
+    <string name="apptour52__outro_body">En veel onder de motorkap: het scherm blijft het hele dictaat aan, lokale modellen geven hun geheugen vrij bij inactiviteit, horloge-dictaten overleven verbindingsonderbrekingen en de Duitse autocorrectie kent nu umlauten. Elke rondleiding is terug te vinden onder Instellingen › Over.</string>
+    <string name="apptour53__cta_try">Uitproberen</string>
+    <string name="apptour53__intro_eyebrow">Dictate 5.3</string>
+    <string name="apptour53__intro_title">Vasthouden, praten, klaar</string>
+    <string name="apptour53__intro_body">Deze versie gaat over de twee dingen die je het vaakst doet: tegen je telefoon praten en erop typen. Allebei sneller, en allebei beter in je niet voor de voeten lopen.</string>
+    <string name="apptour53__pushtotalk_eyebrow">Indrukken om te praten</string>
+    <string name="apptour53__pushtotalk_title">Houd de microfoon vast, laat los om te versturen</string>
+    <string name="apptour53__pushtotalk_body">Als een spraakbericht: houd de microfoontoets vast en praat, laat los en het gaat weg. Veeg naar links om de opname weg te gooien, of sleep omhoog om hem vast te zetten en je hand vrij te hebben. Een korte tik werkt nog gewoon zoals altijd. Aan te zetten in de Dictate-instellingen.</string>
+    <string name="apptour53__autocorrect_eyebrow">Autocorrectie opnieuw gebouwd</string>
+    <string name="apptour53__autocorrect_title">Ze leest je vingers, niet je typefouten</string>
+    <string name="apptour53__autocorrect_body">Correcties komen nu voort uit waar je de toetsen echt raakte, met een zoektocht door de waarschijnlijke woorden terwijl je typt, in plaats van te gokken op het afgemaakte woord. Op onze testset ging het van 88 % naar 98 % goed — het verschil merk je vooral bij snel en slordig typen.</string>
+    <string name="apptour53__offline_eyebrow">Offline, live</string>
+    <string name="apptour53__offline_title">Woorden verschijnen terwijl je praat — zonder verbinding</string>
+    <string name="apptour53__offline_body">Modellen op je toestel transcriberen nu al terwijl je praat, niet pas aan het eind, in tien talen. En er kwamen twee modellen bij: Canary dekt Engels, Duits, Frans en Spaans in een derde van de ruimte, en GigaAM is gespecialiseerd in Russisch.</string>
+    <string name="apptour53__languages_eyebrow">45 talen erbij</string>
+    <string name="apptour53__languages_title">Kroatisch, Bengaals, Swahili en 42 andere</string>
+    <string name="apptour53__languages_body">De talenlijst had gaten die niets te maken hadden met wat de aanbieders werkelijk ondersteunen. Ze is nu gebouwd op wat ze echt kunnen — als jouw taal ontbrak, kijk nog eens.</string>
+    <string name="apptour53__designs_eyebrow">Twee nieuwe looks</string>
+    <string name="apptour53__designs_title">Aurora en Lattice</string>
+    <string name="apptour53__designs_body">Twee nieuwe ontwerpen voor de zwevende knop, levend in plaats van getekend: licht dat in een bol beweegt, en een bol van punten die zich verbindt, met je stem golft en draait terwijl hij werkt. Beide volgen je accentkleur.</string>
+    <string name="apptour53__prediction_eyebrow">Minder aanslagen</string>
+    <string name="apptour53__prediction_title">Het volgende woord, voordat je het typt</string>
+    <string name="apptour53__prediction_body">De suggestiebalk biedt nu wat er meestal volgt, geleerd van hoe jij schrijft. En elk woord kun je met een lange druk aan je woordenboek toevoegen, zodat je namen en jargon niet langer worden weggecorrigeerd.</string>
+    <string name="apptour53__ownserver_eyebrow">Je eigen server</string>
+    <string name="apptour53__ownserver_title">Zelfgehost, nu ook live</string>
+    <string name="apptour53__ownserver_body">Een eigen server kan nu ook live transcriberen, als hij het realtimeprotocol van OpenAI spreekt. En staat er een machine achter die slaapt, dan kan Dictate die vroeg wekken zodat het eerste verzoek niet op het opstarten hoeft te wachten.</string>
+    <string name="apptour53__outro_eyebrow">Dat was 5.3</string>
+    <string name="apptour53__outro_title">Veel dicteerplezier</string>
+    <string name="apptour53__outro_body">Plus een hoop kleinere dingen: elke aanbieder draagt zijn eigen logo, de opname-indicator kan stil, pulserend of stemreactief zijn, de promptuitvoer kan de originele transcriptie ernaast houden, en alinea\'s breken niet meer na afkortingen. Elke rondleiding is terug te vinden onder Instellingen › Over.</string>
+    <string name="changelog__v5_0_0">• NIEUW: Veegtypen — veeg over de toetsen om hele woorden te typen, met woordenboeken per taal die op aanvraag worden gedownload. 👆\n• NIEUW: Woordsuggesties &amp; autocorrectie — typfouten worden automatisch hersteld en het woord dat je typte blijft één tik verwijderd. ✨\n• NIEUW: Realtime transcriptie — zie je woorden verschijnen terwijl je praat, met OpenAI, Deepgram, Soniox, AssemblyAI en ElevenLabs. ⚡\n• NIEUW: Drie extra transcriptieaanbieders — ElevenLabs Scribe, Deepgram en AssemblyAI. ☁️\n• NIEUW: Klassieke dicteerindeling — het toetsenbordloze spraakscherm uit Dictate 3 is terug, vastgezet of gewoon één veeg weg. 🎙️\n• NIEUW: Community-promptbibliotheek — blader door en deel herformuleringsprompts. 📚\n• NIEUW: Dicteerstatistieken met mijlpalen. 📊\n• NIEUW: Offline-model NVIDIA Parakeet, plus een stiltefilter dat lege opnames overslaat. 📴\n• Meer: een stabielere zwevende knop, instelbare redeneerinspanning, haptische feedback, een nieuw E-Reader-thema en tientallen oplossingen. 🛠️</string>
+    <string name="media__tab__gifs">GIFs</string>
+    <string name="prefs__media__gif__title">GIFs</string>
+    <string name="prefs__media__gif_enabled">GIF-zoeken inschakelen</string>
+    <string name="prefs__media__gif_enabled__summary">GIFs zoeken en invoegen, mogelijk gemaakt door KLIPY</string>
+    <string name="prefs__media__gif_setup__title">GIF-zoeken instellen</string>
+    <string name="prefs__media__gif_setup__summary_set">KLIPY-API-sleutel opgeslagen</string>
+    <string name="prefs__media__gif_setup__summary_unset">Tik om je gratis KLIPY-API-sleutel toe te voegen</string>
+    <string name="prefs__media__gif_setup__intro">GIFs worden geleverd door KLIPY, een gratis dienst. Je hebt alleen je eigen gratis sleutel nodig — het kost maar een minuut:</string>
+    <string name="prefs__media__gif_setup__step1">Open het KLIPY Partner Panel — je wordt gevraagd om gratis een account aan te maken als je er nog geen hebt.</string>
+    <string name="prefs__media__gif_setup__step2">Maak op de pagina API Keys een API-sleutel aan.</string>
+    <string name="prefs__media__gif_setup__step3">Kopieer je sleutel en plak deze in het veld hieronder.</string>
+    <string name="prefs__media__gif_setup__open_klipy">Open KLIPY Partner Panel</string>
+    <string name="prefs__media__gif_setup__key_label">KLIPY-API-sleutel</string>
+    <string name="prefs__media__gif_setup__privacy_note">Je zoektermen worden alleen naar KLIPY gestuurd terwijl het GIF-paneel open is — nooit tijdens het dicteren.</string>
+    <string name="gif__search_placeholder">KLIPY doorzoeken</string>
+    <string name="gif__powered_by">Mogelijk gemaakt door KLIPY</string>
+    <string name="gif__no_results">Geen GIFs gevonden</string>
+    <string name="gif__error">Kon GIFs niet laden. Controleer je verbinding en API-sleutel.</string>
+    <string name="gif__setup_needed">Voeg een gratis KLIPY-API-sleutel toe in Instellingen om GIFs te zoeken</string>
+    <string name="gif__setup_needed_action">GIF-zoeken instellen</string>
+    <string name="gif__copied_to_clipboard">GIF gekopieerd naar klembord — houd ingedrukt om te plakken</string>
+    <string name="gif__insert_failed">Kon de GIF niet invoegen</string>
+    <string name="quick_action__ime_ui_mode_gif">GIF</string>
+    <string name="quick_action__ime_ui_mode_gif__tooltip">GIFs zoeken</string>
+    <string name="dictate__legacy_action_select_all">Alles selecteren</string>
+    <string name="dictate__legacy_action_undo">Annuleren</string>
+    <string name="dictate__legacy_action_redo">Opnieuw</string>
+    <string name="dictate__legacy_action_cut">Knippen</string>
+    <string name="dictate__legacy_action_copy">Kopiëren</string>
+    <string name="dictate__legacy_action_paste">Plakken</string>
+    <string name="dictate__legacy_action_emoji">Emoji</string>
+    <string name="dictate__legacy_action_numbers">Cijfers</string>
+    <string name="dictate__legacy_action_language">Taal</string>
+    <string name="dictate__legacy_action_history">Geschiedenis</string>
+    <string name="dictate__legacy_action_reinsert">Opnieuw invoegen</string>
+    <string name="dictate__legacy_action_gif">GIF</string>
+    <string name="dictate__legacy_action_switch">Toetsenbord wisselen</string>
+    <string name="dictate__legacy_enter_chars_title">Tekens voor de Enter-toets</string>
+    <string name="dictate__legacy_enter_chars_summary">Houd de Enter-toets ingedrukt en veeg vervolgens naar links of rechts om een van deze tekens te kiezen en laat los om het in te voegen.</string>
+    <string name="dictate__legacy_enter_chars_label">Tekens (maximaal 8)</string>
+    <string name="dictate__legacy_action_row_title">Actiebalkknoppen</string>
+    <string name="dictate__legacy_action_row_summary">Sleep om de knoppen in de actiebalk van de klassieke lay-out te ordenen</string>
+    <string name="dictate__legacy_action_row_add">Knop toevoegen</string>
+    <string name="dictate__legacy_action_row_full">Verwijder eerst een knop om deze toe te voegen</string>
+    <string name="dictate__legacy_action_row_remove">Verwijderen</string>
+    <string name="dictate__legacy_action_row_drag">Sleep om te herordenen</string>
+    <string name="dictate__legacy_action_row_reset">Standaardinstellingen herstellen</string>
+    <string name="dictate__legacy_prompt_rows_title">Promptrijen</string>
+    <string name="dictate__legacy_prompt_rows_one">Eén rij</string>
+    <string name="dictate__legacy_prompt_rows_two">Twee rijen</string>
+    <string name="about__website__title">Website</string>
+    <string name="dictate__cloud_title">Dictate Cloud</string>
+    <string name="dictate__cloud_row_summary_none">Dicteertegoed kopen — zonder API-sleutel</string>
+    <string name="dictate__cloud_row_summary_balance">Nog {minutes} minuten tegoed</string>
+    <string name="dictate__cloud_intro_title">Dicteren zonder API-sleutel</string>
+    <string name="dictate__cloud_intro_body">Koop dicteertegoed direct hier in de app. Geen account bij een AI-aanbieder, geen API-sleutel, geen abonnement. Tegoed verloopt niet en wordt alleen verbruikt als je het echt gebruikt: een minuut dicteren kost een minuut, een herformulering ongeveer twee seconden.</string>
+    <string name="dictate__cloud_intro_alternative">Dit is volledig optioneel. Dictate werkt net zo goed met je eigen sleutel bij een aanbieder naar keuze — meerdere zijn gratis — en dan houd je je eigen account en betaal je de aanbieder rechtstreeks tegen diens prijzen.</string>
+    <string name="dictate__cloud_use_own_provider_btn">Liever mijn eigen aanbieder</string>
+    <string name="dictate__cloud_balance_label">Resterend tegoed</string>
+    <string name="dictate__cloud_balance_minutes">{minutes} min</string>
+    <string name="dictate__cloud_balance_rewords">of ongeveer {count} herformuleringen</string>
+    <string name="dictate__cloud_balance_checked">Bijgewerkt {time}</string>
+    <string name="dictate__cloud_balance_refresh">Tegoed vernieuwen</string>
+    <string name="dictate__cloud_packs_title">Tegoedpakketten</string>
+    <string name="dictate__cloud_topup_title">Opwaarderen</string>
+    <string name="dictate__cloud_pack_minutes">{minutes} minuten dicteren</string>
+    <string name="dictate__cloud_shop_unavailable">De tegoedpakketten kunnen hier niet worden getoond. Meestal betekent dat dat de app niet via Google Play is geïnstalleerd, of dat er op dit apparaat geen Play-account is aangemeld. Je eigen API-sleutel werkt in beide gevallen.</string>
+    <string name="dictate__cloud_activate_title">Tegoed staat klaar</string>
+    <string name="dictate__cloud_activate_body">Je hebt tegoed, maar het dicteren loopt op dit moment via een andere aanbieder. Wissel wanneer je wilt — zonder jou verandert er niets.</string>
+    <string name="dictate__cloud_activate_btn">Dicteren via Dictate Cloud</string>
+    <string name="dictate__cloud_notice_purchased">{minutes} minuten aan je tegoed toegevoegd.</string>
+    <string name="dictate__cloud_notice_pending">Je betaling is nog niet afgerond. Het tegoed verschijnt zodra Google die bevestigt.</string>
+    <string name="dictate__cloud_notice_not_redeemed">De betaling is gelukt, maar het tegoed kon niet worden opgehaald. Er is niets verloren — open dit scherm opnieuw en het wordt bijgeschreven.</string>
+    <string name="dictate__cloud_notice_needs_recovery">Deze aankoop hoort bij een ander tegoedaccount. Gebruik de herstelcode daarvan om het tegoed naar dit apparaat te halen.</string>
+    <string name="dictate__cloud_notice_failed">De aankoop kon niet worden afgerond.</string>
+    <string name="dictate__cloud_notice_deleted">Je tegoedaccount is verwijderd.</string>
+    <string name="dictate__cloud_notice_gone_deleted" comment="Shown when the app finds out that the credit account was deleted elsewhere">Je tegoedaccount bestaat niet meer — het is via de website of op een ander apparaat verwijderd. Nu is het ook van deze telefoon verdwenen.</string>
+    <string name="dictate__cloud_notice_gone_signed_out" comment="Shown when this device was signed out of the credit account, which still exists">Dit apparaat is afgemeld bij je tegoedaccount. Het account en het tegoed blijven ongemoeid — voer hieronder je herstelcode in om je weer aan te melden.</string>
+    <string name="dictate__cloud_delete_title">Tegoedaccount verwijderen</string>
+    <string name="dictate__cloud_delete_explain">Verwijdert je tegoedaccount en alles wat erover is opgeslagen. Resterend tegoed vervalt en wordt niet terugbetaald. Heb je de app niet meer, dan kan het ook via api.dictatekeyboard.com/delete.</string>
+    <string name="dictate__cloud_delete_btn">Account verwijderen</string>
+    <string name="dictate__cloud_delete_dialog_title">Je account verwijderen?</string>
+    <string name="dictate__cloud_delete_dialog_body" comment="{minutes} is a number">Je hebt nog {minutes} minuten tegoed. Verwijderen wist je account, je herstelcode en alle aangemelde apparaten.</string>
+    <string name="dictate__cloud_delete_dialog_forfeit">Dit tegoed vervalt en kan niet worden hersteld — ook niet door ons.</string>
+    <string name="dictate__cloud_delete_dialog_records">Je aankoopbewijzen blijven tien jaar bewaard, zoals de belastingwet vereist. Ze bevatten een ordernummer en een bedrag, niets dat naar jou leidt.</string>
+    <string name="dictate__cloud_delete_dialog_confirm">Definitief verwijderen</string>
+    <string name="dictate__cloud_delete_dialog_cancel">Account behouden</string>
+    <string name="dictate__cloud_notice_dismiss">OK</string>
+    <string name="dictate__cloud_recovery_title">Herstelcode</string>
+    <string name="dictate__cloud_recovery_explain">Schrijf deze code op. Google zet verbruikt tegoed na een herinstallatie niet terug, dus deze code is de enige manier om je resterende minuten op een nieuwe telefoon te krijgen. Je kunt er ook hetzelfde tegoed op een tweede apparaat mee gebruiken.</string>
+    <string name="dictate__cloud_recovery_copy">Herstelcode kopiëren</string>
+    <string name="dictate__cloud_recovery_copied">Herstelcode gekopieerd</string>
+    <string name="dictate__cloud_recovery_restore_btn">Tegoed herstellen</string>
+    <string name="dictate__cloud_recovery_dialog_body">Voer de herstelcode van een bestaand tegoedaccount in. Het apparaat waarop je het gebruikte blijft werken.</string>
+    <string name="dictate__cloud_recovery_field">Herstelcode</string>
+    <string name="dictate__cloud_recovery_confirm">Herstellen</string>
+    <string name="dictate__cloud_recovery_not_found">Geen tegoed gevonden voor deze code.</string>
+    <string name="dictate__error_cloud_no_account">Geen tegoedaccount op dit apparaat</string>
+    <string name="dictate__cloud_devices_full_title">Te veel apparaten</string>
+    <string name="dictate__cloud_devices_full_body">Je tegoed wordt al op {count} apparaten gebruikt, en meer kan niet tegelijk. Meld er één af om het hier te gebruiken — het tegoed zelf blijft ongemoeid.</string>
+    <string name="dictate__cloud_devices_sign_out">Afmelden</string>
+    <string name="dictate__cloud_devices_unnamed">Naamloos apparaat</string>
+    <string name="dictate__cloud_devices_last_used">Laatst gebruikt {time}</string>
+    <string name="dictate__cloud_devices_never_used">Nog niet gebruikt</string>
+    <string name="dictate__cloud_recovery_error">Server niet bereikbaar. Controleer je verbinding en probeer het opnieuw.</string>
+    <string name="dictate__cloud_limits_title">Wat Dictate Cloud niet kan</string>
+    <string name="dictate__cloud_limits_body">Live transcriptie terwijl je spreekt is er niet met tegoed — het kost per minuut ongeveer vier keer zoveel, en de motor op het apparaat doet het offline en gratis. Het AI-model en hoe lang het nadenkt bepaalt de server, dus modelkeuze, denkinspanning en eigen endpoints blijven uit. Al het andere is onveranderd: prompts, geschiedenis, de zwevende knop, lange dictaten en het horloge.</string>
+    <string name="dictate__cloud_privacy_title">Wat er wordt opgeslagen</string>
+    <string name="dictate__cloud_privacy_body">Je opnamen en teksten worden doorgegeven en nooit naar schijf geschreven. Alleen getallen worden bewaard: welk account, wanneer, hoe lang en of het lukte. Achter een tegoedaccount zit geen naam, geen e-mailadres en geen Google-account — alleen een willekeurige aanduiding.</string>
+    <string name="dictate__cloud_other_way_title">Je eigen aanbieder blijft mogelijk</string>
+    <string name="dictate__cloud_other_way_body">Je kunt altijd overstappen op je eigen API-sleutel, en weer terug. Je tegoed blijft waar het is.</string>
+    <string name="dictate__error_out_of_credit">Tegoed op</string>
+    <string name="dictate__action_top_up">Tegoed opwaarderen</string>
+    <string name="dictate__promo_low_credit_message">Tegoed bijna op.</string>
+    <string name="dictate__promo_low_credit_action">Opwaarderen</string>
 </resources>

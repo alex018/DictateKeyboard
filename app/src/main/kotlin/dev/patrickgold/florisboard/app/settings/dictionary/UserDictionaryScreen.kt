@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import dev.patrickgold.florisboard.R
 import dev.patrickgold.florisboard.app.LocalNavController
+import dev.patrickgold.florisboard.glideTypingManager
 import dev.patrickgold.florisboard.app.settings.theme.DialogProperty
 import dev.patrickgold.florisboard.ime.dictionary.DictionaryManager
 import dev.patrickgold.florisboard.ime.dictionary.FREQUENCY_MAX
@@ -69,6 +70,7 @@ import org.florisboard.lib.android.showLongToastSync
 import org.florisboard.lib.android.stringRes
 import org.florisboard.lib.compose.FlorisIconButton
 import org.florisboard.lib.compose.rippleClickable
+import org.florisboard.lib.compose.florisDialogScroll
 import org.florisboard.lib.compose.stringRes
 
 private val AllLanguagesLocale = FlorisLocale.from(language = "zz")
@@ -92,6 +94,7 @@ fun UserDictionaryScreen(type: UserDictionaryType) = FlorisScreen {
     val navController = LocalNavController.current
     val context = LocalContext.current
     val dictionaryManager = DictionaryManager.default()
+    val glideTypingManager = context.glideTypingManager()
     val scope = rememberCoroutineScope()
 
     var currentLocale by remember { mutableStateOf<FlorisLocale?>(null) }
@@ -133,6 +136,16 @@ fun UserDictionaryScreen(type: UserDictionaryType) = FlorisScreen {
         }
     }
 
+    /**
+     * After a word was added, changed, deleted or imported: refresh the list, and tell glide typing that the
+     * vocabulary it indexed is out of date (issue #263). The keyboard may well be running behind this screen,
+     * and its index is built once per subtype — without this, an edit made here would not reach a swipe.
+     */
+    fun onDictionaryChanged() {
+        buildUi()
+        glideTypingManager.value.invalidateWordData()
+    }
+
     val importDictionary = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri ->
@@ -150,7 +163,7 @@ fun UserDictionaryScreen(type: UserDictionaryType) = FlorisScreen {
             runCatching {
                 db.importCombinedList(context, uri)
             }.onSuccess {
-                buildUi()
+                onDictionaryChanged()
                 context.showLongToastSync(R.string.settings__udm__dictionary_import_success)
             }.onFailure { error ->
                 context.showLongToastSync("Error: ${error.localizedMessage}")
@@ -314,6 +327,7 @@ fun UserDictionaryScreen(type: UserDictionaryType) = FlorisScreen {
             val localeValidation = rememberValidationResult(UserDictionaryValidation.Locale, locale)
 
             JetPrefAlertDialog(
+                scrollModifier = florisDialogScroll(),
                 title = stringRes(if (isAddWord) {
                     R.string.settings__udm__dialog__title_add
                 } else {
@@ -348,7 +362,7 @@ fun UserDictionaryScreen(type: UserDictionaryType) = FlorisScreen {
                             userDictionaryDao()?.update(entry)
                         }
                         userDictionaryEntryForDialog = null
-                        buildUi()
+                        onDictionaryChanged()
                     }
                 },
                 dismissLabel = stringRes(R.string.action__cancel),
@@ -363,7 +377,7 @@ fun UserDictionaryScreen(type: UserDictionaryType) = FlorisScreen {
                 onNeutral = {
                     userDictionaryDao()?.delete(wordEntry)
                     userDictionaryEntryForDialog = null
-                    buildUi()
+                    onDictionaryChanged()
                 },
             ) {
                 Column {

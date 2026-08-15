@@ -84,8 +84,10 @@ data class QuickActionArrangement(
                 QuickAction.InsertKey(TextKeyData.TOGGLE_RESIZE_MODE),
                 QuickAction.InsertKey(TextKeyData.IME_UI_MODE_CLIPBOARD),
                 QuickAction.InsertKey(TextKeyData.IME_UI_MODE_MEDIA),
+                // GIF search panel (KLIPY). Present in the action list so users can drag it into the bar
+                // for one-tap GIF access; it does nothing until a free KLIPY API key is added in settings.
+                QuickAction.InsertKey(TextKeyData.IME_UI_MODE_GIF),
                 QuickAction.InsertKey(TextKeyData.TOGGLE_COMPACT_LAYOUT),
-                QuickAction.InsertKey(TextKeyData.TOGGLE_AUTOCORRECT),
                 QuickAction.InsertKey(TextKeyData.TOGGLE_INCOGNITO_MODE),
                 QuickAction.InsertKey(TextKeyData.ARROW_UP),
                 QuickAction.InsertKey(TextKeyData.ARROW_DOWN),
@@ -114,8 +116,19 @@ data class QuickActionArrangement(
             return QuickActionJsonConfig.encodeToString(value)
         }
 
+        // Key codes of actions that were removed from the app; dropped from any existing stored
+        // arrangement so they don't linger as "!! invalid !!". -245 = the old autocorrect-toggle
+        // placeholder (autocorrect is now fully automatic).
+        private val REMOVED_ACTION_CODES = setOf(-245)
+
         override fun deserialize(value: String): QuickActionArrangement {
-            val stored: QuickActionArrangement = QuickActionJsonConfig.decodeFromString(value)
+            val raw: QuickActionArrangement = QuickActionJsonConfig.decodeFromString(value)
+            fun QuickAction.isRemoved() = this is QuickAction.InsertKey && data.code in REMOVED_ACTION_CODES
+            val stored = raw.copy(
+                stickyAction = raw.stickyAction?.takeUnless { it.isRemoved() },
+                dynamicActions = raw.dynamicActions.filterNot { it.isRemoved() },
+                hiddenActions = raw.hiddenActions.filterNot { it.isRemoved() },
+            )
             // Make newly-added known actions (e.g. the IME-switch actions, #122) show up for existing users
             // too: any Default action not already present is appended to the visible (dynamic) actions, in
             // Default order. In practice only brand-new actions are ever missing, since hiding an action

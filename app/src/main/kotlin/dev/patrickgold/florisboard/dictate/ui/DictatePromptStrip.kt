@@ -15,7 +15,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -105,51 +107,84 @@ fun DictatePromptStrip(
 fun DictatePromptRow(
     prompts: List<PromptModel>,
     modifier: Modifier = Modifier,
+    rows: Int = 1,
 ) {
     val context = LocalContext.current
-    val scrollState = rememberScrollState()
     val inputFeedbackController = LocalInputFeedbackController.current
     val dictateState by DictateController.state.collectAsState()
     val pending by DictateController.pendingPrompts.collectAsState()
+    val livePromptActive by DictateController.livePromptActive.collectAsState()
     val isCapturing = dictateState is DictateController.UiState.Recording ||
         dictateState is DictateController.UiState.Transcribing
     // Slightly taller than the Smartbar and with a touch of vertical padding inside each chip, so the
     // always-on row gives the prompt buttons a more comfortable hit area than the compact Smartbar.
     val rowChipPadding = PaddingValues(horizontal = 2.dp, vertical = 5.dp)
-    SnyggRow(
-        elementName = FlorisImeUi.SmartbarSharedActionsRow.elementName,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(FlorisImeSizing.smartbarHeight * 1.25f)
-            .horizontalScroll(scrollState)
-            .padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+
+    val liveChip: @Composable () -> Unit = {
         DictateLivePromptChip(
             onClick = { DictateController.startLivePrompt(context) },
             modifier = Modifier.padding(horizontal = 1.5.dp),
             tapPadding = rowChipPadding,
+            // Compact row: show only the voice icon to leave more width for the saved-prompt chips.
+            iconOnly = true,
+            // Accent-highlight it while its recording runs (tap again to stop — startLivePrompt toggles).
+            highlighted = livePromptActive,
         )
-        prompts.forEach { prompt ->
-            DictatePromptChip(
-                icon = dictatePromptIcon(prompt),
-                text = prompt.name.orEmpty(),
-                onClick = {
-                    // While a recording/transcription is in flight, queue the prompt instead of
-                    // applying it; otherwise apply it right away. Queuing is a silent state change, so
-                    // give a haptic tick to confirm the tap registered.
-                    if (isCapturing) {
-                        inputFeedbackController.keyPress()
-                        DictateController.togglePendingPrompt(prompt)
-                    } else {
-                        DictateController.applyPrompt(context, prompt)
-                    }
-                },
-                onLongClick = { editPromptInSettings(prompt) },
-                modifier = Modifier.padding(horizontal = 1.5.dp),
-                tapPadding = rowChipPadding,
-                highlighted = pending.any { it.id == prompt.id },
-            )
+    }
+    val promptChip: @Composable (PromptModel) -> Unit = { prompt ->
+        DictatePromptChip(
+            icon = dictatePromptIcon(prompt),
+            text = prompt.name.orEmpty(),
+            onClick = {
+                // While a recording/transcription is in flight, queue the prompt instead of applying it;
+                // otherwise apply it right away. Queuing is a silent state change, so give a haptic tick.
+                if (isCapturing) {
+                    inputFeedbackController.keyPress()
+                    DictateController.togglePendingPrompt(prompt)
+                } else {
+                    DictateController.applyPrompt(context, prompt)
+                }
+            },
+            onLongClick = { editPromptInSettings(prompt) },
+            modifier = Modifier.padding(horizontal = 1.5.dp),
+            tapPadding = rowChipPadding,
+            highlighted = pending.any { it.id == prompt.id },
+        )
+    }
+
+    // One shared scroll state so the (optional) second row scrolls together with the first — it's really
+    // one strip that happens to wrap onto two lines (#194), not two independently-scrolling rows.
+    val scrollState = rememberScrollState()
+    if (rows >= 2) {
+        // Reading order stays left-to-right: the live chip + first half on the top line, the rest below;
+        // both lines share the one horizontal scroll.
+        val half = (prompts.size + 1) / 2
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .horizontalScroll(scrollState)
+                .padding(horizontal = 4.dp),
+        ) {
+            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                liveChip()
+                prompts.take(half).forEach { promptChip(it) }
+            }
+            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                prompts.drop(half).forEach { promptChip(it) }
+            }
+        }
+    } else {
+        SnyggRow(
+            elementName = FlorisImeUi.SmartbarSharedActionsRow.elementName,
+            modifier = modifier
+                .fillMaxWidth()
+                .height(FlorisImeSizing.smartbarHeight * 1.25f)
+                .horizontalScroll(scrollState)
+                .padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            liveChip()
+            prompts.forEach { promptChip(it) }
         }
     }
 }
@@ -184,6 +219,9 @@ internal fun DictatePromptChip(
     tapPadding: PaddingValues = PaddingValues(0.dp),
     highlighted: Boolean = false,
     onLongClick: (() -> Unit)? = null,
+    // Icon-only variant: drops the label and adds a little side padding so the pill stays a comfortable
+    // tap target while taking less width — used for the live-prompt chip in the compact row.
+    iconOnly: Boolean = false,
 ) {
     val prefs by FlorisPreferenceStore
     val accent by prefs.theme.accentColor.collectAsState() // follows the user's keyboard accent.
@@ -209,17 +247,24 @@ internal fun DictatePromptChip(
         SnyggIcon(
             elementName = "${FlorisImeUi.SmartbarActionTile.elementName}-icon",
             imageVector = icon,
-            // Slightly smaller than the theme default so the icon reads as a hint, not the focus.
-            modifier = Modifier.size(iconSize),
+            // Icon-only chips hide the label, so the icon carries the accessibility name instead.
+            contentDescription = if (iconOnly) text else null,
+            // Slightly smaller than the theme default so the icon reads as a hint, not the focus. When
+            // there's no label, a little horizontal padding keeps the pill from collapsing to a tiny square.
+            modifier = Modifier
+                .then(if (iconOnly) Modifier.padding(horizontal = 7.dp) else Modifier)
+                .size(iconSize),
         )
-        // Clear gap between the icon and the label.
-        Spacer(modifier = Modifier.width(6.dp))
-        SnyggText(
-            elementName = "${FlorisImeUi.SmartbarActionTile.elementName}-text",
-            // A touch of trailing room so the label never hugs the pill's right edge.
-            modifier = Modifier.padding(end = 6.dp),
-            text = text,
-        )
+        if (!iconOnly) {
+            // Clear gap between the icon and the label.
+            Spacer(modifier = Modifier.width(6.dp))
+            SnyggText(
+                elementName = "${FlorisImeUi.SmartbarActionTile.elementName}-text",
+                // A touch of trailing room so the label never hugs the pill's right edge.
+                modifier = Modifier.padding(end = 6.dp),
+                text = text,
+            )
+        }
     }
 }
 
@@ -235,6 +280,8 @@ internal fun DictateLivePromptChip(
     modifier: Modifier = Modifier,
     iconSize: Dp = 18.dp,
     tapPadding: PaddingValues = PaddingValues(0.dp),
+    iconOnly: Boolean = false,
+    highlighted: Boolean = false,
 ) {
     DictatePromptChip(
         icon = Icons.Default.RecordVoiceOver,
@@ -243,6 +290,8 @@ internal fun DictateLivePromptChip(
         modifier = modifier,
         iconSize = iconSize,
         tapPadding = tapPadding,
+        iconOnly = iconOnly,
+        highlighted = highlighted,
     )
 }
 

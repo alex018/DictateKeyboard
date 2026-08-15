@@ -18,6 +18,7 @@ package dev.patrickgold.florisboard.ime.keyboard
 
 import android.content.Context
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Gif
 import androidx.compose.material.icons.automirrored.filled.ArrowRightAlt
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -79,6 +80,10 @@ interface ComputingEvaluator {
     val state: KeyboardState
 
     val subtype: Subtype
+
+    /** True while a KLIPY GIF search is being typed, so the Enter key shows a search icon. */
+    val isGifSearchActive: Boolean
+        get() = false
 
     fun context(): Context?
 
@@ -243,7 +248,10 @@ fun ComputingEvaluator.computeImageVector(data: KeyData): ImageVector? {
         KeyCode.ENTER -> {
             val imeOptions = evaluator.editorInfo.imeOptions
             val inputAttributes = evaluator.editorInfo.inputAttributes
-            if (imeOptions.flagNoEnterAction || inputAttributes.flagTextMultiLine) {
+            if (evaluator.isGifSearchActive) {
+                // Enter runs the GIF search → show a magnifier instead of a return arrow.
+                Icons.Default.Search
+            } else if (imeOptions.flagNoEnterAction || inputAttributes.flagTextMultiLine) {
                 Icons.AutoMirrored.Filled.KeyboardReturn
             } else {
                 when (imeOptions.action) {
@@ -267,13 +275,24 @@ fun ComputingEvaluator.computeImageVector(data: KeyData): ImageVector? {
         KeyCode.IME_UI_MODE_CLIPBOARD -> {
             Icons.AutoMirrored.Outlined.Assignment
         }
+        KeyCode.IME_UI_MODE_GIF -> {
+            Icons.Outlined.Gif
+        }
         KeyCode.IME_UI_MODE_DICTATE -> {
             when (dev.patrickgold.florisboard.dictate.DictateController.state.value) {
-                // While recording, show a "send" arrow so it's obvious that tapping again submits
-                // the recording for transcription (rather than merely stopping it).
-                is dev.patrickgold.florisboard.dictate.DictateController.UiState.Recording -> Icons.AutoMirrored.Filled.Send
-                // While transcribing, show a stop button: tapping aborts the in-flight transcription.
-                is dev.patrickgold.florisboard.dictate.DictateController.UiState.Transcribing -> Icons.Default.Stop
+                // While recording: a "send" arrow for batch (tapping submits the recording), but a stop
+                // button for real-time (#128) — the text is already being typed live, so tapping just ends
+                // the stream (the last chunks + rewording still finish).
+                is dev.patrickgold.florisboard.dictate.DictateController.UiState.Recording ->
+                    if (dev.patrickgold.florisboard.dictate.DictateController.isRealtimeRecording()) {
+                        Icons.Default.Stop
+                    } else {
+                        Icons.AutoMirrored.Filled.Send
+                    }
+                // While transcribing or rewording, show a stop button: tapping aborts the in-flight
+                // request (e.g. an accidentally sent prompt, issue #192).
+                is dev.patrickgold.florisboard.dictate.DictateController.UiState.Transcribing,
+                is dev.patrickgold.florisboard.dictate.DictateController.UiState.Rewording -> Icons.Default.Stop
                 else -> Icons.Default.Mic
             }
         }
@@ -345,9 +364,6 @@ fun ComputingEvaluator.computeImageVector(data: KeyData): ImageVector? {
             } else {
                 this.context()?.vectorResource(id = R.drawable.ic_incognito_off)
             }
-        }
-        KeyCode.TOGGLE_AUTOCORRECT -> {
-            Icons.Default.FontDownload
         }
         KeyCode.KANA_SWITCHER -> {
             if (evaluator.state.isKanaKata) {

@@ -20,6 +20,7 @@ import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.view.MotionEvent
+import android.view.accessibility.AccessibilityManager
 import android.view.animation.AccelerateInterpolator
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -59,6 +60,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.toSize
 import dev.patrickgold.florisboard.FlorisImeService
 import dev.patrickgold.florisboard.app.FlorisPreferenceStore
+import dev.patrickgold.florisboard.dictate.ui.LegacyLayoutState
 import dev.patrickgold.florisboard.editorInstance
 import dev.patrickgold.florisboard.glideTypingManager
 import dev.patrickgold.florisboard.ime.editor.OperationScope
@@ -66,6 +68,8 @@ import dev.patrickgold.florisboard.ime.editor.OperationUnit
 import dev.patrickgold.florisboard.ime.input.InputEventDispatcher
 import dev.patrickgold.florisboard.ime.keyboard.ComputingEvaluator
 import dev.patrickgold.florisboard.ime.keyboard.FlorisImeSizing
+import dev.patrickgold.florisboard.ime.nlp.latin.KeyProximityInfo
+import dev.patrickgold.florisboard.ime.nlp.latin.TouchTrace
 import dev.patrickgold.florisboard.ime.keyboard.KeyboardMode
 import dev.patrickgold.florisboard.ime.keyboard.SpaceBarMode
 import dev.patrickgold.florisboard.ime.popup.ExceptionsForKeyCodes
@@ -114,17 +118,25 @@ fun TextKeyboardLayout(
 
     val keyboard = evaluator.keyboard as TextKeyboard
     val glideEnabledInternal by prefs.glide.enabled.collectAsState()
-    val glideEnabled = glideEnabledInternal && evaluator.editorInfo.isRichInputEditor &&
-        evaluator.state.keyVariation != KeyVariation.PASSWORD
+    // Suppressed while the modern keyboard is reached via the legacy swipe gesture (issue #125), so a
+    // horizontal glide doesn't swallow the swipe-back that returns to the dictation UI.
+    val glideSuppressed by dev.patrickgold.florisboard.dictate.ui.LegacyLayoutState.suppressGlide.collectAsState()
+    val glideEnabled = glideEnabledInternal && !glideSuppressed && evaluator.editorInfo.isRichInputEditor &&
+        evaluator.state.keyVariation != KeyVariation.PASSWORD && !isTouchExplorationEnabled(context)
     val glideShowTrail by prefs.glide.showTrail.collectAsState()
     val glideTrailStyle = rememberSnyggThemeQuery(FlorisImeUi.GlideTrail.elementName)
     val glideTrailColor = glideTrailStyle.foreground(default = Color.Green)
 
     val controller = remember { TextKeyboardLayoutController(context) }.also {
         it.keyboard = keyboard
-        if (glideEnabled && keyboard.mode == KeyboardMode.CHARACTERS) {
+        if (keyboard.mode == KeyboardMode.CHARACTERS) {
             val keys = keyboard.keys().asSequence().toList()
-            glideTypingManager.setLayout(keys)
+            // Feed key geometry to the autocorrect proximity model regardless of glide (which is off for
+            // many users); the glide classifier still only gets it when glide is enabled.
+            KeyProximityInfo.update(keys)
+            if (glideEnabled) {
+                glideTypingManager.setLayout(keys)
+            }
         }
     }
     val touchEventChannel = remember { Channel<MotionEvent>(64) }
@@ -389,10 +401,21 @@ private fun TextKeyButton(
 }
 
 @Suppress("unused_parameter")
+/**
+ * Whether a screen reader's touch exploration (e.g. TalkBack) is active. Glide typing conflicts with it
+ * — the swipe is intercepted for exploration — so we disable glide in that case (issue #127, mirroring
+ * HeliBoard's GestureEnabler gate).
+ */
+private fun isTouchExplorationEnabled(context: Context): Boolean {
+    val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
+    return am?.isTouchExplorationEnabled == true
+}
+
 private class TextKeyboardLayoutController(
     context: Context,
 ) : SwipeGesture.Listener, GlideTypingGesture.Listener {
     private val prefs by FlorisPreferenceStore
+    private val appContext = context.applicationContext
     private val editorInstance by context.editorInstance()
     private val keyboardManager by context.keyboardManager()
 
@@ -415,8 +438,10 @@ private class TextKeyboardLayoutController(
     lateinit var keyboard: TextKeyboard
     var size = Size.Zero
 
-    val isGlideEnabled: Boolean get() = prefs.glide.enabled.get() && editorInstance.activeInfo.isRichInputEditor &&
-        keyboardManager.activeState.keyVariation != KeyVariation.PASSWORD
+    val isGlideEnabled: Boolean get() = prefs.glide.enabled.get() &&
+        !dev.patrickgold.florisboard.dictate.ui.LegacyLayoutState.suppressGlide.value &&
+        editorInstance.activeInfo.isRichInputEditor &&
+        keyboardManager.activeState.keyVariation != KeyVariation.PASSWORD && !isTouchExplorationEnabled(appContext)
 
     fun onTouchEventInternal(event: MotionEvent) {
         flogDebug { "event=$event" }
@@ -558,6 +583,12 @@ private class TextKeyboardLayoutController(
         val key = keyboard.getKeyForPos(event.getX(pointer.index), event.getY(pointer.index))
         if (key != null && key.isEnabled) {
             key.computedDataOnDown = key.computedData
+            // Remember where the finger actually landed, not just which key won (issue #242). The autocorrect
+            // decodes from these coordinates, so a tap halfway between two keys stays distinguishable from a
+            // dead-centre one. Consumed when the resulting character reaches the editor.
+            if (key.computedData.type == KeyType.CHARACTER) {
+                TouchTrace.pendingTap(event.getX(pointer.index), event.getY(pointer.index))
+            }
             pointer.pressedKeyInfo = inputEventDispatcher.sendDown(
                 data = key.computedData,
                 onLongPress = onLongPress@ {
@@ -593,6 +624,10 @@ private class TextKeyboardLayoutController(
                             ) {
                                 popupUiController.extend(key, size)
                                 inputFeedbackController?.keyLongPress(key.computedData)
+                                // The long-press popup now owns the horizontal swipe (pick an accent/umlaut,
+                                // e.g. o → ö), so the legacy SWIPE-mode toggle must not hijack it back to
+                                // the dictation UI (issue #221).
+                                LegacyLayoutState.keyOwnsSwipe.value = true
                                 true
                             } else {
                                 false
@@ -612,6 +647,12 @@ private class TextKeyboardLayoutController(
             pointer.activeKey = key
             initSelectionStart = editorInstance.activeContent.selection.start
             initSelectionEnd = editorInstance.activeContent.selection.end
+            // Space/backspace own a horizontal swipe (cursor move / delete). Flag it (and clear it for any
+            // other key, so it never gets stuck) so the legacy SWIPE-mode toggle doesn't hijack that swipe
+            // on the modern keyboard (issue #188). A long-press accent popup raises the same flag later (#221).
+            val downCode = key.computedData.code
+            LegacyLayoutState.keyOwnsSwipe.value =
+                downCode == KeyCode.SPACE || downCode == KeyCode.CJK_SPACE || downCode == KeyCode.DELETE
         } else {
             pointer.activeKey = null
         }
@@ -645,6 +686,7 @@ private class TextKeyboardLayoutController(
 
     private fun onTouchUpInternal(event: MotionEvent, pointer: TouchPointer) {
         flogDebug(LogTopic.TEXT_KEYBOARD_VIEW) { "pointer=$pointer" }
+        LegacyLayoutState.keyOwnsSwipe.value = false // clear the legacy-swipe guard (#188 / #221)
         pointer.pressedKeyInfo?.cancelJobs()
         pointer.pressedKeyInfo = null
 
@@ -669,6 +711,10 @@ private class TextKeyboardLayoutController(
                         }
                     } else {
                         inputEventDispatcher.sendCancel(activeKey.computedDataOnDown)
+                        // Picked from the long-press popup (an accent, a variant): a deliberate choice, not a
+                        // tap that might have missed. Recorded as certain so autocorrect never second-guesses
+                        // it against neighbouring keys (issue #242).
+                        TouchTrace.markPendingExact()
                         inputEventDispatcher.sendDownUp(retData)
                     }
                 } else {
@@ -694,6 +740,7 @@ private class TextKeyboardLayoutController(
 
     private fun onTouchCancelInternal(event: MotionEvent, pointer: TouchPointer) {
         flogDebug(LogTopic.TEXT_KEYBOARD_VIEW) { "pointer=$pointer" }
+        LegacyLayoutState.keyOwnsSwipe.value = false // clear the legacy-swipe guard (#188 / #221)
         pointer.pressedKeyInfo?.cancelJobs()
         pointer.pressedKeyInfo = null
 
