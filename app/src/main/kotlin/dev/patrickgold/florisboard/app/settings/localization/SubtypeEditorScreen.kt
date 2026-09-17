@@ -72,7 +72,9 @@ import dev.patrickgold.florisboard.ime.core.SubtypePreset
 import dev.patrickgold.florisboard.ime.keyboard.LayoutArrangementComponent
 import dev.patrickgold.florisboard.ime.keyboard.LayoutType
 import dev.patrickgold.florisboard.ime.keyboard.extCorePopupMapping
+import dev.patrickgold.florisboard.ime.nlp.LanguageDataDownload
 import dev.patrickgold.florisboard.ime.nlp.han.HanShapeBasedLanguageProvider
+import dev.patrickgold.florisboard.ime.nlp.han.PinyinPackManager
 import dev.patrickgold.florisboard.ime.nlp.latin.GlideDictionaryCatalog
 import dev.patrickgold.florisboard.ime.nlp.latin.LatinLanguageProvider
 import dev.patrickgold.florisboard.extensionManager
@@ -125,6 +127,7 @@ private class SubtypeEditorState(init: Subtype?) {
                     punctuationRule = editor.punctuationRule.value,
                     popupMapping = editor.popupMapping.value,
                     layoutMap = editor.layoutMap.value,
+                    numberRow = editor.numberRow.value,
                 )
                 SubtypeJsonConfig.encodeToString(subtype)
             },
@@ -144,6 +147,7 @@ private class SubtypeEditorState(init: Subtype?) {
     val punctuationRule: MutableState<ExtensionComponentName> = mutableStateOf(init?.punctuationRule ?: Subtype.DEFAULT.punctuationRule)
     val popupMapping: MutableState<ExtensionComponentName> = mutableStateOf(init?.popupMapping ?: SelectComponentName)
     val layoutMap: MutableState<SubtypeLayoutMap> = mutableStateOf(init?.layoutMap ?: SelectLayoutMap)
+    val numberRow: MutableState<Boolean?> = mutableStateOf(init?.numberRow)
 
     fun applySubtype(subtype: Subtype) {
         id.value = subtype.id
@@ -155,6 +159,7 @@ private class SubtypeEditorState(init: Subtype?) {
         punctuationRule.value = subtype.punctuationRule
         popupMapping.value = subtype.popupMapping
         layoutMap.value = subtype.layoutMap
+        numberRow.value = subtype.numberRow
     }
 
     fun toSubtype() = runCatching {
@@ -175,7 +180,7 @@ private class SubtypeEditorState(init: Subtype?) {
         check(layoutMap.value.phone2 != SelectComponentName)
         Subtype(
             id.value, primaryLocale.value, secondaryLocales.value, nlpProviders.value, composer.value,
-            currencySet.value, punctuationRule.value, popupMapping.value, layoutMap.value,
+            currencySet.value, punctuationRule.value, popupMapping.value, layoutMap.value, numberRow.value,
         )
     }
 }
@@ -222,10 +227,16 @@ fun SubtypeEditorScreen(id: Long?) = FlorisScreen {
     var popupMapping by subtypeEditor.popupMapping
     var layoutMap by subtypeEditor.layoutMap
     var nlpProviders by subtypeEditor.nlpProviders
+    var numberRow by subtypeEditor.numberRow
 
     var showSubtypePresetsDialog by rememberSaveable { mutableStateOf(id == null) }
     var showSelectAsError by rememberSaveable { mutableStateOf(false) }
     var errorDialogStrId by rememberSaveable { mutableStateOf<Int?>(null) }
+    // The subtype waiting behind the download question, and what that download costs. Both are needed
+    // at once: the dialog names the size, and confirming has to add exactly the subtype it was asked
+    // about rather than re-deriving it from fields that may have been edited behind the dialog.
+    var pendingSubtype: Subtype? by rememberSaveable(saver = SubtypeSaver) { mutableStateOf(null) }
+    var pendingBytes by rememberSaveable { mutableStateOf(0L) }
 
     val selectLocaleScreenResult = navController.currentBackStackEntry
         ?.savedStateHandle
@@ -285,6 +296,16 @@ fun SubtypeEditorScreen(id: Long?) = FlorisScreen {
             ButtonBarButton(text = stringRes(R.string.action__save)) {
                 subtypeEditor.toSubtype().onSuccess { subtype ->
                     if (id == null) {
+                        // Adding a language fetches its word list and context tables, which run from
+                        // four to fourteen megabytes depending on the script (issue #334). The app
+                        // cannot see whether the connection is metered — that needs a permission it
+                        // does not ask for — so it says the number and waits instead of deciding.
+                        val bytes = LanguageDataDownload.pendingBytes(context, subtype.primaryLocale)
+                        if (bytes > 0) {
+                            pendingSubtype = subtype
+                            pendingBytes = bytes
+                            return@ButtonBarButton
+                        }
                         if (!subtypeManager.addSubtype(subtype)) {
                             errorDialogStrId = R.string.settings__localization__subtype_error_already_exists
                             return@ButtonBarButton
@@ -303,46 +324,77 @@ fun SubtypeEditorScreen(id: Long?) = FlorisScreen {
 
     content {
         Column(modifier = Modifier.padding(8.dp)) {
-            // Missing-dictionary warning (issue #123): some subtypes (e.g. Japanese/CJK) rely on the
-            // shape-based NLP provider, whose word suggestion / Romaji→Kana conversion silently does
-            // nothing until the matching downloadable dictionary (a language pack) is installed. Detect
-            // that state and offer a one-tap jump to the download screen, so it no longer looks broken.
-            val needsMissingLanguagePack = nlpProviders.suggestion == HanShapeBasedLanguageProvider.ProviderId &&
-                primaryLocale != SelectLocale &&
-                installedLanguagePacks.none { pack ->
-                    pack.items.any { it.locale.language == primaryLocale.language }
-                }
-            if (needsMissingLanguagePack) {
+            // Missing-table notice (issue #123): these subtypes rely on the shape-based NLP provider,
+            // which turns what you type into characters using a table shipped as a language pack. Without
+            // it the keys work and nothing is ever converted, with no explanation anywhere.
+            //
+            // Matched on the full locale tag, not just the language: each subtype names one specific table
+            // by its variant — zh-CN-pinyin reads `pinyin`, zh-CN-zhengma reads `zhengma` (issue #262).
+            // Comparing only "zh" made any Chinese pack look like every Chinese pack.
+            val hasLanguagePack = installedLanguagePacks.any { pack ->
+                pack.items.any { it.locale.localeTag() == primaryLocale.localeTag() }
+            }
+            val usesHanProvider = nlpProviders.suggestion == HanShapeBasedLanguageProvider.ProviderId &&
+                primaryLocale != SelectLocale
+            // Pinyin's table is fetched automatically on save (see PinyinPackManager), so "required" and
+            // a button into the pack manager would both be wrong here — there is nothing to do and nothing
+            // to fix. Saying what will happen is the whole job.
+            val packArrivesOnSave = usesHanProvider && !hasLanguagePack &&
+                PinyinPackManager.handles(primaryLocale)
+            if (usesHanProvider && !hasLanguagePack) {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(bottom = 16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer,
+                        containerColor = if (packArrivesOnSave) {
+                            MaterialTheme.colorScheme.surfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.errorContainer
+                        },
                     ),
                 ) {
+                    val contentColor = if (packArrivesOnSave) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onErrorContainer
+                    }
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = stringRes(R.string.settings__localization__subtype_missing_language_pack_title),
-                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            text = stringRes(
+                                if (packArrivesOnSave) {
+                                    R.string.settings__localization__subtype_language_pack_auto_title
+                                } else {
+                                    R.string.settings__localization__subtype_missing_language_pack_title
+                                },
+                            ),
+                            color = contentColor,
                             fontWeight = FontWeight.Bold,
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = stringRes(R.string.settings__localization__subtype_missing_language_pack_message),
-                            color = MaterialTheme.colorScheme.onErrorContainer,
+                            text = stringRes(
+                                if (packArrivesOnSave) {
+                                    R.string.settings__localization__subtype_language_pack_auto_message
+                                } else {
+                                    R.string.settings__localization__subtype_missing_language_pack_message
+                                },
+                            ),
+                            color = contentColor,
                             style = MaterialTheme.typography.bodySmall,
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(
-                            modifier = Modifier.align(Alignment.End),
-                            onClick = {
-                                navController.navigate(
-                                    Routes.Settings.LanguagePackManager(LanguagePackManagerScreenAction.MANAGE),
-                                )
-                            },
-                        ) {
-                            Text(stringRes(R.string.settings__localization__subtype_missing_language_pack_action))
+                        if (!packArrivesOnSave) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                modifier = Modifier.align(Alignment.End),
+                                onClick = {
+                                    navController.navigate(
+                                        Routes.Settings.LanguagePackManager(LanguagePackManagerScreenAction.MANAGE),
+                                    )
+                                },
+                            ) {
+                                Text(stringRes(R.string.settings__localization__subtype_missing_language_pack_action))
+                            }
                         }
                     }
                 }
@@ -556,6 +608,34 @@ fun SubtypeEditorScreen(id: Long?) = FlorisScreen {
 
             SubtypePropertyDropdown(stringRes(R.string.settings__localization__subtype_numeric_advanced_layout), LayoutType.NUMERIC_ADVANCED)
 
+            // Whether this language shows the digit row, overruling the global switch (issue #315).
+            // "Default" means: keep following that switch.
+            SubtypeProperty(stringRes(R.string.pref__keyboard__number_row__label)) {
+                val numberRowOptions = listOf(
+                    stringRes(R.string.settings__default),
+                    stringRes(R.string.state__enabled),
+                    stringRes(R.string.state__disabled),
+                )
+                val expanded = remember { mutableStateOf(false) }
+                JetPrefDropdown(
+                    options = numberRowOptions,
+                    expanded = expanded,
+                    selectedOptionIndex = when (numberRow) {
+                        null -> 0
+                        true -> 1
+                        false -> 2
+                    },
+                    onSelectOption = {
+                        numberRow = when (it) {
+                            1 -> true
+                            2 -> false
+                            else -> null
+                        }
+                    },
+                    appearance = JetPrefDropdownMenuDefaults.outlined(shape = ShapeDefaults.Small),
+                )
+            }
+
             SubtypePropertyDropdown(stringRes(R.string.settings__localization__subtype_numeric_row_layout), LayoutType.NUMERIC_ROW)
 
             SubtypeGroupSpacer()
@@ -616,6 +696,36 @@ fun SubtypeEditorScreen(id: Long?) = FlorisScreen {
                 },
             ) {
                 Text(text = stringRes(strId))
+            }
+        }
+
+        // What the language costs, before it starts costing it (issue #334). Dismissing leaves the
+        // editor open with everything still filled in, so "not now" is not "start over".
+        pendingSubtype?.let { subtype ->
+            JetPrefAlertDialog(
+                scrollModifier = florisDialogScroll(),
+                title = stringRes(R.string.settings__localization__subtype_download_title),
+                confirmLabel = stringRes(R.string.action__add),
+                dismissLabel = stringRes(R.string.action__cancel),
+                onConfirm = {
+                    pendingSubtype = null
+                    if (!subtypeManager.addSubtype(subtype)) {
+                        errorDialogStrId = R.string.settings__localization__subtype_error_already_exists
+                    } else {
+                        navController.popBackStack()
+                    }
+                },
+                onDismiss = {
+                    pendingSubtype = null
+                },
+            ) {
+                Text(
+                    text = stringRes(
+                        R.string.settings__localization__subtype_download_message,
+                        "language_name" to subtype.primaryLocale.displayName(),
+                        "size" to LanguageDataDownload.formatMegabytes(pendingBytes),
+                    ),
+                )
             }
         }
     }

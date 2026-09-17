@@ -42,7 +42,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.patrickgold.florisboard.R
+import dev.patrickgold.florisboard.ime.input.LocalInputFeedbackController
 import dev.patrickgold.florisboard.ime.keyboard.FlorisImeSizing
+import dev.patrickgold.florisboard.ime.text.keyboard.TextKeyData
 import dev.patrickgold.florisboard.ime.theme.FlorisImeUi
 import org.florisboard.lib.compose.stringRes
 import org.florisboard.lib.snygg.ui.SnyggIcon
@@ -63,6 +65,9 @@ private const val CaretBlinkMillis = 1000
  * It replaces two near-identical hand-rolled rows that had drifted apart: the emoji one squeezed the
  * query into 120 dp beside its results and had no way to clear it, the GIF one had no caret and a
  * different pill.
+ *
+ * Leaving the search belongs in [leading] and is drawn as a back arrow, never a second ✕ — the ✕ in
+ * the field means "empty the query", and two of them side by side read as the same button twice.
  */
 @Composable
 fun KeyboardSearchBar(
@@ -74,6 +79,7 @@ fun KeyboardSearchBar(
     trailing: @Composable (RowScope.() -> Unit)? = null,
 ) {
     val style = rememberSnyggThemeQuery(FlorisImeUi.SmartbarCandidatesRow.elementName)
+    val inputFeedbackController = LocalInputFeedbackController.current
     SnyggRow(
         elementName = FlorisImeUi.SmartbarCandidatesRow.elementName,
         modifier = modifier
@@ -98,26 +104,41 @@ fun KeyboardSearchBar(
                     .padding(end = 8.dp)
                     .size(18.dp),
             )
-            // The text only takes the width it needs (fill = false) so the caret follows it instead of
-            // floating at the far end; the row around it holds the remaining space open.
+            // The caret marks where the next character lands, so with nothing typed it belongs *before*
+            // the placeholder, not after it. The text takes only the width it needs (fill = false) so
+            // the caret sits against it; the row around them holds the remaining space open.
             Row(
                 modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    modifier = Modifier.weight(1f, fill = false),
-                    text = query.ifBlank { placeholder },
-                    color = if (query.isBlank()) style.foreground().copy(alpha = 0.6f) else style.foreground(),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Caret(color = style.foreground())
+                if (query.isEmpty()) {
+                    Caret(color = style.foreground())
+                    Text(
+                        modifier = Modifier.padding(start = 6.dp),
+                        text = placeholder,
+                        color = style.foreground().copy(alpha = 0.6f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                } else {
+                    Text(
+                        modifier = Modifier.weight(1f, fill = false),
+                        text = query,
+                        color = style.foreground(),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Caret(color = style.foreground())
+                }
             }
             if (query.isNotEmpty()) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(50))
-                        .clickable(onClick = onClear)
+                        .clickable(onClick = {
+                            inputFeedbackController.keyPress(TextKeyData.UNSPECIFIED)
+                            onClear()
+                        })
                         .padding(6.dp),
                 ) {
                     SnyggIcon(

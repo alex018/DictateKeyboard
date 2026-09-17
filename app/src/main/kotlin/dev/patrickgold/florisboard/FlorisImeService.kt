@@ -40,9 +40,12 @@ import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.DpRect
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import android.view.WindowManager
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import dev.patrickgold.florisboard.dictate.DictateController
 import dev.patrickgold.florisboard.app.FlorisAppActivity
 import dev.patrickgold.florisboard.app.FlorisPreferenceStore
@@ -53,9 +56,11 @@ import dev.patrickgold.florisboard.ime.input.InputFeedbackController
 import dev.patrickgold.florisboard.ime.keyboard.isFullscreenInputRequired
 import dev.patrickgold.florisboard.ime.landscapeinput.ExtractedInputRootView
 import dev.patrickgold.florisboard.ime.landscapeinput.LandscapeInputUiMode
+import dev.patrickgold.florisboard.ime.landscapeinput.showsFullscreenInput
 import dev.patrickgold.florisboard.ime.lifecycle.LifecycleInputMethodService
 import dev.patrickgold.florisboard.ime.nlp.NlpInlineAutofill
 import dev.patrickgold.florisboard.ime.theme.WallpaperChangeReceiver
+import dev.patrickgold.florisboard.ime.window.ImeFormFactor
 import dev.patrickgold.florisboard.ime.window.ImeRootView
 import dev.patrickgold.florisboard.ime.window.ImeWindowController
 import dev.patrickgold.florisboard.lib.devtools.LogTopic
@@ -186,11 +191,12 @@ class FlorisImeService : LifecycleInputMethodService() {
         val imm = systemServiceOrNull(InputMethodManager::class)
         try {
             if (AndroidVersion.ATLEAST_API28_P) {
-                return switchToPreviousInputMethod()
+                return switchToPreviousInputMethod().also { armInstantRecordingIfSwitched(it) }
             } else {
                 window.window?.let { window ->
                     @Suppress("DEPRECATION")
-                    return imm?.switchToLastInputMethod(window.attributes.token) == true
+                    return (imm?.switchToLastInputMethod(window.attributes.token) == true)
+                        .also { armInstantRecordingIfSwitched(it) }
                 }
             }
         } catch (e: Exception) {
@@ -208,15 +214,26 @@ class FlorisImeService : LifecycleInputMethodService() {
      *
      * @return true if the switch was successful
      */
+    /**
+     * Notes that the user is leaving through our own switch key, so the next open can be recognised as
+     * coming back (issue #224). Only a successful switch counts, so the worst case is a missed
+     * auto-start, never a surprising one. See [InstantRecordingArm] for why this is not a preference.
+     */
+    private fun armInstantRecordingIfSwitched(switched: Boolean) {
+        if (!switched) return
+        dev.patrickgold.florisboard.dictate.InstantRecordingArm.arm(this)
+    }
+
     fun switchToNextInputMethod(): Boolean {
         val imm = systemServiceOrNull(InputMethodManager::class)
         try {
             if (AndroidVersion.ATLEAST_API28_P) {
-                return switchToNextInputMethod(false)
+                return switchToNextInputMethod(false).also { armInstantRecordingIfSwitched(it) }
             } else {
                 window.window?.let { window ->
                     @Suppress("DEPRECATION")
-                    return imm?.switchToNextInputMethod(window.attributes.token, false) == true
+                    return (imm?.switchToNextInputMethod(window.attributes.token, false) == true)
+                        .also { armInstantRecordingIfSwitched(it) }
                 }
             }
         } catch (e: Exception) {
@@ -251,6 +268,12 @@ class FlorisImeService : LifecycleInputMethodService() {
     override fun onCreate() {
         super.onCreate()
         FlorisImeServiceReference = WeakReference(this)
+        // A keyboard service is created when it becomes the selected input method and destroyed when
+        // another one takes over, so being created *is* the "the user came to me" signal instant
+        // recording's third mode asks for (issue #224) — and unlike watching our own switch key, it sees
+        // the switch however it was made: our globe, the system picker, the notification shade. A plain
+        // field tap never reaches here, because the service is already alive by then.
+        dev.patrickgold.florisboard.dictate.InstantRecordingArm.arm(this)
         systemLocalesFlow.value = resources.configuration.locales
 
         WindowCompat.setDecorFitsSystemWindows(window.window!!, false)
@@ -350,7 +373,8 @@ class FlorisImeService : LifecycleInputMethodService() {
     override fun onDestroy() {
         super.onDestroy()
         // If the service is torn down mid-recording, finalize and keep the audio and release the mic
-        // instead of leaking the (process-scoped) recorder (issue #147). No-op when not recording.
+        // instead of leaking the (process-scoped) recorder (issue #147). No-op when not recording, and
+        // for a dictation the keyboard does not own — the floating button's outlives it (issue #293).
         dev.patrickgold.florisboard.dictate.DictateController.stashRecordingOnHide(this)
         unregisterReceiver(wallpaperChangeReceiver)
         FlorisImeServiceReference = WeakReference(null)
@@ -380,12 +404,24 @@ class FlorisImeService : LifecycleInputMethodService() {
             editorInstance.handleStartInputView(editorInfo, isRestart = restarting)
         }
 
+        // Typed snippet triggers (issue #283) are plain local text and must work without rewording ever
+        // being switched on — so they get their own refresh here rather than riding on the prompt strip's.
+        dev.patrickgold.florisboard.dictate.snippet.SnippetTriggers.refresh(this)
+
         // File transcription: if the user picked a file via the long-press mic trampoline, transcribe
         // it now that we are back on the field. Skips instant-recording when it kicks in.
         val startedFileTranscription =
             dev.patrickgold.florisboard.dictate.DictateController.consumePendingFileTranscription(this)
 
         val instantRecordingOn = prefs.dictate.instantRecording.get()
+
+        // "Only after switching to Dictate" (issue #224). The IME API cannot say how the keyboard was
+        // opened, so the question is answered from the other side: leaving through our own switch key is
+        // something we can see, and this open is the return trip. Consumed on *every* open, whether or
+        // not it fires — see [InstantRecordingArm].
+        val armedForSwitchIn = dev.patrickgold.florisboard.dictate.InstantRecordingArm.consume(this)
+        val instantRecordingAllowedHere =
+            instantRecordingOn && (!prefs.dictate.instantRecordingAfterSwitchOnly.get() || armedForSwitchIn)
 
         // Don't auto-start on number-only fields (number/phone/PIN/date-time), where dictation rarely
         // makes sense, when the user opted to skip them (issue #146).
@@ -408,7 +444,7 @@ class FlorisImeService : LifecycleInputMethodService() {
         if (!startedFileTranscription &&
             !offeredInterrupted &&
             !restarting &&
-            instantRecordingOn &&
+            instantRecordingAllowedHere &&
             !skipInstantForNumeric &&
             dev.patrickgold.florisboard.dictate.DictateController.state.value is
                 dev.patrickgold.florisboard.dictate.DictateController.UiState.Idle &&
@@ -488,7 +524,8 @@ class FlorisImeService : LifecycleInputMethodService() {
         super.onWindowHidden()
         // Collapsing the keyboard during a recording finalizes and keeps the audio so far (instead of
         // discarding it): the next keyboard open then offers to send the interrupted recording. Outside
-        // an active recording this is the normal teardown.
+        // an active recording this is the normal teardown. A recording the keyboard does not own — the
+        // floating button's, or the system voice input's — is left running (issue #293).
         dev.patrickgold.florisboard.dictate.DictateController.stashRecordingOnHide(this)
         if (windowController.onWindowHidden()) {
             flogInfo(LogTopic.IMS_EVENTS)
@@ -507,11 +544,16 @@ class FlorisImeService : LifecycleInputMethodService() {
         if (config.orientation != Configuration.ORIENTATION_LANDSCAPE) {
             return false
         }
-        return when (prefs.keyboard.landscapeInputUiMode.get()) {
-            LandscapeInputUiMode.DYNAMICALLY_SHOW -> super.onEvaluateFullscreenMode()
-            LandscapeInputUiMode.NEVER_SHOW -> false
-            LandscapeInputUiMode.ALWAYS_SHOW -> true
-        }
+        // The window controller's root insets are measured by the keyboard view, which does not exist
+        // yet the first time the framework asks – so the window size comes from the configuration, the
+        // same source the platform reads the orientation from a few lines up.
+        val formFactor = ImeFormFactor.of(
+            DpRect(0.dp, 0.dp, config.screenWidthDp.dp, config.screenHeightDp.dp),
+        )
+        return prefs.keyboard.landscapeInputUiMode.get().showsFullscreenInput(
+            formFactor = formFactor,
+            platformWouldShow = super.onEvaluateFullscreenMode(),
+        )
     }
 
     override fun onUpdateExtractingVisibility(info: EditorInfo?) {

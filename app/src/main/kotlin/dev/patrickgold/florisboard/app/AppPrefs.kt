@@ -23,6 +23,7 @@ import dev.patrickgold.florisboard.app.settings.theme.ColorPreferenceSerializer
 import dev.patrickgold.florisboard.app.settings.theme.DisplayKbdAfterDialogs
 import dev.patrickgold.florisboard.app.settings.theme.SnyggLevel
 import dev.patrickgold.florisboard.app.setup.NotificationPermissionState
+import dev.patrickgold.florisboard.dictate.DictateFloatingButtonAppScope
 import dev.patrickgold.florisboard.dictate.DictateFloatingButtonDesign
 import dev.patrickgold.florisboard.dictate.DictateLongformMode
 import dev.patrickgold.florisboard.dictate.audio.AudioSpeedUp
@@ -35,8 +36,12 @@ import dev.patrickgold.florisboard.dictate.DictateReasoningEffort
 import dev.patrickgold.florisboard.dictate.data.mappings.DictateMappings
 import dev.patrickgold.florisboard.dictate.gif.GifContentFilter
 import dev.patrickgold.florisboard.dictate.gif.GifHistory
+import dev.patrickgold.florisboard.dictate.overlay.BubbleAnchors
+import dev.patrickgold.florisboard.dictate.overlay.BubbleApps
 import dev.patrickgold.florisboard.dictate.provider.DictateProxyType
 import dev.patrickgold.florisboard.dictate.provider.ProviderAccounts
+import dev.patrickgold.florisboard.dictate.sticker.StickerHistory
+import dev.patrickgold.florisboard.dictate.sticker.StickerPackSettings
 import dev.patrickgold.florisboard.ime.clipboard.CLIPBOARD_HISTORY_NUM_GRID_COLUMNS_AUTO
 import dev.patrickgold.florisboard.ime.clipboard.ClipboardSyncBehavior
 import dev.patrickgold.florisboard.ime.core.DisplayLanguageNamesIn
@@ -44,6 +49,7 @@ import dev.patrickgold.florisboard.ime.core.Subtype
 import dev.patrickgold.florisboard.ime.input.CapitalizationBehavior
 import dev.patrickgold.florisboard.ime.input.HapticVibrationMode
 import dev.patrickgold.florisboard.ime.input.InputFeedbackActivationMode
+import dev.patrickgold.florisboard.ime.keyboard.DoubleSpaceAction
 import dev.patrickgold.florisboard.ime.keyboard.IncognitoMode
 import dev.patrickgold.florisboard.ime.keyboard.SpaceBarMode
 import dev.patrickgold.florisboard.ime.landscapeinput.LandscapeInputUiMode
@@ -52,6 +58,7 @@ import dev.patrickgold.florisboard.ime.media.emoji.EmojiHistory
 import dev.patrickgold.florisboard.ime.media.emoji.EmojiSkinTone
 import dev.patrickgold.florisboard.ime.media.emoji.EmojiSuggestionType
 import dev.patrickgold.florisboard.ime.nlp.SpellingLanguageMode
+import dev.patrickgold.florisboard.ime.nlp.latin.AutoCorrectStrength
 import dev.patrickgold.florisboard.ime.smartbar.CandidatesDisplayMode
 import dev.patrickgold.florisboard.ime.smartbar.ExtendedActionsPlacement
 import dev.patrickgold.florisboard.ime.smartbar.IncognitoDisplayMode
@@ -102,6 +109,20 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val syncToSystem = enum(
             key = "clipboard__sync_to_system",
             default = ClipboardSyncBehavior.NO_EVENTS,
+        )
+        // Opt-in on purpose (issue #329): this quietly changes what the user pastes, and that is only
+        // ever acceptable because they asked for it.
+        val stripTrackingParams = boolean(
+            key = "clipboard__strip_tracking_params",
+            default = false,
+        )
+        // On by default, unlike the link cleaner above (issue #335). The difference is what is at stake
+        // when it is wrong: dropping a tracking parameter can break a link, while dropping the space the
+        // selection handle caught costs nothing anyone wanted to keep — and a selection made of nothing
+        // but whitespace is left alone, so the one case where the padding *is* the content still works.
+        val trimOnCopy = boolean(
+            key = "clipboard__trim_on_copy",
+            default = true,
         )
         val suggestionEnabled = boolean(
             key = "clipboard__suggestion_enabled",
@@ -176,13 +197,34 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "correction__auto_capitalization",
             default = true,
         )
+        // How much tap evidence autocorrect wants before replacing a word on its own (issue #295). Only
+        // the silent swap is affected — every level shows the same suggestions in the strip.
+        val autoCorrectStrength = enum(
+            key = "correction__auto_correct_strength",
+            default = AutoCorrectStrength.BALANCED,
+        )
         val autoSpacePunctuation = boolean(
             key = "correction__auto_space_punctuation",
+            default = false,
+        )
+        // The other half of the same idea (issue #329): auto-space puts a space *after* a punctuation
+        // mark, this removes one the user typed *before* it. Its own switch rather than a widening of
+        // auto-space, because this one rewrites what was already typed.
+        val tightenPunctuationSpacing = boolean(
+            key = "correction__tighten_punctuation_spacing",
             default = false,
         )
         val doubleSpacePeriod = boolean(
             key = "correction__double_space_period",
             default = true,
+        )
+        // What that second tap writes (issue #333). Kept apart from the switch above rather than folded
+        // into it as an "off" value, so nobody's existing on/off choice has to be migrated to keep
+        // meaning what it meant. The default asks the language rather than naming a character — Hindi
+        // ends a sentence with the danda (issue #315).
+        val doubleSpaceAction = enum(
+            key = "correction__double_space_action",
+            default = DoubleSpaceAction.PUNCTUATION,
         )
         val rememberCapsLockState = boolean(
             key = "correction__remember_caps_lock_state",
@@ -214,6 +256,15 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val showKeyTouchBoundaries = boolean(
             key = "devtools__show_touch_boundaries",
+            default = false,
+        )
+        // Makes the floating button insert as if the accessibility input connection did not exist, i.e.
+        // the way it must on Android 12 and older, where that API is not there at all. Without this the
+        // whole node/placeholder/paste half of the insert path (issue #314) is unreachable on a modern
+        // phone — and an emulator cannot stand in for it, because the apps whose fields misreport their
+        // placeholder are exactly the ones not installed there.
+        val forceLegacyInsertion = boolean(
+            key = "devtools__force_legacy_insertion",
             default = false,
         )
         val showDragAndDropHelpers = boolean(
@@ -311,6 +362,23 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "dictate__trust_user_certificates",
             default = false,
         )
+        /**
+         * Seconds a request may go without a byte before it counts as failed (issue #337).
+         *
+         * One number for both halves of the wait — the gap between bytes and the budget for the whole
+         * call — because they are the same question to the person waiting, and telling the two apart
+         * takes knowing how OkHttp works. Two minutes is right for a cloud provider; the reason this is
+         * adjustable at all is the self-hosted end of the range, where a model on a slow machine can
+         * think for longer than that before it answers. Uploads are not capped by this: while bytes are
+         * moving, every one of them starts the clock again.
+         *
+         * The file import ignores anything lower than its own, more generous limits — a screen with a
+         * cancel button on it is not the place to give up early.
+         */
+        val requestTimeout = int(
+            key = "dictate__request_timeout",
+            default = 120,
+        )
 
         // --- DEPRECATED flat credential prefs (migration source only) ----------------------------
         // Kept solely so DictateProviderMigrator can copy them into the keyring once. Do not read these
@@ -400,11 +468,25 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             default = false,
         )
         // Hold-to-record instead of tap-to-start/tap-to-stop (issue #235): press and hold the mic, speak,
-        // release to send — slide left to discard, slide up to latch. Off by default because it replaces
-        // the mic's long-press shortcuts (file transcription, send-with-local-model) with the hold
-        // itself. Long-form segmented ignores it: a ten-minute dictation cannot be held down.
+        // release to send — slide left to discard, slide up to latch. Long-form segmented ignores it: a
+        // ten-minute dictation cannot be held down.
+        //
+        // ON by default since 2026-09-06. It shipped off because it takes the mic's *idle* long-press,
+        // which is how you pick a file to transcribe (#88) — but that has its own way in since #301: share
+        // the file to Dictate, or use the import row in the Dictate settings. Holding to speak is what
+        // almost everyone reaches for; transcribing a file is the rarer errand and no longer depends on
+        // this gesture. The send-button hold for the on-device model (#228) is not affected, since that
+        // one is only reachable while a recording is already running.
         val pushToTalk = boolean(
             key = "dictate__push_to_talk",
+            default = true,
+        )
+        // Guard for the one-time switch of existing users onto hold-to-record (the new default above).
+        // Fires once, so a keyboard already in use ends up behaving like a fresh install rather than
+        // keeping a default nobody chose; the setting is one tap away in Dictate › Recording for anyone
+        // who wants the old behaviour. See DictateLegacyMigrator.migratePushToTalkDefaultIfNeeded.
+        val pushToTalkDefaultMigrated = boolean(
+            key = "dictate__push_to_talk_default_migrated",
             default = false,
         )
         // Minutes the on-device model may sit idle before it is unloaded from RAM to free memory (models
@@ -434,6 +516,20 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "dictate__instant_recording_skip_numeric",
             default = true,
         )
+
+        /**
+         * Narrows instant recording to the one moment the user clearly meant it: having just switched
+         * *to* Dictate from another keyboard (issue #224). With this off it fires on every field the
+         * keyboard opens on, which as a default keyboard is most taps into most fields.
+         *
+         * Stored beside [instantRecording] rather than folded into one enum so that nobody's existing
+         * setting has to be migrated; the settings screen presents the two as a single three-way choice.
+         */
+        val instantRecordingAfterSwitchOnly = boolean(
+            key = "dictate__instant_recording_after_switch_only",
+            default = false,
+        )
+
         // Floating dictation button (issue #88): the in-app master toggle. The bubble only shows when
         // this is on AND the DictateAccessibilityService is enabled in the system accessibility settings
         // (the latter is the actual permission; this lets the user hide the bubble without digging into
@@ -482,6 +578,31 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "dictate__floating_button_remember_position",
             default = true,
         )
+        // The remembered positions themselves (issue #323). Each is an anchor — a side of the screen plus
+        // a share of the travel — not a pixel pair, so a position keeps its meaning when the screen it was
+        // made on changes shape: a rotation, a foldable opening, a move into split screen. Persisted
+        // because the map used to live in the accessibility service and nowhere else, which made
+        // "remember" true only until that service was next restarted.
+        val floatingButtonPositions = custom(
+            key = "dictate__floating_button_positions",
+            default = BubbleAnchors.Empty,
+            serializer = BubbleAnchors.Serializer,
+        )
+        // Which apps the button may appear over (issue #392). ALL by default, so the setting changes
+        // nothing until someone opens it. Note the load order: the accessibility service can connect
+        // before the preference store has finished loading, so the first value the bubble sees is this
+        // default — it fails open, and the flow re-emits the real one a moment later.
+        val floatingButtonAppScope = enum(
+            key = "dictate__floating_button_app_scope",
+            default = DictateFloatingButtonAppScope.ALL,
+        )
+        // The apps themselves. One list for both directions of floatingButtonAppScope, so switching the
+        // mode keeps the selection rather than silently emptying it.
+        val floatingButtonApps = custom(
+            key = "dictate__floating_button_apps",
+            default = BubbleApps.Empty,
+            serializer = BubbleApps.Serializer,
+        )
         // Vibrate briefly when the button is tapped.
         val floatingButtonHaptic = boolean(
             key = "dictate__floating_button_haptic",
@@ -524,11 +645,22 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "dictate__instant_output",
             default = true,
         )
-        // Real-time (streaming) transcription (issue #128): show text live while speaking, for providers
+        // Real-time (streaming) transcription (issue #128): transcribe while speaking, for providers
         // that support it (OpenAI realtime, Soniox, Deepgram, …). Global switch; falls back to batch when
         // the selected provider has no realtime support. Default off.
         val realtimeTranscription = boolean(
             key = "dictate__realtime_transcription",
+            default = false,
+        )
+        // Whether the streaming transcript stays out of sight until the recording is stopped (issue #345).
+        // The stream runs either way — this only decides whether its provisional words are typed into the
+        // field as they arrive or held back and inserted in one piece at the end, which reads like a batch
+        // dictation at streaming speed.
+        //
+        // Stored beside [realtimeTranscription] rather than folded into one enum so that nobody's existing
+        // on/off choice needs migrating; false keeps exactly the behaviour realtime has always had.
+        val realtimeHidePreview = boolean(
+            key = "dictate__realtime_hide_preview",
             default = false,
         )
         // --- Long-form segmented dictation (issue #170) ------------------------------------------
@@ -626,6 +758,32 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val historyAudioBudgetMb = int(
             key = "dictate__history_audio_budget_mb",
             default = 200,
+        )
+        // --- Folder export (issue #379) ----------------------------------------------------------
+        // A SAF tree URI we hold a persisted read+write grant on. Every finished dictation is written
+        // into it as a plain .txt the moment it exists, so whatever the user already runs on that folder
+        // (a sync client, a script, an agent) can pick it up. Empty = off, which is also where a revoked
+        // grant lands. Deliberately not an account integration: the app writes files, it never uploads.
+        val historyExportFolderUri = string(
+            key = "dictate__history_export_folder_uri",
+            default = "",
+        )
+        // Display name of that folder, so the settings row can name it without touching SAF.
+        val historyExportFolderName = string(
+            key = "dictate__history_export_folder_name",
+            default = "",
+        )
+        // Also write the retained WAV next to the transcript. Only does anything while audio retention
+        // is on — without it the recording is deleted as soon as it has been transcribed.
+        val historyExportAudio = boolean(
+            key = "dictate__history_export_audio",
+            default = false,
+        )
+        // Epoch millis of the last write that failed (0 = none since the last success), so the settings
+        // row can say so. There is no retry queue; "export everything" is the catch-up.
+        val historyExportLastFailure = long(
+            key = "dictate__history_export_last_failure",
+            default = 0L,
         )
         // --- Lifetime dictation statistics (issue #142) ------------------------------------------
         // Never auto-reset (unlike totalAudioSeconds below, which the rate nudge clears); only the user
@@ -860,6 +1018,21 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
     }
 
+    /**
+     * Whether word learning is actually running — the switch **and** the dictionary it writes into.
+     *
+     * The settings screen has always greyed the learning switch out while the internal user dictionary
+     * is off, because promotion writes into exactly that dictionary and a learned word could otherwise
+     * never graduate. The engine never knew about that dependency: it read the switch alone, so the
+     * combination "learning on, internal dictionary off" learned words all the way into a dictionary
+     * that was then not consulted — half-working in the way the comment on that screen warns about.
+     *
+     * Reachable for real since issue #375 turned learning on by default: anyone who had switched the
+     * internal dictionary off would land in exactly that state without ever touching the learning switch.
+     */
+    val wordLearningIsOn: Boolean
+        get() = suggestion.learnTypedWords.get() && dictionary.enableFlorisUserDictionary.get()
+
     val dictionary = Dictionary()
     inner class Dictionary {
         val enableSystemUserDictionary = boolean(
@@ -906,6 +1079,17 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val historyRecentMaxSize = int(
             key = "emoji__history_recent_max_size",
             default = 90,
+        )
+
+        /**
+         * The row of recently used emojis between the Smartbar and the keyboard (issue #340).
+         *
+         * Off by default on purpose: it makes the keyboard one row taller, and growing everyone's
+         * keyboard unasked on an update is the kind of surprise that gets reported as a bug.
+         */
+        val rowEnabled = boolean(
+            key = "emoji__row_enabled",
+            default = false,
         )
         val suggestionEnabled = boolean(
             key = "emoji__suggestion_enabled",
@@ -961,6 +1145,51 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
     }
 
+    val sticker = Sticker()
+    inner class Sticker {
+        // The folder the user picked, as a SAF tree URI we hold a persisted read permission on.
+        // Empty = the sticker panel is off, which is also what an revoked permission falls back to.
+        val folderUri = string(
+            key = "sticker__folder_uri",
+            default = "",
+        )
+        // Display name of that folder, kept so the settings row can name it without touching SAF.
+        val folderName = string(
+            key = "sticker__folder_name",
+            default = "",
+        )
+        // Smallest thumbnail width in dp; the grid fits as many columns as this allows.
+        val thumbnailSize = int(
+            key = "sticker__thumbnail_size",
+            default = 72,
+        )
+        val historyRecentMaxSize = int(
+            key = "sticker__history_recent_max_size",
+            default = 16,
+        )
+        // Ask for a second tap before a sticker is sent (#308). Off by default: it costs every send a
+        // tap to save the occasional wrong one, which is only worth it to someone who keeps making
+        // that mistake. A quick double-tap arms and confirms in one motion, so the habit survives.
+        val confirmBeforeInsert = boolean(
+            key = "sticker__confirm_before_insert",
+            default = false,
+        )
+        // Favourites and recently used, per category (see StickerHistory).
+        val historyData = custom(
+            key = "sticker__history_data",
+            default = StickerHistory.Empty,
+            serializer = StickerHistory.Serializer,
+        )
+        // What the user decided about their packs beyond what the folder says: the order of the tabs
+        // and the sticker that stands for each one. Keyed by pack name, because a renamed folder is a
+        // different document id (see StickerPackSettings).
+        val packSettings = custom(
+            key = "sticker__pack_settings",
+            default = StickerPackSettings.Empty,
+            serializer = StickerPackSettings.Serializer,
+        )
+    }
+
     val gestures = Gestures()
     inner class Gestures {
         val swipeUp = enum(
@@ -979,9 +1208,16 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "gestures__swipe_right",
             default = SwipeAction.SWITCH_TO_PREV_SUBTYPE,
         )
+        // Up and down default to a cursor move, where up used to do nothing at all (issue #364): the
+        // vertical glide they switch on is the other half of the one left/right have had all along, and a
+        // trackpad that only goes sideways was the complaint that asked for it.
         val spaceBarSwipeUp = enum(
             key = "gestures__space_bar_swipe_up",
-            default = SwipeAction.NO_ACTION,
+            default = SwipeAction.MOVE_CURSOR_UP,
+        )
+        val spaceBarSwipeDown = enum(
+            key = "gestures__space_bar_swipe_down",
+            default = SwipeAction.MOVE_CURSOR_DOWN,
         )
         val spaceBarSwipeLeft = enum(
             key = "gestures__space_bar_swipe_left",
@@ -1002,6 +1238,13 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         val deleteKeyLongPress = enum(
             key = "gestures__delete_key_long_press",
             default = SwipeAction.DELETE_CHARACTER,
+        )
+        // On by default (issue #366): for anyone who only taps ?123 nothing changes except that the layer
+        // appears under the finger instead of on the lift, and holding it open is the gesture people arrive
+        // from an iPhone expecting. Switchable all the same, because it does claim the slide off the key.
+        val momentaryLayer = boolean(
+            key = "gestures__momentary_layer",
+            default = true,
         )
         val swipeDistanceThreshold = int(
             key = "gestures__swipe_distance_threshold",
@@ -1100,9 +1343,13 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "input_feedback__haptic_feat_key_press",
             default = true,
         )
+        // On since issue #325. Both were off upstream, which was defensible while gesture swipes fed
+        // nothing and a long press was only ever an accent popup. Now that the swipe channel reaches the
+        // keyboard, and because both also carry the push-to-talk hold — start, lock, and *discard a
+        // recording* — leaving them off shipped a destructive gesture you cannot feel.
         val hapticFeatKeyLongPress = boolean(
             key = "input_feedback__haptic_feat_key_long_press",
-            default = false,
+            default = true,
         )
         val hapticFeatKeyRepeatedAction = boolean(
             key = "input_feedback__haptic_feat_key_repeated_action",
@@ -1110,7 +1357,7 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
         )
         val hapticFeatGestureSwipe = boolean(
             key = "input_feedback__haptic_feat_gesture_swipe",
-            default = false,
+            default = true,
         )
         val hapticFeatGestureMovingSwipe = boolean(
             key = "input_feedback__haptic_feat_gesture_moving_swipe",
@@ -1280,6 +1527,24 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "localization__subtypes",
             default = "[]",
         )
+        // One-time guard: existing Hindi subtypes were saved with the old character layout and the
+        // Devanagari digit row, neither of which the preset asks for any more (issue #315). See
+        // DictateLegacyMigrator.migrateHindiDefaultsIfNeeded.
+        val hindiDefaultsMigrated = boolean(
+            key = "localization__hindi_defaults_migrated",
+            default = false,
+        )
+        // One-time guard: French subtypes saved before the "french" punctuation rule existed still name
+        // "default", which would let punctuation tightening eat the space French wants before ? ! ; :
+        // (issue #329). See DictateLegacyMigrator.migrateFrenchPunctuationRuleIfNeeded.
+        val frenchPunctuationMigrated = boolean(
+            key = "localization__french_punctuation_migrated",
+            default = false,
+        )
+        val devanagariPunctuationMigrated = boolean(
+            key = "localization__devanagari_punctuation_migrated",
+            default = false,
+        )
     }
 
     val other = Other()
@@ -1351,6 +1616,12 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "smartbar__extended_actions_placement",
             default = ExtendedActionsPlacement.ABOVE_CANDIDATES,
         )
+        // Word and character count of the selection, in the suggestion strip (issue #335). Off by
+        // default: the strip is the suggestions' place, and this borrows it for a moment.
+        val selectionMetrics = boolean(
+            key = "smartbar__selection_metrics",
+            default = false,
+        )
     }
 
     val spelling = Spelling()
@@ -1399,6 +1670,55 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "suggestion__next_word_prediction",
             default = true,
         )
+        // Build a personal vocabulary out of what is typed (issue #318): a word no dictionary knows is
+        // remembered, offered from the second sighting and added to the personal dictionary at the third.
+        //
+        // **On by default since issue #375.** It shipped off, on the reasoning that a keyboard which
+        // starts keeping a record of what you write is a thing to be asked about rather than told. What
+        // that produced instead was a core keyboard feature nobody found: it sits three screens deep, and
+        // a personal vocabulary that only switched-on users get is one most users never have. The record
+        // it keeps never leaves the device, it is listed word by word in settings with a delete next to
+        // each, and none of the never-learn rules move — nothing in incognito, in password fields, or
+        // from anything that was not typed key by key, dictation and glide included.
+        //
+        // No migration key is needed for the flip: JetPref only stores what was touched, so a user who
+        // switched this *off* keeps their stored `false`, and only those who never had an opinion get the
+        // new default. The release that carries this says so in its what's-new, with where to turn it off.
+        val learnTypedWords = boolean(
+            key = "suggestion__learn_typed_words",
+            default = true,
+        )
+        // Guard for the one-time switch of existing users onto word learning (the new default above).
+        //
+        // Same shape and same reasoning as `dictate__push_to_talk_default_migrated`: a keyboard already in
+        // use would otherwise keep a default nobody ever chose and go on behaving differently from every
+        // fresh install for as long as it exists — and this is the feature the whole personalisation story
+        // rests on, so "only new installs get it" is most of the feature not existing.
+        //
+        // It does write over a deliberate "off", and nothing can tell that apart from a default never
+        // touched. That is exactly why it belongs in the what's-new of the release that carries it: the
+        // switch is one tap away in Typing › User dictionaries, the learned words are listed word by word
+        // with a delete next to each, and the release has to say so plainly. Idempotent via this flag.
+        val learnTypedWordsDefaultMigrated = boolean(
+            key = "suggestion__learn_typed_words_default_migrated",
+            default = false,
+        )
+        // On by default (issue #329), unlike the learning above: this one keeps no record, changes
+        // nothing on its own, and only ever appears when somebody has literally typed a sum and then an
+        // equals sign. Tapping it is the only way anything reaches the field.
+        val mathSuggestions = boolean(
+            key = "suggestion__math_suggestions",
+            default = true,
+        )
+        // Some apps set TYPE_TEXT_FLAG_NO_SUGGESTIONS on ordinary text fields — Instagram and a lot of
+        // WebViews do — which takes the composing region away and with it every word suggestion and the
+        // autocorrect (issue #296). Gboard and SwiftKey ignore that flag outside password fields; this
+        // lets the user do the same. Off by default: an app asking for a quiet strip is taken at its word
+        // until somebody says otherwise.
+        val ignoreAppSuggestionBlock = boolean(
+            key = "suggestion__ignore_app_suggestion_block",
+            default = false,
+        )
         val displayMode = enum(
             key = "suggestion__display_mode",
             default = CandidatesDisplayMode.DYNAMIC_SCROLLABLE,
@@ -1434,6 +1754,20 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
             key = "theme__accent_color",
             default = Color(0xFF30B7E6), // Dictate light blue
             serializer = ColorPreferenceSerializer,
+        )
+        // What the high-contrast switch (#387) replaced, so turning it off puts the user's own themes
+        // back. The switch itself is not a preference: its state is read off dayThemeId/nightThemeId,
+        // so picking another theme by hand turns it off instead of leaving a stored "on" lying about
+        // the keyboard someone is looking at.
+        val themeIdBeforeHighContrastDay = custom(
+            key = "theme__day_theme_id_before_high_contrast",
+            default = extCoreTheme("floris_day"),
+            serializer = ExtensionComponentName.Serializer,
+        )
+        val themeIdBeforeHighContrastNight = custom(
+            key = "theme__night_theme_id_before_high_contrast",
+            default = extCoreTheme("floris_night"),
+            serializer = ExtensionComponentName.Serializer,
         )
         val sunriseTime = localTime(
             key = "theme__sunrise_time",
@@ -1549,6 +1883,14 @@ abstract class FlorisPreferenceModel : PreferenceModel() {
                 if (QuickAction.InsertKey(TextKeyData.TOGGLE_RESIZE_MODE) !in newArrangement) {
                     newArrangement = newArrangement.copy(
                         dynamicActions = newArrangement.dynamicActions.plus(QuickAction.InsertKey(TextKeyData.TOGGLE_RESIZE_MODE))
+                    )
+                }
+                // The split keyboard (issue #362) is new, so an arrangement saved before it existed has
+                // no entry for it and would never show it — the action list is the saved one, not the
+                // default one.
+                if (QuickAction.InsertKey(TextKeyData.SPLIT_LAYOUT) !in newArrangement) {
+                    newArrangement = newArrangement.copy(
+                        dynamicActions = newArrangement.dynamicActions.plus(QuickAction.InsertKey(TextKeyData.SPLIT_LAYOUT))
                     )
                 }
                 val json = QuickActionJsonConfig.encodeToString(newArrangement.distinct())

@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Backspace
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.EmojiEmotions
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardHide
@@ -25,7 +26,11 @@ import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.SelectAll
+import androidx.compose.material.icons.filled.VerticalAlignBottom
+import androidx.compose.material.icons.filled.VerticalAlignTop
+import androidx.compose.material.icons.automirrored.outlined.Assignment
 import androidx.compose.material.icons.outlined.Gif
+import org.florisboard.lib.compose.icons.Sticker
 import androidx.compose.ui.graphics.vector.ImageVector
 import dev.patrickgold.florisboard.R
 
@@ -48,8 +53,18 @@ enum class LegacyEditAction {
     HISTORY,
     REINSERT,
     GIF,
+    STICKER,
+    CLIPBOARD,
     SWITCH,
-    BACKSPACE;
+    BACKSPACE,
+    // Jump to the very start or end of the field (issue #335). They matter more here than on the
+    // keyboard: this layout has no arrow keys at all, only the space bar's swipe, which walks the
+    // cursor one character at a time.
+    HOME,
+    END,
+    // The text editing panel (issue #386). For the same reason HOME/END matter here: the classic layout
+    // has no arrow keys at all, so this is the only place in it where a cursor can be steered.
+    EDITING;
 
     val icon: ImageVector
         get() = when (this) {
@@ -65,8 +80,13 @@ enum class LegacyEditAction {
             HISTORY -> Icons.Default.History
             REINSERT -> Icons.Default.Replay
             GIF -> Icons.Outlined.Gif
+            STICKER -> Icons.Outlined.Sticker
+            CLIPBOARD -> Icons.AutoMirrored.Outlined.Assignment
             SWITCH -> Icons.Default.KeyboardHide
             BACKSPACE -> Icons.Default.Backspace
+            HOME -> Icons.Default.VerticalAlignTop
+            END -> Icons.Default.VerticalAlignBottom
+            EDITING -> Icons.Default.EditNote
         }
 
     @get:StringRes
@@ -84,9 +104,15 @@ enum class LegacyEditAction {
             HISTORY -> R.string.dictate__legacy_action_history
             REINSERT -> R.string.dictate__legacy_action_reinsert
             GIF -> R.string.dictate__legacy_action_gif
+            STICKER -> R.string.sticker__title
+            CLIPBOARD -> R.string.clipboard__header_title
             SWITCH -> R.string.dictate__legacy_action_switch
             // Reuses the existing backspace content-description string (already localised everywhere).
             BACKSPACE -> R.string.dictate__legacy_backspace
+            // Same buttons as in the Smartbar, so they carry the same names rather than a second set.
+            HOME -> R.string.quick_action__move_start_of_page
+            END -> R.string.quick_action__move_end_of_page
+            EDITING -> R.string.quick_action__ime_ui_mode_editing
         }
 
     companion object {
@@ -95,7 +121,10 @@ enum class LegacyEditAction {
             listOf(SELECT_ALL, UNDO, REDO, CUT, COPY, PASTE, EMOJI, NUMBERS)
 
         /** Most action rows fit about this many keys comfortably across a phone; the editor caps here. */
-        const val MAX_ROW = 8
+        // Raised from 8 when stickers and the clipboard joined: the default row already held
+        // eight, so at the old limit both new buttons were greyed out for everyone who had
+        // never edited the row — which is most people.
+        const val MAX_ROW = 10
 
         /** Serialises [actions] for the pref (comma-separated enum names). */
         fun serialize(actions: List<LegacyEditAction>): String = actions.joinToString(",") { it.name }

@@ -16,6 +16,9 @@
 
 package dev.patrickgold.florisboard.app.settings.clipboard
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import dev.patrickgold.florisboard.R
@@ -59,6 +62,25 @@ fun ClipboardScreen() = FlorisScreen {
             title = stringRes(R.string.pref__clipboard__sync_to_system_clipboard__label),
             entries = enumDisplayEntriesOf(ClipboardSyncBehavior::class),
             enabledIf = { prefs.clipboard.useInternalClipboard isEqualTo true },
+        )
+
+        // Sits with the top-level clipboard behaviour rather than in a group, because it applies to
+        // every way of pasting there is — the key, the panel and the suggestion chip (issue #329).
+        SwitchPreference(
+            prefs.clipboard.stripTrackingParams,
+            icon = Icons.Default.LinkOff,
+            modifier = Modifier.settingsSearchAnchor("pref__clipboard__strip_tracking_params__label"),
+            title = stringRes(R.string.pref__clipboard__strip_tracking_params__label),
+            summary = stringRes(R.string.pref__clipboard__strip_tracking_params__summary),
+        )
+
+        // The counterpart on the way out: cut and copy alike, whichever button was used (issue #335).
+        SwitchPreference(
+            prefs.clipboard.trimOnCopy,
+            icon = Icons.Default.ContentCut,
+            modifier = Modifier.settingsSearchAnchor("pref__clipboard__trim_on_copy__label"),
+            title = stringRes(R.string.pref__clipboard__trim_on_copy__label),
+            summary = stringRes(R.string.pref__clipboard__trim_on_copy__summary),
         )
 
         PreferenceGroup(title = stringRes(R.string.pref__clipboard__group_clipboard_suggestion__label)) {

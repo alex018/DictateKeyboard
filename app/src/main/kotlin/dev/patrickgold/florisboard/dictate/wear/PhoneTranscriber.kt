@@ -23,6 +23,7 @@ import dev.patrickgold.florisboard.dictate.provider.ProviderAccount
 import dev.patrickgold.florisboard.dictate.provider.ProviderRegistry
 import dev.patrickgold.florisboard.dictate.provider.TranscriptionApi
 import dev.patrickgold.florisboard.dictate.provider.TranscriptionRequest
+import dev.patrickgold.florisboard.dictate.provider.chatModelFor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -41,12 +42,23 @@ object PhoneTranscriber {
         val model = account.transcriptionModel.ifBlank { preset.defaultTranscriptionModel ?: "" }
         val language = prefs.dictate.activeInputLanguage.get().takeIf { it != DictateLanguages.DETECT }
 
-        val request = TranscriptionRequest(audioFile = audio, model = model, language = language)
+        val request = TranscriptionRequest(
+            audioFile = audio, model = model, language = language,
+            // The watch dictates with the phone's languages, so it gets the same list-shaped hint (#99).
+            expectedLanguages = DictateLanguages.expectedLanguages(
+                activeCode = prefs.dictate.activeInputLanguage.get(),
+                selectionRaw = prefs.dictate.inputLanguages.get(),
+            ),
+        )
 
         val transcript = if (preset.transcriptionApi == TranscriptionApi.LOCAL_ONDEVICE) {
             // The phone is configured for on-device STT: transcribe locally, no network/key needed.
-            LocalTranscriptionProvider(LocalTranscriptionProvider.modelDir(context.applicationContext, model))
-                .transcribe(request).text.trim()
+            LocalTranscriptionProvider(
+                LocalTranscriptionProvider.modelDir(context.applicationContext, model),
+                // Same budget as the cloud branch below (#354) — a watch waiting on a phone that never
+                // answers is the worst place for an unbounded decode.
+                timeoutMillis = prefs.dictate.requestTimeout.get() * 1000L,
+            ).transcribe(request).text.trim()
         } else {
             val client = OpenAiCompatibleClient.from(
                 preset,
@@ -54,6 +66,7 @@ object PhoneTranscriber {
                 baseUrlOverride = if (account.isCustom || preset.allowsCustomBaseUrl) account.customBaseUrl.takeIf { it.isNotBlank() } else null,
                 proxy = prefs.dictate.dictateProxyConfig(),
                 trustUserCerts = prefs.dictate.trustUserCertificates.get(),
+                timeoutSeconds = prefs.dictate.requestTimeout.get().toLong(),
             )
             client.transcribe(request).text.trim()
         }
@@ -75,13 +88,14 @@ object PhoneTranscriber {
         val apiKey = rewordingAccount.apiKey.ifBlank { transcriptionKey }
         if (apiKey.isBlank() && rewordingPreset.transcriptionApi != TranscriptionApi.LOCAL_ONDEVICE) return transcript
 
-        val chatModel = rewordingAccount.chatModel.ifBlank { rewordingPreset.defaultChatModel ?: "gpt-4o-mini" }
+        val chatModel = chatModelFor(rewordingAccount, rewordingPreset)
         val client = OpenAiCompatibleClient.from(
             rewordingPreset,
             apiKey,
             baseUrlOverride = if (rewordingAccount.isCustom || rewordingPreset.allowsCustomBaseUrl) rewordingAccount.customBaseUrl.takeIf { it.isNotBlank() } else null,
             proxy = prefs.dictate.dictateProxyConfig(),
             trustUserCerts = prefs.dictate.trustUserCertificates.get(),
+            timeoutSeconds = prefs.dictate.requestTimeout.get().toLong(),
         )
         val autoApply = withContext(Dispatchers.IO) {
             PromptsDatabaseHelper.getInstance(context).getAll()

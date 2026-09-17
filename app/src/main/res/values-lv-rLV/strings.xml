@@ -9,7 +9,7 @@
     <string name="one_handed__move_start_btn_content_description" comment="Content description for the one-handed move to left button">Pārvietot tastatūru uz kreiso pusi.</string>
     <string name="one_handed__move_end_btn_content_description" comment="Content description for the one-handed move to right button">Pārvietot tastatūru uz labo pusi.</string>
     <!-- Media strings -->
-    <string name="settings__media__title">Sajūtu rakstzīmes un GIF</string>
+    <string name="settings__media__title">Emocijzīmes, GIF un uzlīmes</string>
     <string name="media__tab__emojis" comment="Tab description for emojis in the media UI">Sajūtu rakstzīmes</string>
     <string name="media__tab__emoticons" comment="Tab description for emoticons in the media UI">Sajūtu rakstzīmes</string>
     <string name="media__tab__kaomoji" comment="Tab description for kaomoji in the media UI">Japāņu sajūtu zīmes (Kaomoji)</string>
@@ -18,6 +18,8 @@
     <string name="prefs__media__emoji_history__title" comment="Preference group title">Emocijzīmju vēsture</string>
     <string name="prefs__media__emoji_history_enabled" comment="Preference title">Iespējot emocijzīmju vēsturi</string>
     <string name="prefs__media__emoji_history_enabled__summary" comment="Preference summary">Paturēt nesen izmantotās emocijzīmes ātrai piekļuvei</string>
+    <string name="prefs__media__emoji_row_enabled">Emocijzīmju rinda</string>
+    <string name="prefs__media__emoji_row_enabled__summary">Rādīt virs tastatūras rindu ar piespraustajām un nesen izmantotajām emocijzīmēm</string>
     <string name="prefs__media__emoji_history_pinned_update_strategy" comment="Preference title">Atjaunināšanas stratēģija (Piesprausta)</string>
     <string name="prefs__media__emoji_history_recent_update_strategy" comment="Preference title">Atjaunināšanas stratēģija (Nesena)</string>
     <string name="prefs__media__emoji_history_max_size">Lielākais paturamo vienumu skaits</string>
@@ -58,6 +60,10 @@
     <string name="quick_action__arrow_left__tooltip">Izpildīt bultu pa kreisi</string>
     <string name="quick_action__arrow_right" comment="Please mind the limited available space for the quick action strings">Pa labi</string>
     <string name="quick_action__arrow_right__tooltip">Izpildīt bultu pa labi</string>
+    <string name="quick_action__move_start_of_page" comment="Please mind the limited available space for the quick action strings">Teksta sākums</string>
+    <string name="quick_action__move_start_of_page__tooltip">Pāriet uz teksta sākumu</string>
+    <string name="quick_action__move_end_of_page" comment="Please mind the limited available space for the quick action strings">Teksta beigas</string>
+    <string name="quick_action__move_end_of_page__tooltip">Pāriet uz teksta beigām</string>
     <string name="quick_action__ime_hide_ui" comment="Please mind the limited available space for the quick action strings">Paslēpt tastatūru</string>
     <string name="quick_action__ime_hide_ui__tooltip">Veikt tastatūras paslēpšanu</string>
     <string name="quick_action__clipboard_clear_primary_clip__tooltip">Izpildīt galvenā starliktuves vienuma notīrīšanu</string>
@@ -67,6 +73,7 @@
     <string name="quick_action__clipboard_cut__tooltip">Izpildīt starpliktuves izgriešanu</string>
     <string name="quick_action__clipboard_paste" comment="Please mind the limited available space for the quick action strings">Ielīmēt</string>
     <string name="quick_action__clipboard_paste__tooltip">Izpildīt starpliktuves ielīmēšanu</string>
+    <string name="quick_action__clipboard_select">Atlasīt</string>
     <string name="quick_action__clipboard_select_all" comment="Please mind the limited available space for the quick action strings">Iezīmēt visu</string>
     <string name="quick_action__clipboard_select_all__tooltip">Veikt visu starpliktuves vienumu atlasīšanu</string>
     <string name="quick_action__ime_ui_mode_clipboard" comment="Please mind the limited available space for the quick action strings">Starpliktuve</string>
@@ -91,6 +98,12 @@
     <string name="quick_action__floating_window_mode" comment="Please mind the limited available space for the quick action strings">Peldošs</string>
     <string name="quick_action__one_handed_mode" comment="Please mind the limited available space for the quick action strings">Vienrocīgs</string>
     <string name="quick_action__one_handed_mode__tooltip">Pārslēgt vienrocīgo ievadi</string>
+    <string name="quick_action__split_layout" comment="Please mind the limited available space for the quick action strings">Dalīta</string>
+    <string name="quick_action__split_layout__tooltip">Pārslēgt dalīto tastatūru</string>
+    <string name="quick_action__toggle_number_row" comment="Quick action that shows or hides the row of digit keys above the letters. Please mind the limited available space for the quick action strings">Ciparu rinda</string>
+    <string name="quick_action__toggle_number_row__tooltip">Rādīt vai paslēpt ciparu rindu</string>
+    <string name="quick_action__view_numeric_advanced" comment="Quick action that replaces the whole keyboard with a number pad (digits, arithmetic signs, brackets). Not to be confused with the number row above. Please mind the limited available space for the quick action strings">Ciparu tastatūra</string>
+    <string name="quick_action__view_numeric_advanced__tooltip">Pārslēgties uz ciparu tastatūru</string>
     <string name="quick_action__drag_marker__tooltip" comment="This action is only used as a placeholder in the actions editor drag and drop screen and only visible in debug mode">Pašreizējā rādītāja vilkšanas atrašanās vieta</string>
     <string name="quick_action__noop" comment="Noop=no operation; this action is only used as a placeholder in the actions editor drag and drop screen">Nekas</string>
     <string name="quick_action__noop__tooltip" comment="Noop=no operation; this action is only used as a placeholder in the actions editor drag and drop screen">Nav darbības</string>
@@ -118,13 +131,22 @@
     <string name="settings__search__clear_recent" comment="Button to clear the recent searches">Notīrīt nesenos meklējumus</string>
     <string name="settings__search__popular" comment="Header above a small list of popular settings shortcuts">Populāri</string>
     <string name="settings__search__no_results" comment="Shown when a settings search returns nothing">Nav atrasts neviens iestatījums</string>
+    <string name="settings__search__keywords__text_expansion" comment="NOT SHOWN ANYWHERE — extra search terms that lead to the typing-shortcut setting, which lets a short trigger expand into a saved block of text. Translate as the words people in your language would actually type when looking for that feature, separated by spaces. Do not translate word for word; add or drop terms as makes sense.">teksta izvēršana saīsinājums fragments makro automātiskais teksts veidne snippet text expansion</string>
+    <string name="settings__search__keywords__selection_metrics" comment="NOT SHOWN ANYWHERE — extra search terms that lead to the setting which shows how many words and characters are selected. Translate as the words people in your language would actually type when looking for it, separated by spaces. Do not translate word for word.">vārdu skaits rakstzīmju skaits garums statistika</string>
+    <string name="settings__search__keywords__trim_on_copy" comment="NOT SHOWN ANYWHERE — extra search terms that lead to the setting which removes spaces and line breaks at the ends of copied text. Translate as the words people in your language would actually type when looking for it, separated by spaces. Do not translate word for word.">apgriezt atstarpes noņemt tīrīt kopēt izgriezt</string>
+    <string name="settings__search__keywords__clear_cache">kešatmiņa krātuve vieta pagaidu faili atbrīvot dzēst tīrīt</string>
+    <string name="settings__search__keywords__momentary_layer">turēt vilkt simbols slānis pieturzīmes pagaidu Īsā brīdī 123 iphone</string>
+    <string name="settings__search__keywords__emoji_row">emocijzīmes rinda josla nesen izmantotās virs tastatūras ātri</string>
+    <string name="settings__search__keywords__request_timeout">noildze taimauts lēns gaidīšana savienojums sekundes</string>
     <string name="settings__localization__title" comment="Title of languages and Layout screen">Valodas un izkārtojumi</string>
     <string name="settings__localization__display_language_names_in__label" comment="Label of Display language names in preference">Attēlot valodu nosaukumu</string>
     <string name="settings__localization__display_keyboard_labels_in_subtype_language" comment="Label of Display keyboard labels in subtype language preference">Attēlot tastatūras iezīmes apakšveida valodā</string>
     <string name="settings__localization__group_subtypes__label" comment="Label of subtypes group">Apakšveidi</string>
     <string name="settings__localization__subtype_add_title" comment="Title of subtype dialog when adding a new subtype">Pievienot apakšveidu</string>
     <string name="settings__localization__language_pack_title" comment="Title of the language pack manager screen for managing installed and custom language packs">Pārvaldīt uzstādītās valodas</string>
-    <string name="settings__localization__language_pack_summary" comment="Summary of preference item for adding a new language pack">Izmēģinājuma: paplašinājumi, kas pievieno noteiktas valodas (pagaidām ķīniešu uz apveidu balstīta).</string>
+    <string name="settings__localization__language_pack_summary" comment="Summary of preference item for adding a new language pack">Paplašinājumi, kas pievieno ievades metodi: ķīniešu piņjiņ un uz apveidu balstītās metodes.</string>
+    <string name="settings__localization__subtype_download_title">Valodas dati</string>
+    <string name="settings__localization__subtype_download_message">Pievienojot valodu {language_name}, tiks lejupielādēti {size} vārdu sarakstu un konteksta datu. Ieteikumiem un automātiskajai labošanai tie ir nepieciešami. Lejupielāde sākas uzreiz un var izmantot mobilos datus.</string>
     <string name="settings__localization__subtype_edit_title" comment="Title of subtype dialog when editing an existing subtype">Labot apakšveidu</string>
     <string name="settings__localization__subtype_locale" comment="Label for locale dropdown in subtype dialog">Galvenā valoda</string>
     <string name="settings__localization__subtype_popup_mapping" comment="Label for popup mapping dropdown in subtype screen">Uznirstošo lodziņu kartēšana</string>
@@ -153,12 +175,16 @@
     <string name="settings__localization__subtype_error_fields_no_value" comment="Error message shown in subtype editor if at least one field is set to '- select -' (means no value specified)">Vismaz vienam laukam nav atlasīta vērtība. Lūgums norādīt vērtību laukam(iem).</string>
     <string name="settings__localization__subtype_error_layout_not_installed" comment="Error message shown in subtype list when a layout is not installed, where %s will be replaced by the layout ID">{layout_id} (nav uzstādīts)</string>
     <string name="settings__localization__subtype_missing_language_pack_title">Nepieciešama vārdnīca</string>
-    <string name="settings__localization__subtype_missing_language_pack_message">Šai valodai nepieciešama lejupielādējama vārdnīca vārdu ieteikumiem un pārveidošanai (piem. Romaji → Kana). Kamēr tā nav uzstādīta, rakstīšana darbojas, bet pārveidošana neko nedara.</string>
+    <string name="settings__localization__subtype_missing_language_pack_message">Šai ievades metodei nepieciešama lejupielādējama tabula, lai rakstīto pārvērstu rakstzīmēs. Kamēr tā nav uzstādīta, taustiņi darbojas, bet nekas netiek pārvērsts.</string>
+    <string name="settings__localization__subtype_language_pack_auto_title">Tabula lejupielādējas pati</string>
+    <string name="settings__localization__subtype_language_pack_auto_message">Šī ievades metode pārvērš rakstīto rakstzīmēs, izmantojot aptuveni 3 MB lielu tabulu. Tā tiek lejupielādēta vienreiz, tūlīt pēc šī apakštipa saglabāšanas.</string>
     <string name="settings__localization__subtype_missing_language_pack_action">Lejupielādēt vārdnīcu</string>
     <string name="settings__localization__group_layouts__label" comment="Label of layouts group">Izkārtojumi</string>
     <string name="settings__localization__subtype_delete_confirmation_title" comment="Title of the subtype delete confirmation dialog">Izdzēšanas apstiprināšana</string>
     <string name="settings__localization__subtype_delete_confirmation_warning" comment="Warning message in the confirmation dialog to confirm the user's intent to delete">Vai tiešām izdzēst šo apakšveidu?</string>
     <string name="settings__theme__title" comment="Title of the Theme screen">Izskats</string>
+    <string name="pref__theme__high_contrast__label" comment="Label of the switch that turns on the measured high-contrast theme pair">Augsts kontrasts</string>
+    <string name="pref__theme__high_contrast__summary" comment="Summary of the high-contrast switch. 7:1 is the WCAG AAA contrast ratio for body text; keep the ratio as digits.">Apmaloti taustiņi, katrs uzraksts mērīts 7:1. Iestata dienu un nakti.</string>
     <string name="pref__theme__mode__label" comment="Label of the theme mode preference">Izskata veids</string>
     <string name="pref__theme__sunrise_time__label" comment="Label of the sunrise time preference">Saullēkta laikā</string>
     <string name="pref__theme__sunset_time__label" comment="Label of the sunset time preference">Saulrieta laikā</string>
@@ -276,6 +302,7 @@
     <string name="snygg__rule_element__smartbar_candidate_clip">Viedjoslas ieteikumu starpliktuves vienums</string>
     <string name="snygg__rule_element__smartbar_candidate_clip_icon">Viedjoslas ieteikumu starpliktuves vienuma ikona</string>
     <string name="snygg__rule_element__smartbar_candidate_clip_text">Viedjoslas ieteikumu starpliktuves vienuma teksts</string>
+    <string name="snygg__rule_element__smartbar_candidate_clip_dismiss">Viedjoslas starpliktuves ieteikuma aizvēršanas poga</string>
     <string name="snygg__rule_element__smartbar_candidate_spacer">Viedjoslas ieteikumu atdalītājs</string>
     <string name="snygg__rule_element__subtype_panel_list">Apakšveida paneļu saraksts</string>
     <string name="snygg__rule_element__subtype_panel_list_item">Apakšveida paneļu saraksta vienums</string>
@@ -286,10 +313,13 @@
     <string name="snygg__rule_selector__disabled">Atspējots</string>
     <string name="snygg__property_name__background">Pamats</string>
     <string name="snygg__property_name__foreground">Priekšplāns</string>
+    <string name="snygg__property_name__background_blur">Fona izpludināšana</string>
     <string name="snygg__property_name__background_image">Fona attēls</string>
     <string name="snygg__property_name__content_scale">Satura mērogs</string>
     <string name="snygg__property_name__border_color">Apmales krāsa</string>
     <string name="snygg__property_name__border_style">Apmales veids</string>
+    <string name="snygg__property_name__background_sheen">Virsmas spīdums</string>
+    <string name="snygg__property_name__border_sheen">Malas spīdums</string>
     <string name="snygg__property_name__border_width">Apmales platums</string>
     <string name="snygg__property_name__font_family">Fontu saime</string>
     <string name="snygg__property_name__font_size">Burtu lielums</string>
@@ -328,6 +358,8 @@
     <string name="snygg__property_value__circle_shape">Apļa veidols</string>
     <string name="snygg__property_value__cut_corner_shape_dp">Nogriezta stūra aprise (dp)</string>
     <string name="snygg__property_value__cut_corner_shape_percent">Nogriezta stūra aprise (%)</string>
+    <string name="snygg__property_value__sheen">Spīdums</string>
+    <string name="snygg__property_value__squircle_shape">Squircle</string>
     <string name="snygg__property_value__rounded_corner_shape_dp">Noapaļota stūra aprise (dp)</string>
     <string name="snygg__property_value__rounded_corner_shape_percent">Noapaļota stūra aprise (%)</string>
     <string name="snygg__property_value__dp_size">Lielums (dp)</string>
@@ -362,7 +394,7 @@
     <string name="pref__input_feedback__any_feat_key_press__summary" comment="Preference summary">piemēram, taustiņi, pogas, sajūtu rakstzīmju cilnes</string>
     <string name="pref__input_feedback__any_feat_key_long_press__summary" comment="Preference summary">piemēram, uznirstošā izvēlne</string>
     <string name="pref__input_feedback__any_feat_key_repeated_action__summary" comment="Preference summary">piemēram, dzēšanas taustiņš</string>
-    <string name="pref__input_feedback__any_feat_gesture_swipe__summary" comment="Preference summary">nav īstenots</string>
+    <string name="pref__input_feedback__any_feat_gesture_swipe__summary" comment="Preference summary">piemēram, valodas maiņa ar pavilkšanu, vilkšanas rakstīšana</string>
     <string name="pref__input_feedback__any_feat_gesture_moving_swipe__summary" comment="Preference summary">piemēram, rādītāja vadīšanas pavilkšana</string>
     <string name="settings__keyboard__title" comment="Title of Keyboard preferences screen">Tastatūra</string>
     <string name="pref__keyboard__number_row__label" comment="Preference title">Ciparu rinda</string>
@@ -377,6 +409,8 @@
     <string name="pref__keyboard__font_size_multiplier__label" comment="Preference title">Fonta izmēra reizinātājs</string>
     <string name="pref__keyboard__group_layout__label" comment="Preference group title">Izkārtojums</string>
     <string name="pref__keyboard__landscape_input_ui_mode__label" comment="Preference value">Līmeniska pilnekrāna ievade</string>
+    <string name="pref__keyboard__key_spacing__label" comment="Preference title">Atstarpe starp taustiņiem</string>
+    <string name="pref__keyboard__key_spacing__summary" comment="Preference summary">{v}% vertikāli, {h}% horizontāli — lielāka atstarpe padara mazākus taustiņus, nevis tastatūru.</string>
     <string name="pref__keyboard__group_keypress__label" comment="Preference group title">Taustiņa piespiešana</string>
     <string name="pref__keyboard__popup_enabled__label" comment="Preference title">Uznirstošā lodziņa redzamība</string>
     <string name="pref__keyboard__popup_enabled__summary" comment="Preference summary">Rādīt uznirstošo lodziņu, kad tiek nospiests taustiņš</string>
@@ -394,6 +428,8 @@
     <string name="pref__smartbar__group_layout_specific__label" comment="Preference group title">Izkārtojuma iespējas</string>
     <string name="pref__smartbar__flip_toggles__label" comment="Preference title">Apvērst pārslēgšanas pogas</string>
     <string name="pref__smartbar__flip_toggles__summary" comment="Preference summary">Apvērš darbību rindas slēdžus</string>
+    <string name="pref__smartbar__selection_metrics__label" comment="Preference title, keep short">Atlases skaitītājs</string>
+    <string name="pref__smartbar__selection_metrics__summary" comment="Preference summary, keep short (one line)">Atlasītie vārdi un rakstzīmes</string>
     <string name="pref__smartbar__shared_actions_auto_expand_collapse__label" comment="Preference title">Pašizpildoša izvēršanās/sakļaušanās</string>
     <string name="pref__smartbar__shared_actions_auto_expand_collapse__summary" comment="Preference summary">Pašizpildoši izvērš/sakļauj kopīgo darbību rindu atbilstoši pašreizējam stāvoklim</string>
     <string name="pref__smartbar__extended_actions_placement__label" comment="Preference title">Darbību rindas novietojums</string>
@@ -413,8 +449,15 @@
     <string name="pref__correction__auto_space_punctuation__summary" comment="Preference summary">Automātiski ievietot atstarpi pēc pieturzīmes</string>
     <string name="pref__correction__remember_caps_lock_state__label" comment="Preference title">Atcerēties burtslēga stāvokli</string>
     <string name="pref__correction__remember_caps_lock_state__summary" comment="Preference summary">Burtslēgs paliks ieslēgts pēc pārvietošanās uz citu ievades lauku</string>
-    <string name="pref__correction__double_space_period__label" comment="Preference title">Divkāršas atstarpes punkts</string>
-    <string name="pref__correction__double_space_period__summary" comment="Preference summary">Divreiz piesitot atstarpes taustiņam, tiks ievietots punkts un atstarpe</string>
+    <string name="pref__correction__double_space_period__label" comment="Preference title">Dubultpieskāriens atstarpes taustiņam</string>
+    <string name="enum__double_space_action__punctuation" comment="Enum value label">Teikuma beigas</string>
+    <string name="enum__double_space_action__punctuation__description" comment="Enum value description. The character in brackets is the Devanagari danda, the Hindi full stop, and must stay as it is.">Rakstzīme, ar kuru rakstāmajā valodā beidzas teikums, un aiz tās atstarpe — parasti punkts, hindi valodā danda (।).</string>
+    <string name="enum__double_space_action__comma" comment="Enum value label">Komats</string>
+    <string name="enum__double_space_action__comma__description" comment="Enum value description">Komats un aiz tā atstarpe.</string>
+    <string name="enum__double_space_action__newline" comment="Enum value label">Jauna rinda</string>
+    <string name="enum__double_space_action__newline__description" comment="Enum value description">Rindas pārtraukums atstarpes vietā.</string>
+    <string name="enum__double_space_action__slash" comment="Enum value label">Slīpsvītra</string>
+    <string name="enum__double_space_action__slash__description" comment="Enum value description">Slīpsvītra bez atstarpēm, piemēram, rakstot un/vai.</string>
     <string name="pref__spelling__title" comment="Preference group title">Pareizrakstība</string>
     <string name="pref__spelling__active_spellchecker__summary_disabled">Atspējots sistēmā. Nepareizi vārdi netiks pasvītroti ar sarkanu līniju. Piesist, lai mainītu.</string>
     <string name="pref__spelling__active_spellchecker__summary_none">Nav norādīta iekļauta teksta lauka pareizrakstības pārbaudīšanas pakalpe. Piesist, lai mainītu.</string>
@@ -441,16 +484,24 @@
     <string name="settings__udm__open_system_manager_ui" comment="Label of the Open system manager UI menu option">Atvērt sistēmas pārvaldnieka lietotāja saskarni</string>
     <string name="settings__udm__dictionary_import_success" comment="Message for dictionary import success">Lietotāja vārdnīca tika veiksmīgi ievietota.</string>
     <string name="settings__udm__dictionary_export_success" comment="Message for dictionary export success">Lietotāja vārdnīca tika veiksmīgi izdota.</string>
+    <string name="settings__udm__add_from_contacts">Pievienot vārdu no kontaktpersonām</string>
+    <string name="settings__udm__import_from_contacts_file">Importēt vārdus no kontaktpersonu faila</string>
+    <string name="settings__udm__contacts_confirm_message">Šajā failā atrasti {count} vārdi. Pievienot tos vārdnīcai?</string>
+    <string name="settings__udm__contacts_added_one">{name} pievienots vārdnīcai</string>
+    <string name="settings__udm__contacts_added_many">Vārdnīcai pievienoti {count} vārdi</string>
+    <string name="settings__udm__contacts_added_none">Nav atrasts neviens jauns vārds</string>
+    <string name="settings__udm__contacts_file_unreadable">Šo failu nevarēja nolasīt</string>
+    <string name="settings__udm__contacts_no_picker">Nav atrasta neviena kontaktpersonu lietotne</string>
     <string name="settings__udm__dialog__title_add" comment="Label for the title (when in adding mode) in the user dictionary add/edit dialog">Pievienot vārdu</string>
     <string name="settings__udm__dialog__title_edit" comment="Label for the title (when in editing mode) in the user dictionary add/edit dialog">Labot vārdu</string>
     <string name="settings__udm__dialog__word_label" comment="Label for the word in the user dictionary add/edit dialog">Vārds</string>
     <string name="settings__udm__dialog__word_error_empty" comment="Error label for the word in the user dictionary add/edit dialog">Lūgums ievadīt vārdu</string>
-    <string name="settings__udm__dialog__word_error_invalid" comment="Error label for the word in the user dictionary add/edit dialog">Lūgums ievadīt vārdu, kas atbilst {regex}</string>
+    <string name="settings__udm__dialog__word_error_invalid">Šajā laukā var ievadīt vienu vārdu — bez atstarpēm, komatiem un semikoliem. Veselam teikumam vai vairāku rindu tekstam izveido fragmentu sadaļā Uzvednes.</string>
     <string name="settings__udm__dialog__freq_label" comment="Label for the frequency in the user dictionary add/edit dialog. The two decimal placeholders are the minimum and maximum frequency, both inclusive.">Biežums (starp {f_min} un {f_max})</string>
     <string name="settings__udm__dialog__freq_error_empty" comment="Error label for the frequency in the user dictionary add/edit dialog">Lūgums ievadīt biežuma vērtību</string>
     <string name="settings__udm__dialog__freq_error_invalid" comment="Error label for the frequency in the user dictionary add/edit dialog">Lūgums ievadīt derīgu skaitli, kas ir norādītajās robežās</string>
     <string name="settings__udm__dialog__shortcut_label" comment="Label for the shortcut in the user dictionary add/edit dialog">Saīsne (pēc izvēles)</string>
-    <string name="settings__udm__dialog__shortcut_error_invalid" comment="Error label for the shortcut in the user dictionary add/edit dialog">Lūgums ievadīt saīsni, kas atbilst {regex}</string>
+    <string name="settings__udm__dialog__shortcut_error_invalid">Saīsne ir viens vārds — bez atstarpēm, komatiem un semikoliem.</string>
     <string name="settings__udm__dialog__locale_label" comment="Label for the language code in the user dictionary add/edit dialog">Valodas kods (pēc izvēles)</string>
     <string name="settings__udm__dialog__locale_error_invalid" comment="Error label for the language code in the user dictionary add/edit dialog">Šis valodas kods neatbilst vēlamajam veidolam. Kodam ir vai nu jāborāda tikai valoda (piemēram, en), vai valoda un valsts (piemēram, en_US), vai arī valoda, valsts un raksts (piemēram, en_US-script).</string>
     <string name="settings__gestures__title" comment="Title of Gestures screen">Kustību un slīdošā rakstīšana</string>
@@ -473,9 +524,12 @@
     <string name="pref__gestures__swipe_left__label" comment="Preference title">Pavilkt pa kreisi</string>
     <string name="pref__gestures__swipe_right__label" comment="Preference title">Pavilkt pa labi</string>
     <string name="pref__gestures__space_bar_swipe_up__label" comment="Preference title">Pavilkt no atstarpes taustiņa uz augšu</string>
+    <string name="pref__gestures__space_bar_swipe_down__label" comment="Preference title">Pavilkt no atstarpes taustiņa uz leju</string>
     <string name="pref__gestures__space_bar_swipe_left__label" comment="Preference title">Pavilkt no atstarpes taustiņa pa kreisi</string>
     <string name="pref__gestures__space_bar_swipe_right__label" comment="Preference title">Pavilkt no atstarpes taustiņa pa labi</string>
     <string name="pref__gestures__space_bar_long_press__label" comment="Preference title">Atstarpes taustiņa ilga piespiešana</string>
+    <string name="pref__gestures__momentary_layer__label" comment="Preference title, keep short">Turiet, lai ieskatītos slānī</string>
+    <string name="pref__gestures__momentary_layer__summary" comment="Preference summary, keep short (one line)">Turiet ?123, velciet līdz rakstzīmei un atlaidiet — tā tiek ievietota un burti atgriežas</string>
     <string name="pref__gestures__delete_key_swipe_left__label" comment="Preference title">Pavilkt no izdzēšanas taustiņa pa kreisi</string>
     <string name="pref__gestures__delete_key_long_press__label" comment="Preference title">Dzēšanas taustiņa ilga piespiešana</string>
     <string name="pref__gestures__swipe_velocity_threshold__label" comment="Preference title">Pavilkšanas ātruma slieksnis</string>
@@ -490,6 +544,10 @@
     </string>
     <string name="pref__other__settings_language__label" comment="Label of Settings language preference in Other">Iestatījumu valoda</string>
     <string name="pref__other__show_app_icon__label" comment="Label of Show app icon preference in Other">Rādīt lietotnes ikonu palaidējā</string>
+    <string name="pref__other__clear_cache__label">Notīrīt kešatmiņu</string>
+    <string name="pref__other__clear_cache__summary">Pagaidu faili: {size}</string>
+    <string name="pref__other__clear_cache__confirm">Notīrīt</string>
+    <string name="pref__other__clear_cache__message">Dzēš pagaidu failus, kurus lietotne var izveidot no jauna: kopīgotu failu, kas tiek transkribēts, lejupielādētus GIF un uzlīmes, atkodētus attēlus. Diktēšanas vēsture, ieraksti, iestatījumi un vārdnīcas netiek aiztiktas. Šobrīd notiekošs ieraksts vai transkripcija var tikt pārtraukta.</string>
     <string name="pref__other__show_app_icon__summary_atleast_q" comment="Summary of Show app icon preference in Other for Android 10+">Vienmēr iespējots Android 10+ sistēmas ierobežojumu dēļ</string>
     <!-- About UI strings -->
     <string name="about__title" comment="Title of About activity">Par</string>
@@ -552,6 +610,10 @@
     <string name="backup_and_restore__back_up__destination_share_intent">Trešās puses lietotne ar kopīgošanas izvēlni</string>
     <string name="backup_and_restore__back_up__files">Atlasīt, kam veidot rezerves kopiju</string>
     <string name="backup_and_restore__back_up__files_jetpref_datastore">Uzstādījumi</string>
+    <string name="backup_and_restore__back_up__files_provider_credentials">API atslēgas un paroles</string>
+    <string name="backup_and_restore__back_up__credentials_warning">Šis arhīvs satur tavas API atslēgas un paroles atklātā tekstā, kā arī tavu Dictate Cloud kredītu — ikviens, kas to saņem, var diktēt uz tava rēķina. Nenodod to tālāk, un, ja jau esi nodevis, nomaini atslēgu pie sava pakalpojuma sniedzēja. Viss pārējais, kas atzīmēts zemāk, ceļo kopā ar to, tostarp transkripcijas vēsture un starpliktuve.</string>
+    <string name="backup_and_restore__back_up__credentials_excluded_note">Šajā arhīvā nav ne API atslēgu, ne paroļu, ne Dictate Cloud kredīta, tāpēc to var nodot tālāk, taču tavas tas arī neatjaunos. Viss pārējais, kas atzīmēts zemāk, tajā joprojām ir, tostarp transkripcijas vēsture un starpliktuve.</string>
+    <string name="backup_and_restore__back_up__personal_content_note">Šajā arhīvā nav API atslēgu un paroļu, bet ir viss, kas atzīmēts zemāk: transkripcijas vēsture kopā ar saglabātajiem ierakstiem, starpliktuve, tavi uzvedņi un vārdi, ko tastatūra no tevis iemācījusies.</string>
     <string name="backup_and_restore__back_up__files_ime_keyboard">Tastatūras paplašinājumi</string>
     <string name="backup_and_restore__back_up__files_ime_spelling">Pareizrakstības paplašinājumi / vārdnīcas</string>
     <string name="backup_and_restore__back_up__files_ime_theme">Izskata paplašinājumi</string>
@@ -567,6 +629,7 @@
     <string name="backup_and_restore__restore__metadata">Atlasīts rezerves kopiju arhīvs</string>
     <string name="backup_and_restore__restore__metadata_warn_different_version">Šis rezerves kopiju arhīvs tika izveidots ne pašreizējā lietotnes laidienā, kas kopumā ir atbalstīts. Jāņem vērā, ka var būt mazas nepilnības vai atsevišķi uzstādījumi var netikt pienācīgi pārsūtīti iespēju atšķirību dēļ.</string>
     <string name="backup_and_restore__restore__metadata_warn_different_vendor">Šis rezerves kopiju arhīvs tika izveidots trešās puses lietotnē, kas kopumā netiek atbalstīts. Ir iespējami datu zudumi, un šāda veida atjaunošana ir katra paša ziņā.</string>
+    <string name="backup_and_restore__restore__metadata_note_no_credentials">Šajā dublējuma arhīvā nav API atslēgu un paroļu. Viss pārējais tiek atjaunots. Apvienošana saglabā atslēgas, kas šajā ierīcē jau ir; pārrakstīšana tās izdzēš — arī Dictate Cloud atjaunošanas kodu, ko nevar ievadīt vēlreiz.</string>
     <string name="backup_and_restore__restore__metadata_error_invalid_metadata">Šis rezerves kopiju arhīvs satur nederīgus metadatus. Vai nu tas ir bojāts, vai arī nepienācīgi pārveidots. Atjaunošana no šī arhīva nav iespējama, lūgums atlasīt citu.</string>
     <string name="backup_and_restore__restore__metadata_error_nothing_to_restore">Šis rezerves kopiju arhīvs nesatur atjaunojamas datnes, lūgums atlasīt citu.</string>
     <string name="backup_and_restore__restore__mode">Atjaunošanas veids</string>
@@ -589,7 +652,10 @@
     <string name="crash_multiple_notification__title" comment="Title of the notification for consecutive crashes">Izskatās, ka Dictate atkārtoti pārstāj darboties…</string>
     <string name="crash_multiple_notification__body" comment="Body of the notification for consecutive crashes">Notiek atkāpšanāš uz iepriekšējo tastatūru, lai apturētu nebeidzamu avārijas cilpu. Piesist, lai apskatītu kļūdu izklāstu</string>
     <!-- Clipboard strings -->
+    <string name="editing__back_to_keyboard">Atpakaļ uz tastatūru</string>
     <string name="clipboard__header_title">Starpliktuve</string>
+    <string name="clipboard__search_placeholder" comment="Hint inside the clipboard search field">Meklēt starpliktuvē</string>
+    <string name="clipboard__search_no_results" comment="Shown when no clip contains what was typed">Neviens ieraksts to nesatur</string>
     <string name="clipboard__disabled__title">Starpliktuves vēsture pašreiz ir atspējota</string>
     <string name="clipboard__disabled__message">{app_name} starpliktuves vēsture ļauj ātri saglabāt un piekļūt saturam un attēliem, kas tiek kopēti, ar iespēju piespraust vienumus, uzstādīt pašattīrīšanos un uzstādīt lielāko pieļaujamo vienumu ierobežojumu.</string>
     <string name="clipboard__disabled__enable_button">Iespējot starpliktuves vēsturi</string>
@@ -622,6 +688,8 @@
     <string name="pref__clipboard__sync_to_system_clipboard__label">Sinhronizēt uz sistēmas starpliktuvi</string>
     <string name="pref__clipboard__group_clipboard_suggestion__label">Starpliktuves ieteikumi</string>
     <string name="pref__clipboard__suggestion_enabled__label" comment="Preference title">Starpliktuves satura ieteikumi</string>
+    <string name="pref__clipboard__trim_on_copy__label" comment="Preference title, keep short">Apgriezt kopējot</string>
+    <string name="pref__clipboard__trim_on_copy__summary" comment="Preference summary, keep short (one line)">Noņem atstarpes un rindu pārtraukumus galos</string>
     <string name="pref__clipboard__suggestion_enabled__summary" comment="Preference summary">Ieteikt iepriekš starpliktuvē ievietotu saturu</string>
     <string name="pref__clipboard__num_history_grid_columns__label">Režģa sleju skaits</string>
     <string name="pref__clipboard__suggestion_timeout__label" comment="Preference title; Translators: This should form a sentence together with `pref__clipboard__suggestion_timeout__summary` and is the first part">Ierobežot starpliktuves ieteikumus līdz</string>
@@ -774,6 +842,7 @@
     <string name="action__apply">Pielietot</string>
     <string name="action__back_up">Veikt rezerves kopēšanu</string>
     <string name="action__cancel">Atcelt</string>
+    <string name="action__back">Atpakaļ</string>
     <string name="action__clear">Notīrīt</string>
     <string name="action__create">Izveidot</string>
     <string name="action__default">Noklusējums</string>
@@ -956,6 +1025,7 @@
     <string name="enum__swipe_action__move_cursor_start_of_page" comment="Enum value label">Pārvietot rādītāju uz lapas sākumu</string>
     <string name="enum__swipe_action__move_cursor_end_of_page" comment="Enum value label">Pārvietot rādītāju uz lapas beigām</string>
     <string name="enum__swipe_action__switch_to_clipboard_context" comment="Enum value label">Atvērt starpliktuves pārvaldnieku/vēsturi</string>
+    <string name="enum__swipe_action__switch_to_editing_context">Atvērt teksta rediģēšanas paneli</string>
     <string name="enum__swipe_action__shift" comment="Enum value label">Pārslēgšanās taustiņš</string>
     <string name="enum__swipe_action__redo" comment="Enum value label">Atatsaukt</string>
     <string name="enum__swipe_action__undo" comment="Enum value label">Atsaukt</string>
@@ -1001,12 +1071,19 @@
         <item quantity="one">{v} rakstzīme</item>
         <item quantity="other">{v} rakstzīmes</item>
     </plurals>
+    <plurals name="unit__words__written">
+        <item quantity="zero">{v} vārdu</item>
+        <item quantity="one">{v} vārds</item>
+        <item quantity="other">{v} vārdi</item>
+    </plurals>
     <plurals name="unit__candidates__written">
         <item quantity="zero">{v} izvēles iespēju</item>
         <item quantity="one">{v} izvēles iespēja</item>
         <item quantity="other">{v} izvēles iespējas</item>
     </plurals>
     <!-- Dictate strings -->
+    <string name="quick_action__ime_ui_mode_editing">Teksta rediģēšana</string>
+    <string name="quick_action__ime_ui_mode_editing__tooltip">Pārvietojiet kursoru, atlasiet un rediģējiet tekstu</string>
     <string name="quick_action__ime_ui_mode_dictate">Diktēšana</string>
     <string name="quick_action__ime_ui_mode_dictate__tooltip">Pieskarieties, lai diktētu, pieskarieties vēlreiz, lai transkribētu</string>
     <string name="quick_action__dictate_live_prompt">Balss norādījums</string>
@@ -1021,14 +1098,25 @@
     <string name="about__feedback__email">contact@devemperor.net</string>
     <string name="about__feedback__subject">Dictate Feedback</string>
     <string name="setup__provider__title">Izvēlieties, kā Dictate atšifrē runu</string>
-    <string name="setup__provider__choose_intro">Dictate pārvērš jūsu runu tekstā ar MI pakalpojuma palīdzību. To var iestatīt divos veidos, un abi tiek pilnībā atbalstīti — izvēlieties sev piemērotāko.</string>
+    <string name="setup__provider__choose_intro">Dictate pārvērš jūsu runu tekstā ar MI pakalpojuma palīdzību. Vairumam cilvēku noder kāds no abiem augšējiem veidiem — un, ja nevēlaties izmantot nevienu mākoņpakalpojumu, zemāk ir vēl divi.</string>
     <string name="setup__provider__choice_cloud_title">Pirkt kredītu lietotnē</string>
     <string name="setup__provider__choice_cloud_body">Dictate Cloud: nekur nav vajadzīgs konts, nav vajadzīga API atslēga. Diktēšanas minūtes pērkat caur Google Play, un tās nekad nezaudē derīgumu. Ērtais ceļš — un mazliet dārgāks nekā doties tieši pie pakalpojuma sniedzēja.</string>
     <string name="setup__provider__choice_cloud_btn">Rādīt kredīta paketes</string>
     <string name="setup__provider__choice_own_title">Izmantot savu MI pakalpojuma sniedzēju</string>
     <string name="setup__provider__choice_own_body">Izveidojiet atslēgu pie sev tīkama pakalpojuma sniedzēja — Groq ikdienas diktēšanai ir bez maksas. Jūs paturat savu kontu un maksājat tieši sniedzējam pēc viņa cenām. Aizņem apmēram divas minūtes.</string>
     <string name="setup__provider__choice_own_btn">Iestatīt savu atslēgu</string>
-    <string name="setup__provider__back_to_choice">Atpakaļ pie abām iespējām</string>
+    <string name="setup__provider__back_to_choice">Atpakaļ pie visām iespējām</string>
+    <string name="setup__provider__more_ways">Labāk pavisam bez mākoņpakalpojuma?</string>
+    <string name="setup__provider__choice_local_title">Jūsu ierīcē, bezsaistē</string>
+    <string name="setup__provider__choice_local_body">Vienreiz lejupielādējiet runas modeli. Bez konta, bez izmaksām, un neviens ieraksts nepamet tālruni.</string>
+    <string name="setup__provider__choice_server_title">Savs serveris</string>
+    <string name="setup__provider__choice_server_body">Norādiet Dictate uz runas serveri, ko uzturat pats, vai uz jebkuru ar OpenAI saderīgu galapunktu.</string>
+    <string name="setup__provider__local_intro">Runas atpazīšana tad darbojas jūsu tālrunī: nekas netiek nekur sūtīts, un tas darbojas arī bez savienojuma. Izvēlieties tagad vienu modeli, ko lejupielādēt — vēlāk varēsiet pievienot vai nomainīt citus.</string>
+    <string name="setup__provider__local_recommended">Ieteikts jūsu valodai</string>
+    <string name="setup__provider__local_bigger">Precīzāks, taču ievērojami lielāka lejupielāde</string>
+    <string name="setup__provider__local_download_btn">Lejupielādēt modeli</string>
+    <string name="setup__provider__local_use_btn">Izmantot šo modeli</string>
+    <string name="setup__provider__local_all_models">Rādīt visus modeļus</string>
     <string name="setup__provider__intro">Dictate pārvērš jūsu runu tekstā ar tiešsaistes MI pakalpojuma palīdzību. Lai to izmantotu, jums ir vajadzīga sava personīgā atslēga šādam pakalpojumam.</string>
     <string name="setup__provider__what_is_key">API atslēga ir kā personīga parole, kas ļauj Dictate izmantot pakalpojumu jūsu vietā. Tās izveide ir bezmaksas un aizņem aptuveni divas minūtes.</string>
     <string name="setup__provider__recommended">Mēs iesakām <b>Groq</b> — tas ir ātrs un bezmaksas ikdienas diktēšanai.</string>
@@ -1092,6 +1180,17 @@
     <string name="dictate__floating_button_design_pill_summary">Aktīvā stāvoklī izvēršas, rādot taimeri un tiešraides viļņu formu.</string>
     <string name="dictate__floating_button_design_ring">Gredzens</string>
     <string name="dictate__floating_button_design_ring_summary">Kompakts aplis ar gredzenu, kas animējas ieraksta un transkripcijas laikā.</string>
+    <string name="dictate__floating_button_apps_title">Redzamība lietotnēs</string>
+    <string name="dictate__floating_button_apps_summary_all">Visās lietotnēs</string>
+    <string name="dictate__floating_button_apps_summary_only">Tikai {n} lietotnēs</string>
+    <string name="dictate__floating_button_apps_summary_except">Visur, izņemot {n} lietotnes</string>
+    <string name="dictate__floating_button_apps_scope_all">Visas lietotnes</string>
+    <string name="dictate__floating_button_apps_scope_only">Tikai zemāk atzīmētās lietotnes</string>
+    <string name="dictate__floating_button_apps_scope_except">Visas, izņemot zemāk atzīmētās</string>
+    <string name="dictate__floating_button_apps_note">Virs izlaistas lietotnes poga nekad netiek zīmēta, un Dictate tajā nelasa teksta laukus. Lietotne, kas iebilst pret pieejamības pakalpojumiem kā tādiem, tik un tā redzēs, ka pakalpojums ir ieslēgts.</string>
+    <string name="dictate__floating_button_apps_list_title">Lietotnes</string>
+    <string name="dictate__floating_button_apps_search">Meklēt lietotnes</string>
+    <string name="dictate__floating_button_apps_none">Nav atrasta neviena lietotne vaicājumam “{search_term}”</string>
     <string name="dictate__floating_button_design_title">Pogas stils</string>
     <string name="dictate__floating_button_haptic_summary_off">Bez vibrācijas, pieskaroties.</string>
     <string name="dictate__floating_button_haptic_summary_on">Īsa vibrācija, pieskaroties pogai.</string>
@@ -1147,6 +1246,8 @@
     <string name="dictate__error_transcription_failed">Transkribēšana neizdevās.</string>
     <string name="dictate__error_unknown">Nezināma kļūda transkribēšanas laikā.</string>
     <string name="dictate__error_rewording_failed">Pārformulēšana neizdevās.</string>
+    <string name="dictate__error_rewording_default_model">%1$s ir %2$s iebūvētais noklusējuma modelis, nevis jūsu izvēlētais. Izvēlieties pārfrāzēšanas modeli sadaļā MI pakalpojumu sniedzēji.</string>
+    <string name="dictate__notice_rewording_failed">Pārformulēšana neizdevās – ievietots neapstrādāts teksts</string>
     <string name="dictate__error_overlay_insert_clipboard">Šī lietotne tekstu nepieņēma. Tas ir starpliktuvē — turiet lauku un ielīmējiet.</string>
     <string name="dictate__error_invalid_api_key">Pārbaudiet savu API atslēgu</string>
     <string name="dictate__error_quota_exceeded">Sasniegta kvota vai ierobežojums</string>
@@ -1154,8 +1255,11 @@
     <string name="dictate__error_text_size_limit">Teksts pārāk garš pārformulēšanai</string>
     <string name="dictate__error_format_not_supported">Audio formāts netiek atbalstīts</string>
     <string name="dictate__error_timeout">Pieprasījuma noildze</string>
+    <string name="dictate__error_timeout_on_device">Ierīcē veiktā transkripcija ir pārāk lēna</string>
     <string name="dictate__error_network">Nav interneta savienojuma</string>
     <string name="dictate__error_server">Pakalpojuma sniedzējs nav pieejams – mēģiniet vēlreiz</string>
+    <string name="dictate__error_try_on_device">Nav savienojuma – mēģiniet ierīcē</string>
+    <string name="dictate__error_try_on_device_detail">Transkripcijai ierīcē savienojums nav vajadzīgs nemaz — tas palīdz gan tad, ja pakalpojums ir bloķēts, gan tad, ja nav signāla. Iestatiet to sadaļā MI pakalpojumu sniedzēji un ieslēdziet Bezsaistes rezerve, lai tā pārņemtu darbu pati.</string>
     <string name="dictate__action_settings">Atvērt iestatījumus</string>
     <string name="dictate__action_error_details">Rādīt kļūdas detaļas</string>
     <string name="dictate__error_details_title">Kļūdas detaļas</string>
@@ -1203,16 +1307,39 @@
     <string name="dictate__providers_status_unconfigured">Nav konfigurēts</string>
     <string name="dictate__providers_cap_stt">Transkribēšana</string>
     <string name="dictate__providers_cap_chat">Pārformulēšana</string>
-    <string name="dictate__providers_add_custom">Pievienot pielāgotu serveri</string>
-    <string name="dictate__providers_add_custom_summary">Jebkurš ar OpenAI saderīgs galapunkts</string>
+    <string name="dictate__providers_add_custom">Pievienot savu serveri</string>
+    <string name="dictate__providers_add_custom_summary">Pašmitināts vai jebkurš ar OpenAI saderīgs galapunkts — runas atpazīšanai un pārfrāzēšanai</string>
+    <string name="dictate__providers_azure_endpoint">Galapunkts ir blakus atslēgai portāla lapā “Keys and Endpoint”. MAI-Transcribe darbojas tikai reģionos East US, West US, West US 2, North Europe, Southeast Asia un Central India.</string>
+    <string name="dictate__providers_ollama_no_stt">Ollama nav runas atpazīšanas galapunkta, tāpēc tas var tikai pārfrāzēt. Lai diktētu caur savu serveri, palaidiet runas serveri (piemēram, Speaches, faster-whisper-server vai whisper.cpp) un pievienojiet to sadaļā “Pievienot savu serveri” — vai izmantojiet atpazīšanu ierīcē, kurai serveris nav vajadzīgs vispār.</string>
     <string name="dictate__providers_custom_title">Pielāgots serveris</string>
     <string name="dictate__providers_field_name">Nosaukums</string>
     <string name="dictate__providers_field_transcription_model">Transkribēšanas modelis</string>
     <string name="dictate__providers_field_chat_model">Pārformulēšanas modelis</string>
     <string name="dictate__providers_test">Pārbaudīt savienojumu</string>
-    <string name="dictate__providers_test_success">Savienots · {count} modeļi</string>
-    <string name="dictate__providers_test_failed">Savienojums neizdevās</string>
+    <string name="dictate__providers_test_transcribe">Pārbaudīt transkribēšanu</string>
+    <string name="dictate__providers_check_no_key">Vispirms ievadiet savu API atslēgu.</string>
+    <string name="dictate__providers_check_credentials_ok">Akreditācijas dati pārbaudīti · {count} modeļi</string>
+    <string name="dictate__providers_check_credentials_ok_nocount">Akreditācijas dati pārbaudīti</string>
+    <string name="dictate__providers_check_endpoint_ok">Serveris sasniegts · {count} modeļi</string>
+    <string name="dictate__providers_check_credentials_untested">Transkribēšana nav pārbaudīta.</string>
+    <string name="dictate__providers_check_transcription_ok">Transkribēšana pārbaudīta</string>
+    <string name="dictate__providers_check_transcription_text">Atgriezās kā: „{text}“</string>
+    <string name="dictate__providers_check_transcription_empty">Pieprasījums izgāja cauri, bet teksts neatgriezās — savienojums darbojas, šis modelis paraugu nesaprata.</string>
+    <string name="dictate__providers_check_failed_connection">Savienojuma pārbaude neizdevās</string>
+    <string name="dictate__providers_check_failed_transcription">Transkribēšanas pārbaude neizdevās</string>
+    <string name="dictate__providers_check_err_auth">Atslēga tika noraidīta. Pārbaudiet to un to, vai adrese pieder tam pašam kontam.</string>
+    <string name="dictate__providers_check_err_quota">Atslēga darbojas, bet kontam vairs nav kvotas vai ir pārsniegts ierobežojums. Pārbaudiet savu plānu pie pakalpojuma sniedzēja.</string>
+    <string name="dictate__providers_check_err_network">Serveri neizdevās sasniegt. Pārbaudiet adresi un interneta savienojumu.</string>
+    <string name="dictate__providers_check_err_timeout">Nav atbildes noteiktajā laikā. Pakalpojuma sniedzējs var būt noslogots — mēģiniet vēlreiz.</string>
+    <string name="dictate__providers_check_err_server">Pakalpojuma sniedzējs ziņo par savu kļūdu. Šeit nav ko mainīt; mēģiniet vēlāk.</string>
+    <string name="dictate__providers_check_err_format">Pakalpojuma sniedzējs noraidīja audio paraugu. Iespējams, šis formāts netiek atbalstīts.</string>
+    <string name="dictate__providers_check_err_unknown">Pieprasījums neizdevās.</string>
+    <string name="dictate__providers_azure_link_signup">Izveidot Azure kontu</string>
+    <string name="dictate__providers_azure_link_portal">Azure portāls</string>
+    <string name="dictate__providers_azure_link_guide">Iestatīšanas ceļvedis</string>
     <string name="dictate__providers_network_group">Tīkls</string>
+    <string name="dictate__request_timeout_title">Pieprasījuma noildze</string>
+    <string name="dictate__request_timeout_summary">{v} s · palieliniet lēnam savam serverim</string>
     <string name="dictate__proxy_title">Starpniekserveris</string>
     <string name="dictate__proxy_summary_off">Izslēgts · tiešs savienojums</string>
     <string name="dictate__proxy_enabled_title">Izmantot starpniekserveri</string>
@@ -1266,7 +1393,10 @@
     <string name="dictate__paragraph_split_off">Izslēgts</string>
     <string name="dictate__paragraph_split_value">Pēc {n} vārdiem</string>
     <string name="dictate__realtime_title">Reāllaika transkripcija</string>
-    <string name="dictate__realtime_summary">Rāda tekstu tiešraidē, kamēr runājat, pakalpojumiem, kas to atbalsta</string>
+    <string name="dictate__realtime_summary">Atšifrē jau runāšanas laikā, nevis pēc apturēšanas, pakalpojumiem, kas to atbalsta</string>
+    <string name="dictate__realtime_mode_off">Izslēgts</string>
+    <string name="dictate__realtime_mode_live">Rādīt tekstu runāšanas laikā</string>
+    <string name="dictate__realtime_mode_at_end">Rādīt tekstu tikai pēc apturēšanas</string>
     <string name="dictate__longform_title">Gara diktēšana</string>
     <string name="dictate__longform_summary">Transkribē garus diktātus fonā, daļu pa daļai, kamēr turpini runāt — ierakstīšanas laikā pieskaries Tālāk, lai nosūtītu pašreizējo daļu, tā beigās nav ilgi jāgaida.</string>
     <string name="dictate__longform_autosplit_title">Vieda automātiskā dalīšana</string>
@@ -1325,6 +1455,26 @@
     <string name="dictate__custom_words_title">Pielāgoti vārdi</string>
     <string name="dictate__custom_words_summary_empty">Pievienojiet vārdus vai tehniskos terminus, lai tie tiktu pareizi uzrakstīti</string>
     <string name="dictate__custom_words_placeholder">piem. FlorisBoard, Kubernetes, Renée, OAuth, Anthropic</string>
+    <string name="dictate__custom_words_summary">{count} vārdi · aptuveni {tokens} no {budget} marķieriem</string>
+    <string name="dictate__custom_words_budget_info">Katrs vārds no šejienes tiek nosūtīts līdzi ikvienai diktēšanai, un runas modelis no tā izlasa tikai aptuveni {budget} marķieru konteksta. Tavs saraksts aizņem aptuveni {tokens}.</string>
+    <string name="dictate__custom_words_budget_over">Tavs saraksts ir garāks, nekā runas modelis izlasa. Tam sasniedz aptuveni {fits} no taviem {count} vārdiem; pārējie tiek sūtīti ar katru diktēšanu un ignorēti. Plašākai vārdnīcai izmanto pielāgotās aizstāšanas — tās ir precīzas, darbojas bezsaistē un neko nemaksā.</string>
+    <string name="dictate__custom_words_import">Importēt vārdu sarakstu</string>
+    <string name="dictate__custom_words_export">Eksportēt vārdu sarakstu</string>
+    <string name="dictate__custom_words_export_filename">dictate_words.txt</string>
+    <string name="dictate__custom_words_import_title">Importēt vārdu sarakstu</string>
+    <string name="dictate__custom_words_import_fitting">{count} jauni vārdi no šī faila ietilpst tavā sarakstā.</string>
+    <string name="dictate__custom_words_import_known">{count} jau bija tajā.</string>
+    <string name="dictate__custom_words_import_nofit">{count} palika ārpusē — runas modelis izlasa tikai aptuveni {budget} marķieru konteksta, tāpēc tie tiktu sūtīti ar katru diktēšanu un ignorēti.</string>
+    <string name="dictate__custom_words_import_unusable">{count} rindās nebija nekā rakstāma, un tās tika izlaistas.</string>
+    <string name="dictate__custom_words_import_truncated">Tika nolasīti tikai pirmie {count} faila ieraksti.</string>
+    <string name="dictate__custom_words_import_also_dictionary">Pievienot tos arī personīgajai vārdnīcai</string>
+    <string name="dictate__custom_words_import_also_dictionary_summary">Šis saraksts pasaka tikai runas modelim, kā vārds rakstāms. Personīgā vārdnīca ir tā, ko tastatūra izmanto rakstīšanas laikā — tai nav garuma ierobežojuma, tāpēc tajā nonāk katrs faila vārds, ne tikai tie, kas ietilpst augšā.</string>
+    <string name="dictate__custom_words_import_empty">Šajā failā netika atrasts neviens vārds</string>
+    <string name="dictate__custom_words_import_done">Pievienoti {count} vārdi</string>
+    <string name="dictate__custom_words_import_done_dictionary">Pievienoti {count} vārdi un {dict} tavai personīgajai vārdnīcai</string>
+    <string name="dictate__file_unreadable">Šo failu neizdevās nolasīt</string>
+    <string name="dictate__file_export_done">Fails saglabāts</string>
+    <string name="dictate__file_export_failed">Šo failu neizdevās ierakstīt</string>
     <string name="dictate__rewording_group">Pārformulēšana (MI rediģēšana)</string>
     <string name="dictate__rewording_title">Pārformulēšana (MI)</string>
     <string name="dictate__rewording_summary_on">Ieslēgts – pārformulēt, tulkot un formatēt ar MI</string>
@@ -1353,7 +1503,11 @@
     <string name="dictate__prompt_name_title">Nosaukums</string>
     <string name="dictate__prompt_name_placeholder">piem. Labot gramatiku</string>
     <string name="dictate__prompt_text_title">Uzvedne</string>
-    <string name="dictate__prompt_text_placeholder">Norādījums, kas tiek nosūtīts MI modelim</string>
+    <string name="dictate__prompt_text_placeholder">Norādījums MI — vai [teksts kvadrātiekavās], lai ievietotu to bez izmaiņām</string>
+    <string name="dictate__prompt_trigger_title">Rakstīšanas saīsne (neobligāti)</string>
+    <string name="dictate__prompt_trigger_placeholder">piem. ;sig</string>
+    <string name="dictate__prompt_trigger_error_invalid">Saīsne ir viens vārds bez atstarpēm, ne garāks par 32 rakstzīmēm.</string>
+    <string name="dictate__prompt_trigger_error_duplicate">To jau izmanto “{name}”.</string>
     <string name="dictate__prompt_requires_selection_title">Nepieciešama atlase</string>
     <string name="dictate__prompt_requires_selection_summary">Darbojas ar atlasīto tekstu un aizstāj to</string>
     <string name="dictate__prompt_auto_apply_title">Lietot automātiski</string>
@@ -1401,6 +1555,7 @@
     <string name="dictate__prompt_library_all">Visas</string>
     <string name="dictate__prompt_library_add">Pievienot</string>
     <string name="dictate__prompt_library_added">Pievienota</string>
+    <string name="dictate__prompt_library_add_again">Pievienot vēlreiz</string>
     <string name="dictate__prompt_library_empty">Nav uzvednu, kas atbilstu jūsu meklējumam.</string>
     <string name="dictate__prompt_library_error">Neizdevās ielādēt kopienas bibliotēku. Pārbaudiet savienojumu un mēģiniet vēlreiz.</string>
     <string name="dictate__prompt_library_retry">Mēģināt vēlreiz</string>
@@ -1415,6 +1570,34 @@
     <string name="dictate__file_preparing">Sagatavo failu…</string>
     <string name="dictate__file_too_large">Fails ir pārāk liels – pakalpojuma sniedzējs pieņem ne vairāk kā 25 MB.</string>
     <string name="dictate__file_read_error">Neizdevās nolasīt atlasīto failu.</string>
+    <string name="dictate__import_share_label">Transkribēt</string>
+    <string name="dictate__import_title">Transkribēt failu</string>
+    <string name="dictate__import_menu">Transkribēt failu</string>
+    <string name="dictate__import_menu_summary">Izvēlies audio vai video failu un izlasi, kas tajā teikts</string>
+    <string name="dictate__import_step_copy">Faila saņemšana</string>
+    <string name="dictate__import_step_extract">Audio izgūšana</string>
+    <string name="dictate__import_step_prepare">Audio sagatavošana</string>
+    <string name="dictate__import_step_upload">Augšupielāde</string>
+    <string name="dictate__import_step_transcribe">Transkripcija ar {provider}</string>
+    <string name="dictate__import_step_transcribe_local">Transkripcija šajā ierīcē</string>
+    <string name="dictate__import_step_finish">Pabeigšana</string>
+    <string name="dictate__import_step_percent">{v} %</string>
+    <string name="dictate__import_step_part">{current}. daļa no {total}</string>
+    <string name="dictate__import_result_label">Transkripts</string>
+    <string name="dictate__import_prompt_button">Pārstrādāt</string>
+    <string name="dictate__import_revert">Atsaukt</string>
+    <string name="dictate__import_copy">Kopēt</string>
+    <string name="dictate__import_copied">Nokopēts!</string>
+    <string name="dictate__import_save">Saglabāt kā failu</string>
+    <string name="dictate__import_saved">Transkripts saglabāts.</string>
+    <string name="dictate__import_save_failed">Transkriptu neizdevās saglabāt.</string>
+    <string name="dictate__import_search">Meklēt transkriptā</string>
+    <string name="dictate__import_search_hits">{current}/{total}</string>
+    <string name="dictate__import_search_none">0/0</string>
+    <string name="dictate__import_retry">Mēģināt vēlreiz</string>
+    <string name="dictate__import_no_file">Neviens audio fails netika kopīgots.</string>
+    <string name="dictate__import_not_audio">Šajā failā nav audio.</string>
+    <string name="dictate__import_only_first">Tiek transkribēts tikai pirmais fails – vēl {count} tika izlaisti.</string>
     <string name="dictate__setup_description">Iestatiet savu MI pakalpojuma sniedzēju un API atslēgu, lai sāktu diktēt ar mikrofonu.</string>
     <string name="dictate__setup_configure_btn">Konfigurēt Dictate</string>
     <string name="setup__grant_mic_permission__title">Piekļuve mikrofonam</string>
@@ -1471,6 +1654,16 @@
     <string name="dictate__mappings_field_to_placeholder">piem., GitHub</string>
     <string name="dictate__mappings_group">Aizstāšanas kārtulas</string>
     <string name="dictate__mappings_matchcase_summary">Aizstāt tikai tad, ja burtu reģistrs sakrīt precīzi.</string>
+    <string name="dictate__mappings_import">Importēt noteikumus</string>
+    <string name="dictate__mappings_export">Eksportēt noteikumus</string>
+    <string name="dictate__mappings_export_filename">dictate_mappings.tsv</string>
+    <string name="dictate__mappings_import_title">Importēt noteikumus</string>
+    <string name="dictate__mappings_import_message">{count} jauni noteikumi šajā failā. Pievienot tos savam sarakstam?</string>
+    <string name="dictate__mappings_import_known">{count} jau bija tajā.</string>
+    <string name="dictate__mappings_import_unusable">{count} rindās nebija norādīta neviena aizstāšana, un tās tika izlaistas.</string>
+    <string name="dictate__mappings_import_format">Viens noteikums rindā: kas tiek dzirdēts, tabulācija, par ko tam jākļūst.</string>
+    <string name="dictate__mappings_import_empty">Šajā failā netika atrasts neviens noteikums</string>
+    <string name="dictate__mappings_import_done">Pievienoti {count} noteikumi</string>
     <string name="dictate__mappings_matchcase_title">Ņemt vērā reģistru</string>
     <string name="dictate__mappings_opt_caseinsensitive">Neņem vērā reģistru</string>
     <string name="dictate__mappings_opt_casesensitive">Ņem vērā reģistru</string>
@@ -1482,6 +1675,7 @@
     <string name="dictate__wear_standalone_summary">Nosūtiet API atslēgu pulkstenim, lai tas var diktēt bez tālruņa tuvumā.</string>
     <string name="dictate__wear_standalone_title">Sinhronizēt atslēgu ar pulksteni</string>
     <string name="emoji__search__hint">Meklēt emocijzīmes</string>
+    <string name="emoji__row__open_panel">Atvērt visas emocijzīmes</string>
     <string name="emoji__search__no_results">Nav atbilstošu emocijzīmju</string>
     <string name="pref__suggestion__api30_inline_suggestions_enabled__label">Sistēmas automātiskās aizpildes ieteikumi</string>
     <string name="pref__suggestion__block_possibly_offensive__summary">Neļauj rakstīšanas laikā ieteikt iespējami aizskarošus vārdus</string>
@@ -1491,7 +1685,6 @@
     <string name="dictate__providers_field_transcription_rewording_model">Transkripcijas un pārformulēšanas modelis</string>
     <string name="dictate__providers_single_call_title">Viens multimodāls pieprasījums</string>
     <string name="dictate__providers_single_call_summary">Viens audio modelis transkribē un formatē vienā pieprasījumā.</string>
-    <string name="dictate__providers_single_call_pick_audio">Izvēlieties audio ievadi atbalstošu modeli (modeļu sarakstā atzīmēts ar 🎤).</string>
     <string name="dictate__providers_rewording_single_call_note">Pašlaik netiek izmantots — jūsu transkripcijas pakalpojums veic pārformulēšanu savā vienreizējā pieprasījumā.</string>
     <string name="dictate__wear_title">Wear OS</string>
     <string name="dictate__wear_summary">Diktēšanas opcijas no savienota pulksteņa</string>
@@ -1543,6 +1736,26 @@
     <string name="dictate__history_clear_title">Notīrīt vēsturi?</string>
     <string name="dictate__history_clear_message">Šī darbība neatgriezeniski izdzēš visus vēstures ierakstus un jebkuru saglabāto audio.</string>
     <string name="dictate__history_clear_confirm">Notīrīt visu</string>
+    <string name="dictate__history_export_title">Eksportēt uz mapi</string>
+    <string name="dictate__history_export_summary">Katrs jaunais diktāts, tiklīdz tas ir pabeigts, tiek ierakstīts arī šajā mapē kā vienkāršs teksta fails.</string>
+    <string name="dictate__history_export_folder">Mape</string>
+    <string name="dictate__history_export_folder_unset">Nav iestatīts</string>
+    <string name="dictate__history_export_folder_unavailable">Mape nav pieejama — izvēlieties to vēlreiz</string>
+    <string name="dictate__history_export_choose">Izvēlēties mapi</string>
+    <string name="dictate__history_export_change">Mainīt</string>
+    <string name="dictate__history_export_disconnect">Atvienot</string>
+    <string name="dictate__history_export_audio_title">Eksportēt arī ierakstu</string>
+    <string name="dictate__history_export_audio_summary">Saglabā audio blakus atšifrējumam.</string>
+    <string name="dictate__history_export_audio_needs_retention">Nepieciešams “Saglabāt audio”.</string>
+    <string name="dictate__history_export_all">Eksportēt visu tagad</string>
+    <string name="dictate__history_export_all_summary">Ieraksta katru diktātu, kas mapē vēl nav: tos, kas radīti pirms mapes izvēles, un tos, kurus neizdevās ierakstīt, kamēr mape nebija pieejama.</string>
+    <string name="dictate__history_export_all_result">Ierakstīti: {written}, jau bija: {skipped}, neizdevās: {failed}</string>
+    <string name="dictate__history_export_last_failure">Ierakstīšana {when} neizdevās. “Eksportēt visu tagad” papildina trūkstošo.</string>
+    <string name="dictate__history_export_warning_title">Kas tur nonāk</string>
+    <string name="dictate__history_export_warning_message">Mapē turpmāk būs katra jūsu diktāta teksts, un arī ieraksti, ja to ieslēgsiet. Viss, kas to sinhronizē — mākoņa klients, dublēšanas rīks, cita lietotne — aiznes šos atšifrējumus prom no šīs ierīces.\n\nDictate turpina rakstīt, līdz atvienojat mapi, un nekad neko no tās nedzēš: ieraksti, kas izkrīt no vēstures, paliek mapē. Paroļu un inkognito lauki nekad netiek reģistrēti un tāpēc netiek arī eksportēti.</string>
+    <string name="dictate__history_export_needs_history">Mapes eksports ieraksta to, ko reģistrē vēsture, tāpēc vēsturei jābūt ieslēgtai.</string>
+    <string name="dictate__history_export_enable_history">Ieslēgt vēsturi</string>
+    <string name="dictate__history_export_pick_failed">Neizdevās iegūt rakstīšanas piekļuvi šai mapei</string>
     <string name="dictate__stats_empty">Vēl nav diktātu — statistika parādīsies šeit, tiklīdz sāksi diktēt.</string>
     <string name="dictate__stats_time_saved">Ietaupītais laiks</string>
     <string name="dictate__stats_time_saved_sub">salīdzinot ar rakstīšanu</string>
@@ -1587,6 +1800,10 @@
     <string name="dictate__action_save_audio">Saglabāt audio</string>
     <string name="dictate__audio_saved">Audio saglabāts mapē Downloads/Dictate: %s</string>
     <string name="dictate__audio_save_failed">Neizdevās saglabāt audio</string>
+    <string name="dictate__instant_recording_mode_off">Izslēgts</string>
+    <string name="dictate__instant_recording_mode_always">Katru reizi, kad atveras tastatūra</string>
+    <string name="dictate__instant_recording_mode_after_switch">Tikai pēc pārslēgšanās uz {app_name}</string>
+    <string name="dictate__instant_recording_in_numeric">Arī skaitļu laukos</string>
     <string name="dictate__instant_recording_skip_numeric_title">Izlaist skaitļu laukus</string>
     <string name="dictate__instant_recording_skip_numeric_summary">Nesākt automātiski skaitļu, tālruņa vai PIN laukos</string>
     <string name="settings__localization__subtype_status_words">Ieteikumi</string>
@@ -1595,10 +1812,19 @@
     <string name="settings__localization__subtype_status_context">Konteksts</string>
     <string name="pref__suggestion__auto_correct__label">Automātiskā labošana</string>
     <string name="pref__suggestion__auto_correct__summary">Automātiski labot drukas kļūdas, nospiežot atstarpi</string>
+    <string name="pref__correction__auto_correct_strength__label">Automātiskās labošanas stiprums</string>
+    <string name="enum__auto_correct_strength__cautious">Piesardzīgi</string>
+    <string name="enum__auto_correct_strength__cautious__description">Labo tikai acīmredzamu pirksta paslīdēšanu. Neparastas rakstības netiek aiztiktas.</string>
+    <string name="enum__auto_correct_strength__balanced">Līdzsvaroti</string>
+    <string name="enum__auto_correct_strength__balanced__description">Labo ikdienas drukas kļūdas, arī blakus taustiņa nospiešanu. Ieteicams.</string>
+    <string name="enum__auto_correct_strength__aggressive">Agresīvi</string>
+    <string name="enum__auto_correct_strength__aggressive__description">Labo arī tālākus vārdus — un reizēm aizstāj to, kuru gribēji.</string>
     <string name="pref__suggestion__multilingual_typing__label">Daudzvalodu rakstīšana</string>
     <string name="pref__suggestion__multilingual_typing__summary">Pieņemt vārdus no visām tastatūras valodām</string>
     <string name="pref__suggestion__next_word_prediction__label">Nākamā vārda ieteikumi</string>
     <string name="pref__suggestion__next_word_prediction__summary">Iesaka iespējamos nākamos vārdus, kad vārds ir pabeigts</string>
+    <string name="pref__suggestion__ignore_app_suggestion_block__label">Ignorēt lietotnes, kas izslēdz ieteikumus</string>
+    <string name="pref__suggestion__ignore_app_suggestion_block__summary">Rādīt tos tik un tā, izņemot paroles laukos</string>
     <string name="suggestion__added_to_dictionary">\"{word}\" pievienots jūsu vārdnīcai</string>
     <string name="suggestion__already_in_dictionary">\"{word}\" jau ir jūsu vārdnīcā</string>
     <string name="dictate__legacy_record">Ierakstīt</string>
@@ -1753,6 +1979,104 @@
     <string name="apptour53__outro_eyebrow">Tā ir 5.3</string>
     <string name="apptour53__outro_title">Veiksmīgu diktēšanu</string>
     <string name="apptour53__outro_body">Un vēl daudz sīkumu: katram pakalpojumu sniedzējam ir savs logotips, ieraksta indikators var būt nekustīgs, pulsējošs vai balsij atsaucīgs, uzvednes izvade var blakus paturēt sākotnējo atšifrējumu, un rindkopas vairs nelūzt aiz saīsinājumiem. Katru ekskursiju vari pārskatīt sadaļā Iestatījumi › Par.</string>
+
+    <string name="apptour60__cta_try">Izmēģināt</string>
+    <string name="apptour60__art_minutes">minūtes</string>
+    <string name="apptour60__art_speed">1,5×</string>
+    <string name="apptour60__intro_eyebrow">Dictate 6.0</string>
+    <string name="apptour60__intro_title">Kredīts, ķīniešu valoda, lētāka diktēšana</string>
+    <string name="apptour60__intro_body">Šī versija pievieno otru ceļu iekšā — nopirkt kredītu, nevis izmantot savu API atslēgu —, kā arī pinjinu ķīniešu valodai, septiņas valodas ar jaunu vārdnīcu un ierakstus, kas maksā mazāk.</string>
+    <string name="apptour60__cloud_eyebrow">Jaunums: Dictate Cloud</string>
+    <string name="apptour60__cloud_title">Pērciet minūtes, nevis meklējiet atslēgu</string>
+    <string name="apptour60__cloud_body">Ja nevēlaties veidot kontu pie pakalpojumu sniedzēja, tagad varat vienkārši nopirkt kredītu. Jā, tas iet caur mūsu serveri — bet ne jūsu ieraksti, ne teksti tur netiek glabāti, tie tiek nodoti tālāk uzreiz. Viss servera kods ir publisks un izlasāms. Jūsu pašu atslēga darbojas tieši tāpat kā līdz šim.</string>
+    <string name="apptour60__speedup_eyebrow">Mazāki API izdevumi</string>
+    <string name="apptour60__speedup_title">Tie paši vārdi, mazāk minūšu</string>
+    <string name="apptour60__speedup_body">Ierakstus var paātrināt pirms augšupielādes, un balss nekļūst augstāka. Vairums pakalpojumu sniedzēju maksu aprēķina pēc garuma: par trešdaļu īsāks ieraksts maksā par trešdaļu mazāk. Garie diktāti turklāt tiek saspiesti, nevis noraidīti.</string>
+    <string name="apptour60__chinese_eyebrow">Jaunums: pinjins</string>
+    <string name="apptour60__chinese_title">Rakstiet ķīniski tā, kā to raksta</string>
+    <string name="apptour60__chinese_body">Pinjins ar kandidātu rindu — līdz šim bija tikai Zhengma, ko gandrīz neviens neizmanto. Klāt nākuši ierīcē darbināms modelis, kas patiešām apmācīts ķīniešu valodā, un pakalpojumu sniedzējs, kas sasniedzams no kontinentālās Ķīnas.</string>
+    <string name="apptour60__emoji_eyebrow">Emocijzīmes</string>
+    <string name="apptour60__emoji_title">Meklējiet emocijzīmes savā valodā</string>
+    <string name="apptour60__emoji_body">Emocijzīmju meklēšana zināja sešas valodas. Tagad to ir vairāk nekā četrdesmit — meklējiet „heart", „心" vai „قلب" un nonāksiet pie tās pašas emocijzīmes. Meklēšana seko jūsu tastatūras valodai.</string>
+    <string name="apptour60__languages_eyebrow">Vārdnīcas</string>
+    <string name="apptour60__languages_title">Septiņas valodas bez ieteikumiem</string>
+    <string name="apptour60__languages_body">Arābu, bengāļu, somu, hindi, indonēziešu, tamilu un urdu valoda tagad saņem vārdu ieteikumus un automātisko labošanu. Islandiešu un gruzīnu vārdnīcās vienkārši bija nepareizās valodas, un tās uzbūvētas no jauna. Un 19 izkārtojumu ilgās nospiešanas rakstzīmes tagad atbilst tam, ko attiecīgajā valodā tiešām raksta.</string>
+    <string name="apptour60__more_eyebrow">Turklāt</string>
+    <string name="apptour60__more_title">Daudz sīkumu</string>
+    <string name="apptour60__more_body">Apturēšanas pogas turēšana atsauc iestrēgušu atšifrējumu. Peldošā poga vairs nepaziņo par panākumu, ko nav spējusi pārbaudīt, un nodziest kopā ar ekrānu. Vilkšanas rakstīšana tagad zina jūsu pašu pievienotos vārdus. Un avārija tūlīt pēc atjaunināšanas ir novērsta.</string>
+    <string name="apptour60__outro_eyebrow">Tā ir 6.0</string>
+    <string name="apptour60__outro_title">Lai patīk</string>
+    <string name="apptour60__outro_body">Lai kā jūs lietotu Dictate — sava atslēga, savs serveris, modelis ierīcē vai kredīts —, pārējos ceļos nekas nav mainījies. Katru ievadu varat pārskatīt sadaļā Iestatījumi › Par.</string>
+    <string name="apptour61__cta_try">Izmēģināt</string>
+    <string name="apptour61__art_folder">Uzlīmes</string>
+    <string name="apptour61__art_share">Kopīgot ar</string>
+    <string name="apptour61__art_typed">tsa</string>
+    <string name="apptour61__art_fixed">tas</string>
+    <string name="apptour61__intro_eyebrow">Dictate 6.1</string>
+    <string name="apptour61__intro_title">Uzlīmes, balss ziņas un automātiskā labošana, kas beidzot pamana drukas kļūdu</string>
+    <string name="apptour61__intro_body">Norādi tastatūrai mapi ar savām uzlīmēm, kopīgo balss ziņu tieši ar Dictate, lai uzzinātu, kas tajā teikts, un izmanto automātisko labošanu, kas beidzot pamana kļūdu, kuru tā bija būvēta nepamanīt.</string>
+    <string name="apptour61__stickers_eyebrow">Jauns: tavas paša uzlīmes</string>
+    <string name="apptour61__stickers_title">Mape telefonā — uz tastatūras</string>
+    <string name="apptour61__stickers_body">Norādi Dictate jebkuru mapi, un tajā esošie attēli kļūst par uzlīmēm — apakšmapes pārvēršas cilnēs ar savām izlasēm un nesen lietotajām. Pievieno no jebkuras lietotnes, izmantojot kopīgošanas izvēlni, dzēs, nepametot tastatūru. Tas, ko tērzēšanas lietotne patiešām pieņem, nav tas, ko tā apgalvo pieņemam: tāpēc katra uzlīme tiek sagatavota vienreiz, to pievienojot, un no turienes vienkārši nosūtīta.</string>
+    <string name="apptour61__share_eyebrow">Jauns: kopīgot ar Dictate</string>
+    <string name="apptour61__share_title">Uzzini, ko saka šī balss ziņa</string>
+    <string name="apptour61__share_body">Dictate tagad ir audio un video kopīgošanas izvēlnē. Kopīgo tur balss ziņu, un atveras ekrāns, kas pats sāk atšifrēt — nav jāmeklē lauks un nav jāspiež poga. Atšifrējumā var meklēt, bet gari ieraksti tiek apstrādāti pa daļām, nevis noraidīti.</string>
+    <string name="apptour61__autocorrect_eyebrow">Automātiskā labošana</string>
+    <string name="apptour61__autocorrect_title">Drukas kļūda, ko tā nespēja saskatīt</string>
+    <string name="apptour61__autocorrect_body">Noteikums, kas izlēma, vai vārdu drīkst labot, laida cauri pirkstu, kas bija noslīdējis gandrīz līdz blakus taustiņam, bet nekad tādu, kas uz tā nolaidās precīzi — lai gan tieši tā ir parastā drukas kļūda. Tas ir izlabots, un cik izlēmīgi tiek labots, tagad nosaki tu pats. Vārds, ko paņems atstarpes taustiņš, ir atzīmēts ar tavu akcenta krāsu, un atpakaļatkāpes taustiņš uzreiz pēc tam atdod tieši to, ko biji ierakstījis.</string>
+    <string name="apptour61__contacts_eyebrow">Kontakti</string>
+    <string name="apptour61__contacts_title">Vārdi, kas vairs netiek pasvītroti</string>
+    <string name="apptour61__contacts_body">Tavu kontaktu vārdi var nonākt personiskajā vārdnīcā, lai tastatūra pārstātu tos uzskatīt par kļūdām un sāktu piedāvāt. Piekļuve adrešu grāmatai netiek prasīta — vārdus izvēlies pats vai importē vCard. Netiek nolasīts nekas, ko neesi nodevis.</string>
+    <string name="apptour61__models_eyebrow">Gemini un Deepgram Flux</string>
+    <string name="apptour61__models_title">Divi pakalpojumi, kas iemācījušies klausīties labāk</string>
+    <string name="apptour61__models_body">Google izlaida savus runas atpazīšanas modeļus, tāpēc Gemini vairs neatšifrē ar tērzēšanas modeli pēc norādījuma — un tagad to prot arī tiešraidē. Deepgram Flux pats izlemj, kad esi beidzis runāt, nevis nogaida klusumu. Un, ja runā vairākās valodās, tagad vari pateikt, kurās, nevis izvēlēties vienu un cerēt.</string>
+    <string name="apptour61__more_eyebrow">Turklāt</string>
+    <string name="apptour61__more_title">Daudz sīkumu</string>
+    <string name="apptour61__more_body">Sagataves var izsaukt, ierakstot saīsinājumu, ne tikai pieskaroties. Krievu valodu var rakstīt fonētiski, bet franču valoda atrod savas diakritiskās zīmes pēc kailiem burtiem. Ļoti platām planšetēm ainavas režīmā atkal ir tastatūra. Un ieteikumu slēdzis tos tiešām izslēdz — arī tad, kad lietotne to grib izdarīt tavā vietā.</string>
+    <string name="apptour61__outro_eyebrow">Tā ir 6.1</string>
+    <string name="apptour61__outro_title">Tā pati tastatūra, ar mazāk asām malām</string>
+    <string name="apptour61__outro_body">Nekas nemainās tajā, kā tu diktē līdz šim — savs atslēgas kods, savs serveris vai modelis ierīcē. Visas pamācības atkal atrodamas sadaļā Iestatījumi › Par.</string>
+    <string name="apptour62__cta_try">Izmēģināt</string>
+    <string name="apptour62__cta_manage">Kur to izslēgt</string>
+    <string name="apptour62__art_word">Zoja</string>
+    <string name="apptour62__art_emoji_word">kūka</string>
+    <string name="apptour62__art_emoji">🍰</string>
+    <string name="apptour62__intro_eyebrow">Dictate 6.2</string>
+    <string name="apptour62__intro_title">Tā mācās tavus vārdus un ieguvusi piecus jaunus izskatus</string>
+    <string name="apptour62__intro_body">Tastatūra tagad spēj atcerēties vārdus, ko nezina neviena vārdnīca, taustiņi var ļaut cauri spīdēt lietotnei aiz tiem, un katram īkšķim var būt sava puse. Turklāt sauja mazu palīgu tam, ko dari ik dienu.</string>
+    <string name="apptour62__learning_eyebrow">Jauns: mācās, kamēr raksti</string>
+    <string name="apptour62__learning_title">Vārdi, ko nezina neviena vārdnīca</string>
+    <string name="apptour62__learning_body">Ieraksti vārdu vai terminu pietiekami bieži, un tastatūra to patur: tā vairs neatzīmē to kā kļūdu un sāk piedāvāt. Šis atjauninājums to ieslēdz visiem, arī tiem, kas to agrāk bija izslēguši. Inkognito režīmā, paroļu laukos un no visa, ko neesi rakstījis taustiņu pa taustiņam, netiek iemācīts nekas; viss paliek šajā ierīcē, un poga zemāk atver sarakstu — un slēdzi.</string>
+    <string name="apptour62__themes_eyebrow">Pieci jauni izskati</string>
+    <string name="apptour62__themes_title">Glass, Sand, Deep un tumšs E-Ink</string>
+    <string name="apptour62__themes_body">Dictate Glass ļauj lietotnei spīdēt cauri atstarpēm starp taustiņiem, kamēr paši taustiņi paliek pietiekami necaurspīdīgi, lai uz tiem varētu lasīt; Glass Clear iet tālāk un izskatās labāk — par cenu, ka lietotnēs, kas zīmē aiz tastatūras, cauri spīd to teksts. Sand ir silts gaišs izskats, Deep — kluss tumšs, un E-Ink beidzot ir nakts variants, tāpēc automātiskā pārslēgšanās pēc tumsas iestāšanās vairs nepasniedz baltu tastatūru.</string>
+    <string name="apptour62__split_eyebrow">Jauns: dalīta tastatūra</string>
+    <string name="apptour62__split_title">Abi īkšķi, bez stiepšanās</string>
+    <string name="apptour62__split_body">Jauna ātrā darbība — blakus vienas rokas un peldošajam režīmam — izstiepj rindas, lai katrs īkšķis paliktu savā pusē. Dalās katrs izkārtojums, ne tikai QWERTY, jo šuve tiek aprēķināta no taustiņu platuma, nevis ierakstīta katrā izkārtojumā. Bet ainavas režīmā lietotne tagad paliek redzama ikreiz, kad vietas pietiek abiem.</string>
+    <string name="apptour62__emoji_eyebrow">Emocijzīmes</string>
+    <string name="apptour62__emoji_title">Vārds atrod savu emocijzīmi</string>
+    <string name="apptour62__emoji_body">Ieraksti vārdu, un emocijzīme, ko tas nozīmē, parādās ieteikumu joslā — aptuveni piecdesmit valodās, no tiem pašiem datiem, ko izmanto sistēma. Tā brauc līdzi blakus ieteikumiem, nevis aizņem kāda no tiem vietu. Virs taustiņiem ir arī neobligāta rinda ar tavām piespraustajām un nesen lietotajām emocijzīmēm.</string>
+    <string name="apptour62__helpers_eyebrow">Četri mazi palīgi</string>
+    <string name="apptour62__helpers_title">Inkognito, tīras saites un atbilde uz rēķinu</string>
+    <string name="apptour62__helpers_body">Inkognito režīms neļauj neko iegaumēt, kamēr tas ir ieslēgts — nekas netiek iemācīts, nekas netiek saglabāts. Ielīmētām saitēm var noņemt izsekošanas parametrus ceļā uz lauku. Ieraksti rēķinu, kas beidzas ar =, un atbilde parādās kā ieteikums. Un, kad ciparu rinda ir ieslēgta, burti atkal rāda savus ciparus.</string>
+    <string name="apptour62__selection_eyebrow">Atlasīšana un pārvietošanās</string>
+    <string name="apptour62__selection_title">Redzi, cik daudz esi atlasījis</string>
+    <string name="apptour62__selection_body">Rinda, kas atlases laikā līdz šim stāvēja tukša, tagad skaita tajā esošos vārdus un rakstzīmes. Jaunas pogas lec uz paša lauka sākuma un beigām, un kopējot var atstāt malās palikušās liekās atstarpes. Darbību rinda atkāpjas, tiklīdz sākas atlase, nevis runā tai pāri.</string>
+    <string name="apptour62__clipboard_eyebrow">Starpliktuve</string>
+    <string name="apptour62__clipboard_title">Atrodi ierakstu pēc tā, kas tajā rakstīts</string>
+    <string name="apptour62__clipboard_body">Starpliktuvē tagad var meklēt — visā, kas tajā ir. Tas, ko tikko nokopēji, tiek piedāvāts ieteikumu joslā kā tablete, ko vari noraidīt, un vienu un to pašu tekstu nokopēt divreiz skaitās divreiz, tāpēc tas atgriežas. Dzēšot ierakstu, tagad tiek dzēsts arī fails aiz tā, nevis atstāts attēls tālrunī.</string>
+    <string name="apptour62__gestures_eyebrow">Žesti</string>
+    <string name="apptour62__gestures_title">Turi ?123, pavelc, atlaid</string>
+    <string name="apptour62__gestures_body">Turi simbolu taustiņu, pavelc uz vajadzīgo rakstzīmi un atlaid: tā tiek ievietota, un burti jau ir atpakaļ, bez pārslēgšanās turp un atpakaļ. Vilkšana augšup pa atstarpes taustiņu tagad sasniedz rindu virs, nevis tikai iepriekšējo vārdu. Un atstarpi starp taustiņiem var iestatīt diapazonā, kuru tiešām var redzēt.</string>
+    <string name="apptour62__export_eyebrow">Jauns: diktāti kā faili</string>
+    <string name="apptour62__export_title">Katrs diktāts mapē pēc tavas izvēles</string>
+    <string name="apptour62__export_body">Izvēlies mapi vienu reizi, un katrs pabeigtais diktāts tiek ierakstīts arī tajā kā vienkāršs teksta fails — brīdī, kad tas ir gatavs. Lai kas šo mapi vērotu — piezīmju lietotne, sinhronizācijas rīks, tava rezerves kopija —, tas saņem tavus tekstus, Dictate neiemācoties tā valodu.</string>
+    <string name="apptour62__more_eyebrow">Turklāt</string>
+    <string name="apptour62__more_title">Daudz mazu lietu</string>
+    <string name="apptour62__more_body">Ieteikumi tagad katrā valodā skatās divus vārdus pirms kursora, ne tikai angļu valodā. Rezerves kopiju var izveidot bez tavām API atslēgām, tāpēc to var droši nodot tālāk. Azure paša transkripcijas modeļi ir sasniedzami, modeļa izvēle bezsaistes darbam tagad pārslēdz arī uz bezsaistes dzinēju, un katram pieprasījumam ir termiņš, kas atbilst gaidīšanai. Diktāti parādās vēsturē brīdī, kad tiek nosūtīti, importēšana pasaka, kurā solī tā ir, un to var atcelt, un teksts drošāk nonāk lietotnēs, kurām ar to sanāca grūti.</string>
+    <string name="apptour62__outro_eyebrow">Tā ir 6.2</string>
+    <string name="apptour62__outro_title">Tā pati tastatūra, vairāk no tās — tava</string>
+    <string name="apptour62__outro_body">Nekas nemainās tajā, kā tu diktē — sava atslēga, savs serveris vai modelis ierīcē. Visas pamācības atkal atrodamas sadaļā Iestatījumi › Par.</string>
     <string name="changelog__v5_0_0">• JAUNS: Vilkšanas rakstīšana — velc pār taustiņiem, lai rakstītu veselus vārdus, ar valodu vārdnīcām, kas tiek lejupielādētas pēc pieprasījuma. 👆\n• JAUNS: Vārdu ieteikumi un automātiskā labošana — drukas kļūdas tiek labotas automātiski, un ierakstītais vārds paliek viena pieskāriena attālumā. ✨\n• JAUNS: Reāllaika transkripcija — vēro, kā vārdi parādās, kamēr runā, ar OpenAI, Deepgram, Soniox, AssemblyAI un ElevenLabs. ⚡\n• JAUNS: Vēl trīs transkripcijas pakalpojumi — ElevenLabs Scribe, Deepgram un AssemblyAI. ☁️\n• JAUNS: Klasiskais diktēšanas izkārtojums — Dictate 3 balss ekrāns bez tastatūras ir atpakaļ, fiksēts vai viena vilkuma attālumā. 🎙️\n• JAUNS: Kopienas uzvednu bibliotēka — pārlūko un kopīgo pārformulēšanas uzvednes. 📚\n• JAUNS: Diktēšanas statistika ar atskaites punktiem. 📊\n• JAUNS: Bezsaistes modelis NVIDIA Parakeet, kā arī klusuma filtrs, kas izlaiž tukšos ierakstus. 📴\n• Vēl: stabilāka peldošā poga, spriešanas piepūles vadība, taktilā atsauce, jauna E-Reader tēma un desmitiem labojumu. 🛠️</string>
     <string name="media__tab__gifs">GIF</string>
     <string name="prefs__media__gif__title">GIF</string>
@@ -1820,6 +2144,7 @@
     <string name="dictate__cloud_packs_title">Kredīta paketes</string>
     <string name="dictate__cloud_topup_title">Papildināt</string>
     <string name="dictate__cloud_pack_minutes">{minutes} minūtes diktēšanas</string>
+    <string name="dictate__cloud_pack_savings">Par {percent}% lētāk</string>
     <string name="dictate__cloud_shop_unavailable">Kredīta paketes šeit nevar parādīt. Parasti tas nozīmē, ka lietotne nav instalēta no Google Play vai ka šajā ierīcē nav pieteikts Play konts. Jūsu paša API atslēga darbojas abos gadījumos.</string>
     <string name="dictate__cloud_activate_title">Kredīts ir gatavs</string>
     <string name="dictate__cloud_activate_body">Jums ir kredīts, taču diktēšana pašlaik notiek caur citu pakalpojuma sniedzēju. Pārslēdzieties, kad vien vēlaties — bez jums nekas nemainās.</string>
@@ -1869,4 +2194,93 @@
     <string name="dictate__action_top_up">Papildināt kredītu</string>
     <string name="dictate__promo_low_credit_message">Kredīts gandrīz beidzies.</string>
     <string name="dictate__promo_low_credit_action">Papildināt</string>
+    <string name="prefs__media__sticker__title">Uzlīmes</string>
+    <string name="prefs__media__sticker_folder__title">Uzlīmju mape</string>
+    <string name="prefs__media__sticker_folder__summary_unset">Izvēlieties mapi ar saviem attēliem</string>
+    <string name="prefs__media__sticker_folder_clear">Aizmirst šo mapi</string>
+    <string name="prefs__media__sticker_rescan">Nolasīt mapi vēlreiz</string>
+    <string name="prefs__media__sticker_rescan__summary">Izmantojiet pēc failu pievienošanas vai noņemšanas</string>
+    <string name="prefs__media__sticker_thumbnail_size">Uzlīmju izmērs</string>
+    <string name="prefs__media__sticker_history_recent_max_size">Saglabājamo nesen lietoto uzlīmju skaits</string>
+    <string name="prefs__media__sticker_confirm_before_insert">Apstiprināt pirms nosūtīšanas</string>
+    <string name="prefs__media__sticker_confirm_before_insert__summary">Pieskarieties uzlīmei vienreiz, lai to atlasītu, un vēlreiz, lai nosūtītu. Ātrs dubultskāriens nosūta uzreiz</string>
+    <string name="prefs__media__sticker_pinned_reset">Notīrīt izlases uzlīmes</string>
+    <string name="prefs__media__sticker_history_reset">Notīrīt nesen lietotās uzlīmes</string>
+    <string name="sticker__title">Uzlīmes</string>
+    <string name="sticker__category_all">Visas</string>
+    <string name="sticker__section_favorites">Izlase</string>
+    <string name="sticker__section_recent">Nesen lietotās</string>
+    <string name="sticker__section_rest">Visas uzlīmes</string>
+    <string name="sticker__pin">Pievienot izlasei</string>
+    <string name="sticker__unpin">Noņemt no izlases</string>
+    <string name="sticker__reorder">Mainīt pozīciju</string>
+    <string name="sticker__reorder_hint">Pārvietot ar bultiņām</string>
+    <string name="sticker__reorder_earlier">Pārvietot uz sākumu</string>
+    <string name="sticker__reorder_later">Pārvietot uz beigām</string>
+    <string name="sticker__search">Meklēt uzlīmes</string>
+    <string name="sticker__search_placeholder">Meklēt pēc faila nosaukuma</string>
+    <string name="sticker__search_no_results">Nav uzlīmes ar šādu nosaukumu</string>
+    <string name="sticker__setup_needed">Izvēlieties mapi, lai lietotu savas uzlīmes</string>
+    <string name="sticker__setup_needed_action">Atvērt iestatījumus</string>
+    <string name="sticker__folder_empty">Šajā mapē nav attēlu</string>
+    <string name="sticker__access_lost">Uzlīmju mapi vairs nevar nolasīt. Izvēlieties to vēlreiz.</string>
+    <string name="sticker__folder_pick_failed">Neizdevās saglabāt piekļuvi šai mapei</string>
+    <string name="sticker__rescan_done">Atrastas {n} uzlīmes</string>
+    <string name="sticker__rescan_done_converted">Atrastas {n} uzlīmes, {converted} pārveidotas</string>
+    <string name="sticker__copied_to_clipboard">Šī lietotne nepieņem uzlīmes — nokopēts starpliktuvē, turiet nospiestu, lai ielīmētu</string>
+    <string name="sticker__insert_failed">Uzlīmi neizdevās ievietot</string>
+    <string name="quick_action__ime_ui_mode_sticker">Uzlīme</string>
+    <string name="quick_action__ime_ui_mode_sticker__tooltip">Ievietot savas uzlīmes</string>
+    <string name="prefs__media__sticker_add">Pievienot uzlīmes</string>
+    <string name="prefs__media__sticker_add__summary">Kopējiet attēlus mapē. Attēlu var arī kopīgot ar Dictate no jebkuras lietotnes.</string>
+    <string name="prefs__media__sticker_import_whatsapp">Paņemt no WhatsApp</string>
+    <string name="prefs__media__sticker_import_whatsapp__summary">Atver failu izvēli WhatsApp uzlīmju mapē. Tādas tastatūras kā Samsung glabā savas uzlīmes tur, kur neviena cita lietotne nedrīkst lasīt — tās kopīgojiet ar Dictate.</string>
+    <string name="sticker__import_share_label">Saglabāt kā uzlīmi</string>
+    <string name="sticker__import_added">Pievienotas: {n}</string>
+    <string name="sticker__import_duplicate">{n} jau bija</string>
+    <string name="sticker__import_unsupported">{n} nederīgas</string>
+    <string name="sticker__import_failed">{n} neizdevās</string>
+    <string name="sticker__import_nothing">Nav ko pievienot</string>
+    <string name="sticker__import_no_folder">Vispirms izvēlieties uzlīmju mapi</string>
+    <string name="sticker__import_needs_write">Izvēlieties uzlīmju mapi vēlreiz, lai atļautu pievienošanu un dzēšanu</string>
+    <string name="sticker__forget_recent">Noņemt no nesen lietotajām</string>
+    <string name="sticker__delete_file">Dzēst failu</string>
+    <string name="sticker__delete_confirm">Tiešām dzēst?</string>
+    <string name="sticker__delete_failed">Failu neizdevās izdzēst</string>
+    <string name="prefs__media__emoji__title">Emocijzīmes</string>
+    <string name="prefs__media__sticker_import_source">Paņemt no lietotnes</string>
+    <string name="prefs__media__sticker_import_source__summary">Atver failu izvēli uzreiz mapē, kurā raksta cita lietotne</string>
+    <string name="prefs__media__sticker_packs">Uzlīmju pakas</string>
+    <string name="prefs__media__sticker_packs__summary">Izveidojiet, pārdēvējiet un dzēsiet mapes, kurās sakārtotas jūsu uzlīmes</string>
+    <string name="sticker__source_whatsapp">WhatsApp</string>
+    <string name="sticker__source_whatsapp_business">WhatsApp Business</string>
+    <string name="sticker__source_telegram">Telegram</string>
+    <string name="sticker__source_downloads">Lejupielādes</string>
+    <string name="sticker__source_pictures">Attēli</string>
+    <string name="sticker__source_dcim">Kamera</string>
+    <string name="sticker__source_hint">Tie ir sākumpunkti, nevis garantijas — ja mapes nav, izvēle atveras kā parasti. Lietotnes, kas savas uzlīmes patur sev, piemēram, Samsung tastatūra, tās var tikai kopīgot ar Dictate.</string>
+    <string name="sticker__import_progress">Kopē {done} no {total}</string>
+    <string name="sticker__import_cancel">Pieskarieties, lai apturētu. Nokopētais paliek.</string>
+    <string name="sticker__refused_declares_nothing">Šī lietotne nepieņem attēlus no tastatūras — nokopēts starpliktuvē, turiet nospiestu, lai ielīmētu</string>
+    <string name="sticker__refused_accepts_only">Šī lietotne pieņem tikai {accepted}, bet šī uzlīme ir {own} — nokopēts starpliktuvē, turiet nospiestu, lai ielīmētu</string>
+    <string name="sticker__move_to_pack">Pārvietot uz paku</string>
+    <string name="sticker__pack_none">Bez pakas</string>
+    <string name="sticker__move_failed">Uzlīmi neizdevās pārvietot</string>
+    <string name="sticker__pack_new">Izveidot paku</string>
+    <string name="sticker__pack_name">Pakas nosaukums</string>
+    <string name="sticker__pack_rename">Pārdēvēt</string>
+    <string name="sticker__pack_reorder_hint">Turiet paku, lai to pārvietotu</string>
+    <string name="sticker__pack_icon_set">Izmantot kā pakas ikonu</string>
+    <string name="sticker__pack_icon_clear">Noņemt pakas ikonu</string>
+    <string name="sticker__pack_delete">Dzēst paku</string>
+    <string name="sticker__pack_delete_confirm">Vai dzēst paku \"{name}\" un tajā esošās {n} uzlīmes?</string>
+    <string name="sticker__pack_failed">Neizdevās — mape var būt aizsargāta pret rakstīšanu</string>
+    <string name="sticker__packs_loading">Notiek mapes lasīšana…</string>
+    <string name="sticker__packs_empty">Pagaidām nav neviena pakas. Paka ir jūsu uzlīmju mapes apakšmape.</string>
+    <string name="sticker__share">Sūtīt ar kopīgošanas izvēlni</string>
+    <string name="sticker__insert_as_gif">Ievietot kā GIF</string>
+    <string name="sticker__source_browse">Pārlūkot failus…</string>
+    <string name="sticker__source_threema">Threema</string>
+    <string name="sticker__source_signal">Signal</string>
+    <string name="sticker__source_stickers_folder">Uzlīmju mape</string>
 </resources>

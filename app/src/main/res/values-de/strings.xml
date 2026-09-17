@@ -9,7 +9,7 @@
     <string name="one_handed__move_start_btn_content_description" comment="Content description for the one-handed move to left button">Tastatur nach links verschieben.</string>
     <string name="one_handed__move_end_btn_content_description" comment="Content description for the one-handed move to right button">Tastatur nach rechts verschieben.</string>
     <!-- Media strings -->
-    <string name="settings__media__title">Emojis &amp; GIFs</string>
+    <string name="settings__media__title">Emojis, GIFs &amp; Sticker</string>
     <string name="media__tab__emojis" comment="Tab description for emojis in the media UI">Emojis</string>
     <string name="media__tab__emoticons" comment="Tab description for emoticons in the media UI">Emoticons</string>
     <string name="media__tab__kaomoji" comment="Tab description for kaomoji in the media UI">Kaomoji</string>
@@ -18,6 +18,8 @@
     <string name="prefs__media__emoji_history__title" comment="Preference group title">Emoji-Historie</string>
     <string name="prefs__media__emoji_history_enabled" comment="Preference title">Aktiviere Emoji-Historie</string>
     <string name="prefs__media__emoji_history_enabled__summary" comment="Preference summary">Behalte kürzlich genutzte Emojis für einen schnellen Zugriff</string>
+    <string name="prefs__media__emoji_row_enabled">Emoji-Reihe</string>
+    <string name="prefs__media__emoji_row_enabled__summary">Zeigt über der Tastatur eine Reihe mit angepinnten und zuletzt benutzten Emojis</string>
     <string name="prefs__media__emoji_history_pinned_update_strategy" comment="Preference title">Update Strategie (gepinnt)</string>
     <string name="prefs__media__emoji_history_recent_update_strategy" comment="Preference title">Update Strategie (kürzlich)</string>
     <string name="prefs__media__emoji_history_max_size">Maximale zu behaltende Emojis</string>
@@ -58,6 +60,10 @@
     <string name="quick_action__arrow_left__tooltip">Pfeil nach links ausführen</string>
     <string name="quick_action__arrow_right" comment="Please mind the limited available space for the quick action strings">Pfeil rechts</string>
     <string name="quick_action__arrow_right__tooltip">Pfeil nach rechts ausführen</string>
+    <string name="quick_action__move_start_of_page" comment="Please mind the limited available space for the quick action strings">Textanfang</string>
+    <string name="quick_action__move_start_of_page__tooltip">An den Anfang des Textes springen</string>
+    <string name="quick_action__move_end_of_page" comment="Please mind the limited available space for the quick action strings">Textende</string>
+    <string name="quick_action__move_end_of_page__tooltip">An das Ende des Textes springen</string>
     <string name="quick_action__clipboard_clear_primary_clip" comment="Please mind the limited available space for the quick action strings">Clip löschen</string>
     <string name="quick_action__clipboard_clear_primary_clip__tooltip">Hauptclip von der Zwischenablage löschen</string>
     <string name="quick_action__clipboard_copy" comment="Please mind the limited available space for the quick action strings">Kopieren</string>
@@ -66,6 +72,7 @@
     <string name="quick_action__clipboard_cut__tooltip">Zur Zwischenablage ausschneiden</string>
     <string name="quick_action__clipboard_paste" comment="Please mind the limited available space for the quick action strings">Einfügen</string>
     <string name="quick_action__clipboard_paste__tooltip">Einfügen aus der Zwischenablage</string>
+    <string name="quick_action__clipboard_select">Auswählen</string>
     <string name="quick_action__clipboard_select_all" comment="Please mind the limited available space for the quick action strings">Alles ausw.</string>
     <string name="quick_action__clipboard_select_all__tooltip">Alles auswählen in der Zwischenablage</string>
     <string name="quick_action__ime_ui_mode_clipboard" comment="Please mind the limited available space for the quick action strings">Zwischenab.</string>
@@ -89,6 +96,12 @@
     <string name="quick_action__voice_input__tooltip" comment="IME stands for Input Method Editor and is indirectly equivalent to 'keyboard'.">Öffne Anbieter für Spracheingabe</string>
     <string name="quick_action__one_handed_mode" comment="Please mind the limited available space for the quick action strings">Einhändig</string>
     <string name="quick_action__one_handed_mode__tooltip">Einhandmodus umschalten</string>
+    <string name="quick_action__split_layout" comment="Please mind the limited available space for the quick action strings">Geteilt</string>
+    <string name="quick_action__split_layout__tooltip">Geteilte Tastatur umschalten</string>
+    <string name="quick_action__toggle_number_row" comment="Quick action that shows or hides the row of digit keys above the letters. Please mind the limited available space for the quick action strings">Zahlenreihe</string>
+    <string name="quick_action__toggle_number_row__tooltip">Zahlenreihe ein- oder ausblenden</string>
+    <string name="quick_action__view_numeric_advanced" comment="Quick action that replaces the whole keyboard with a number pad (digits, arithmetic signs, brackets). Not to be confused with the number row above. Please mind the limited available space for the quick action strings">Zahlenblock</string>
+    <string name="quick_action__view_numeric_advanced__tooltip">Zum Zahlenblock wechseln</string>
     <string name="quick_action__drag_marker" comment="This action is only used as a placeholder in the actions editor drag and drop screen and only visible in debug mode">Zug-Marker</string>
     <string name="quick_action__drag_marker__tooltip" comment="This action is only used as a placeholder in the actions editor drag and drop screen and only visible in debug mode">Aktuelle Marker-Position</string>
     <string name="quick_action__noop" comment="Noop=no operation; this action is only used as a placeholder in the actions editor drag and drop screen">Keine</string>
@@ -117,12 +130,21 @@
     <string name="settings__search__clear_recent" comment="Button to clear the recent searches">Letzte Suchen löschen</string>
     <string name="settings__search__popular" comment="Header above a small list of popular settings shortcuts">Beliebt</string>
     <string name="settings__search__no_results" comment="Shown when a settings search returns nothing">Keine Einstellungen gefunden</string>
+    <string name="settings__search__keywords__text_expansion" comment="NOT SHOWN ANYWHERE — extra search terms that lead to the typing-shortcut setting, which lets a short trigger expand into a saved block of text. Translate as the words people in your language would actually type when looking for that feature, separated by spaces. Do not translate word for word; add or drop terms as makes sense.">Textbaustein Textbausteine Textersetzung Kürzel Abkürzung Makro Autotext Vorlage snippet text expansion</string>
+    <string name="settings__search__keywords__selection_metrics" comment="NOT SHOWN ANYWHERE — extra search terms that lead to the setting which shows how many words and characters are selected. Translate as the words people in your language would actually type when looking for it, separated by spaces. Do not translate word for word.">Wörter zählen Wortanzahl Zeichenzahl Länge Statistik wie viele Wörter</string>
+    <string name="settings__search__keywords__trim_on_copy" comment="NOT SHOWN ANYWHERE — extra search terms that lead to the setting which removes spaces and line breaks at the ends of copied text. Translate as the words people in your language would actually type when looking for it, separated by spaces. Do not translate word for word.">kürzen Leerzeichen entfernen bereinigen kopieren ausschneiden Umbruch</string>
+    <string name="settings__search__keywords__clear_cache">Cache Zwischenspeicher Speicher Speicherplatz temporäre Dateien freigeben löschen aufräumen</string>
+    <string name="settings__search__keywords__momentary_layer">halten ziehen symbol ebene sonderzeichen umschalten kurz vorübergehend 123 satzzeichen iphone</string>
+    <string name="settings__search__keywords__emoji_row">emoji reihe zeile leiste zuletzt benutzt über tastatur schnell smiley</string>
+    <string name="settings__search__keywords__request_timeout">Zeitlimit Timeout Zeitüberschreitung langsam warten Verbindung Sekunden abgebrochen</string>
     <string name="settings__localization__title" comment="Title of languages and Layout screen">Sprachen &amp; Layouts</string>
     <string name="settings__localization__display_language_names_in__label" comment="Label of Display language names in preference">Sprachnamen anzeigen in</string>
     <string name="settings__localization__group_subtypes__label" comment="Label of subtypes group">Untertypen</string>
     <string name="settings__localization__subtype_add_title" comment="Title of subtype dialog when adding a new subtype">Stil hinzufügen</string>
     <string name="settings__localization__language_pack_title" comment="Title of the language pack manager screen for managing installed and custom language packs">Installierte Sprachpakete verwalten</string>
-    <string name="settings__localization__language_pack_summary" comment="Summary of preference item for adding a new language pack">Experimentell: Erweiterungen, die bestimmte Sprachen hinzufügen (vorerst formbasiertes Chinesisch).</string>
+    <string name="settings__localization__language_pack_summary" comment="Summary of preference item for adding a new language pack">Erweiterungen, die eine Eingabemethode hinzufügen: chinesisches Pinyin und die strichbasierten Methoden.</string>
+    <string name="settings__localization__subtype_download_title">Sprachdaten</string>
+    <string name="settings__localization__subtype_download_message">{language_name} hinzuzufügen lädt {size} an Wortlisten und Wortkontextdaten. Vorschläge und Autokorrektur brauchen sie. Der Download startet sofort und kann Mobilfunkdaten verbrauchen.</string>
     <string name="settings__localization__subtype_edit_title" comment="Title of subtype dialog when editing an existing subtype">Benutzerdefinierten Eingabestil bearbeiten</string>
     <string name="settings__localization__subtype_locale" comment="Label for locale dropdown in subtype dialog">Primäre Sprache</string>
     <string name="settings__localization__subtype_popup_mapping" comment="Label for popup mapping dropdown in subtype screen">Pop-up-Anordnung</string>
@@ -151,12 +173,16 @@
     <string name="settings__localization__subtype_error_fields_no_value" comment="Error message shown in subtype editor if at least one field is set to '- select -' (means no value specified)">In mindestens einem Feld ist kein Wert ausgewählt. Bitte wähle einen Wert für das Feld / die Felder.</string>
     <string name="settings__localization__subtype_error_layout_not_installed" comment="Error message shown in subtype list when a layout is not installed, where %s will be replaced by the layout ID">{layout_id} (nicht installiert)</string>
     <string name="settings__localization__subtype_missing_language_pack_title">Wörterbuch erforderlich</string>
-    <string name="settings__localization__subtype_missing_language_pack_message">Diese Sprache benötigt ein herunterladbares Wörterbuch für Wortvorschläge und Konvertierung (z. B. Romaji → Kana). Bis es installiert ist, funktioniert das Tippen, aber die Konvertierung bewirkt nichts.</string>
+    <string name="settings__localization__subtype_missing_language_pack_message">Diese Eingabemethode braucht eine herunterladbare Tabelle, um Getipptes in Schriftzeichen umzuwandeln. Bis sie installiert ist, funktionieren die Tasten, aber es wird nichts umgewandelt.</string>
+    <string name="settings__localization__subtype_language_pack_auto_title">Tabelle lädt von selbst</string>
+    <string name="settings__localization__subtype_language_pack_auto_message">Diese Eingabemethode wandelt Getipptes mit einer rund 3 MB großen Tabelle in Schriftzeichen um. Sie wird einmal geladen, direkt nach dem Speichern dieses Subtyps.</string>
     <string name="settings__localization__subtype_missing_language_pack_action">Wörterbuch herunterladen</string>
     <string name="settings__localization__group_layouts__label" comment="Label of layouts group">Layouts</string>
     <string name="settings__localization__subtype_delete_confirmation_title" comment="Title of the subtype delete confirmation dialog">Löschen bestätigen</string>
     <string name="settings__localization__subtype_delete_confirmation_warning" comment="Warning message in the confirmation dialog to confirm the user's intent to delete">Bist du sicher, dass du diesen Untertyp löschen willst?</string>
     <string name="settings__theme__title" comment="Title of the Theme screen">Design</string>
+    <string name="pref__theme__high_contrast__label" comment="Label of the switch that turns on the measured high-contrast theme pair">Hoher Kontrast</string>
+    <string name="pref__theme__high_contrast__summary" comment="Summary of the high-contrast switch. 7:1 is the WCAG AAA contrast ratio for body text; keep the ratio as digits.">Umrandete Tasten, jedes Zeichen auf 7:1 gemessen. Setzt Tag und Nacht.</string>
     <string name="pref__theme__mode__label" comment="Label of the theme mode preference">Design-Modus</string>
     <string name="pref__theme__sunrise_time__label" comment="Label of the sunrise time preference">Sonnenuntergangszeit</string>
     <string name="pref__theme__sunset_time__label" comment="Label of the sunset time preference">Sonnenuntergangszeit</string>
@@ -245,6 +271,7 @@
     <string name="snygg__rule_element__smartbar_candidates_row">Smartbar Kandidatenzeile</string>
     <string name="snygg__rule_element__smartbar_candidate_word">Smartbar Wortkandidat</string>
     <string name="snygg__rule_element__smartbar_candidate_clip">Smartbar Kandidatenclip</string>
+    <string name="snygg__rule_element__smartbar_candidate_clip_dismiss">Verwerfen-Schaltfläche des Smartbar-Zwischenablage-Vorschlags</string>
     <string name="snygg__rule_element__smartbar_candidate_spacer">Smartbar Kandidaten-Abstandshalter</string>
     <string name="snygg__rule_selector__pressed">Gedrückt</string>
     <string name="snygg__rule_selector__focus">Fokussiert</string>
@@ -252,9 +279,12 @@
     <string name="snygg__rule_selector__disabled">Deaktiviert</string>
     <string name="snygg__property_name__background">Hintergrund</string>
     <string name="snygg__property_name__foreground">Vordergrund</string>
+    <string name="snygg__property_name__background_blur">Hintergrundunschärfe</string>
     <string name="snygg__property_name__background_image">Hintergrundbild</string>
     <string name="snygg__property_name__border_color">Rahmenfarbe</string>
     <string name="snygg__property_name__border_style">Rahmenstil</string>
+    <string name="snygg__property_name__background_sheen">Flächenschimmer</string>
+    <string name="snygg__property_name__border_sheen">Kantenschimmer</string>
     <string name="snygg__property_name__border_width">Rahmenbreite</string>
     <string name="snygg__property_name__font_family">Schriftart</string>
     <string name="snygg__property_name__font_size">Schriftgröße</string>
@@ -290,6 +320,8 @@
     <string name="snygg__property_value__circle_shape">Kreisform</string>
     <string name="snygg__property_value__cut_corner_shape_dp">Form mit eckigen Ecken (dp)</string>
     <string name="snygg__property_value__cut_corner_shape_percent">Form mit eckigen Ecken (%)</string>
+    <string name="snygg__property_value__sheen">Schimmer</string>
+    <string name="snygg__property_value__squircle_shape">Squircle</string>
     <string name="snygg__property_value__rounded_corner_shape_dp">Form mit abgerundeten Ecken (dp)</string>
     <string name="snygg__property_value__rounded_corner_shape_percent">Form mit abgerundeten Ecken (%)</string>
     <string name="snygg__property_value__dp_size">Größe (dp)</string>
@@ -300,6 +332,8 @@
     <string name="pref__input_feedback__audio_enabled__label" comment="Preference title">Ton Rückmeldung aktivieren</string>
     <string name="pref__input_feedback__audio_enabled__summary_disabled" comment="Preference summary">Niemals Töne für Eingaben abspielen, unabhängig von den Systemeinstellungen</string>
     <string name="pref__input_feedback__audio_volume__label" comment="Preference title">Lautstärke für Eingabeereignisse</string>
+    <string name="pref__input_feedback__audio_muted_by_system__warning" comment="Warning card shown when Android\'s touch sounds are off">Androids Töne bei Berührung sind ausgeschaltet, deshalb bleibt die Tastatur stumm. Tippe hier, um sie einzuschalten, oder stelle die Einstellung unten auf immer abspielen.</string>
+    <string name="pref__input_feedback__audio_muted_by_ringer__warning" comment="Warning card shown when the phone is on vibrate or silent">Dein Handy steht auf Vibration oder lautlos. Android schaltet Tastentöne in diesen Modi stumm, auch wenn hier immer abspielen eingestellt ist.</string>
     <string name="pref__input_feedback__audio_feat_key_press__label" comment="Preference title">Tastentöne</string>
     <string name="pref__input_feedback__audio_feat_key_long_press__label" comment="Preference title">Ton bei langem Tastendruck</string>
     <string name="pref__input_feedback__audio_feat_key_repeated_action__label" comment="Preference title">Ton bei wiederholten Tasten</string>
@@ -321,7 +355,7 @@
     <string name="pref__input_feedback__any_feat_key_press__summary" comment="Preference summary">z.B. Tasten, Schaltflächen, Emoji Tabs</string>
     <string name="pref__input_feedback__any_feat_key_long_press__summary" comment="Preference summary">z.B. Popup Menü</string>
     <string name="pref__input_feedback__any_feat_key_repeated_action__summary" comment="Preference summary">z.B. Löschen Taste</string>
-    <string name="pref__input_feedback__any_feat_gesture_swipe__summary" comment="Preference summary">nicht implementiert</string>
+    <string name="pref__input_feedback__any_feat_gesture_swipe__summary" comment="Preference summary">z.B. Wischen zum Sprachwechsel, Wischen zum Schreiben</string>
     <string name="pref__input_feedback__any_feat_gesture_moving_swipe__summary" comment="Preference summary">z.B. Geste zum Bewegen des Cursors</string>
     <string name="settings__keyboard__title" comment="Title of Keyboard preferences screen">Tastatur</string>
     <string name="pref__keyboard__number_row__label" comment="Preference title">Zahlenreihe</string>
@@ -336,6 +370,8 @@
     <string name="pref__keyboard__font_size_multiplier__label" comment="Preference title">Schriftgröße</string>
     <string name="pref__keyboard__group_layout__label" comment="Preference group title">Layout</string>
     <string name="pref__keyboard__landscape_input_ui_mode__label" comment="Preference value">Querformat Vollbild Eingabe</string>
+    <string name="pref__keyboard__key_spacing__label" comment="Preference title">Abstand zwischen den Tasten</string>
+    <string name="pref__keyboard__key_spacing__summary" comment="Preference summary">{v} % vertikal, {h} % horizontal — ein größerer Abstand macht die Tasten kleiner, nicht die Tastatur.</string>
     <string name="pref__keyboard__group_keypress__label" comment="Preference group title">Tastendruck</string>
     <string name="pref__keyboard__popup_enabled__label" comment="Preference title">Pop-Up Sichtbarkeit</string>
     <string name="pref__keyboard__popup_enabled__summary" comment="Preference summary">Pop-Up bei Tastendruck anzeigen</string>
@@ -353,6 +389,8 @@
     <string name="pref__smartbar__group_layout_specific__label" comment="Preference group title">Aufbauspezifische Einstellungen</string>
     <string name="pref__smartbar__flip_toggles__label" comment="Preference title">Tausche Schalter für Zugriffsleisten</string>
     <string name="pref__smartbar__flip_toggles__summary" comment="Preference summary">Vertauscht die Schnellzugriffs-Leisten</string>
+    <string name="pref__smartbar__selection_metrics__label" comment="Preference title, keep short">Auswahl-Zähler</string>
+    <string name="pref__smartbar__selection_metrics__summary" comment="Preference summary, keep short (one line)">Wörter und Zeichen der Markierung</string>
     <string name="pref__smartbar__shared_actions_auto_expand_collapse__label" comment="Preference title">Automatisch aus-/einklappen</string>
     <string name="pref__smartbar__shared_actions_auto_expand_collapse__summary" comment="Preference summary">Klappt die geteilte Aktionsleiste abhängig vom aktuellen Status automatisch ein/aus</string>
     <string name="pref__smartbar__extended_actions_placement__label" comment="Preference title">Platzierung der Aktionszeile</string>
@@ -370,10 +408,19 @@
     <string name="pref__correction__auto_capitalization__summary" comment="Preference summary">Automatisches Großschreiben je nach aktuellem Kontext</string>
     <string name="pref__correction__auto_space_punctuation__label" comment="Preference title">Automatische Leerzeichen nach Punktsetzung</string>
     <string name="pref__correction__auto_space_punctuation__summary" comment="Preference summary">Automatisch ein Leerzeichen nach einem Punkt setzen</string>
+    <string name="pref__correction__tighten_punctuation_spacing__label" comment="Preference title">Zeichensetzung straffen</string>
+    <string name="pref__correction__tighten_punctuation_spacing__summary" comment="Preference summary">Entfernt ein Leerzeichen vor . , ? !</string>
     <string name="pref__correction__remember_caps_lock_state__label" comment="Preference title">Status der festgestellten Umschalttaste merken</string>
     <string name="pref__correction__remember_caps_lock_state__summary" comment="Preference summary">Die festgestellte Umschalttaste bleibt auch beim Wechsel in ein anderes Textfeld aktiviert</string>
-    <string name="pref__correction__double_space_period__label" comment="Preference title">Doppeltes Leerzeichen durch Punkt ersetzen</string>
-    <string name="pref__correction__double_space_period__summary" comment="Preference summary">Doppeltes Tippen auf die Leertaste fügt Punkt und ein Leerzeichen ein</string>
+    <string name="pref__correction__double_space_period__label" comment="Preference title">Doppeltipp auf die Leertaste</string>
+    <string name="enum__double_space_action__punctuation" comment="Enum value label">Satzende</string>
+    <string name="enum__double_space_action__punctuation__description" comment="Enum value description. The character in brackets is the Devanagari danda, the Hindi full stop, and must stay as it is.">Das Zeichen, mit dem in der getippten Sprache ein Satz endet, gefolgt von einem Leerzeichen — meist ein Punkt, im Hindi das Danda (।).</string>
+    <string name="enum__double_space_action__comma" comment="Enum value label">Komma</string>
+    <string name="enum__double_space_action__comma__description" comment="Enum value description">Ein Komma, gefolgt von einem Leerzeichen.</string>
+    <string name="enum__double_space_action__newline" comment="Enum value label">Zeilenumbruch</string>
+    <string name="enum__double_space_action__newline__description" comment="Enum value description">Ein Zeilenumbruch anstelle des Leerzeichens.</string>
+    <string name="enum__double_space_action__slash" comment="Enum value label">Schrägstrich</string>
+    <string name="enum__double_space_action__slash__description" comment="Enum value description">Ein Schrägstrich ohne Leerzeichen, etwa für „und/oder“.</string>
     <string name="pref__spelling__title" comment="Preference group title">Rechtschreibung</string>
     <string name="pref__spelling__active_spellchecker__summary_disabled">Systemweit deaktiviert. Es werden keine roten Linien in Textfeldern für falsche Wörter angezeigt. Zum Ändern antippen.</string>
     <string name="pref__spelling__active_spellchecker__summary_none">Keinen Inline-Rechtschreibprüfungs-Service eingestellt. Zum Ändern antippen.</string>
@@ -391,6 +438,33 @@
     <string name="pref__dictionary__enable_internal_user_dictionary__summary" comment="Preference summary">Wörter vorschlagen, die im internen Benutzerwörterbuch gespeichert sind</string>
     <string name="pref__dictionary__manage_floris_user_dictionary__label" comment="Preference title">Internes Benutzerwörterbuch verwalten</string>
     <string name="pref__dictionary__manage_floris_user_dictionary__summary" comment="Preference summary">Hinzufügen, ansehen und bearbeiten von Einträgen für das interne Benutzerwörterbuch</string>
+    <string name="pref__dictionary__learn_typed_words__label" comment="Preference title for automatic word learning">Wörter beim Tippen lernen</string>
+    <string name="pref__dictionary__learn_typed_words__summary" comment="Preference summary for automatic word learning">Merkt sich Namen und Fachbegriffe, die kein Wörterbuch kennt. Bleibt auf dem Gerät.</string>
+    <string name="pref__dictionary__manage_learned_words__label" comment="Preference title">Gelernte Wörter</string>
+    <string name="pref__dictionary__manage_learned_words__summary" comment="Preference summary">Ansehen, was die Tastatur aufgeschnappt hat, und löschen, was sie vergessen soll</string>
+
+    <string name="settings__learned__title" comment="Title of the learned words screen">Gelernte Wörter</string>
+    <string name="settings__learned__empty" comment="Shown when nothing has been learned yet">Noch nichts gelernt. Wörter, die du tippst und die kein Wörterbuch kennt, erscheinen hier.</string>
+    <string name="settings__learned__empty_stage" comment="Shown when one learning stage holds no words, while others do">Auf dieser Stufe steht nichts.</string>
+    <string name="settings__learned__disabled" comment="Shown when the learning feature is switched off">Das Lernen beim Tippen ist ausgeschaltet, es wird also nichts Neues gemerkt.</string>
+    <string name="settings__learned__disabled_dictionary" comment="Shown when learning is on but the internal user dictionary it writes into is off">Das interne Benutzerwörterbuch ist ausgeschaltet, also kann nichts gelernt werden — ein aufgeschnapptes Wort hätte kein Ziel. Unter „Benutzerwörterbücher" einschalten.</string>
+    <string name="settings__learned__stage_remembered" comment="Ladder stage: seen once, no effect yet">Bemerkt — wird noch nicht vorgeschlagen</string>
+    <string name="settings__learned__stage_suggested" comment="Ladder stage: appears in the suggestion strip">Wird beim Tippen vorgeschlagen</string>
+    <string name="settings__learned__stage_promoted" comment="Ladder stage: in the personal dictionary">Im Wörterbuch — die Autokorrektur lässt es in Ruhe</string>
+    <string name="settings__learned__sightings" comment="How often a word has been seen. The placeholder inserts a count.">{count}× gesehen</string>
+    <string name="settings__learned__forget" comment="Button that removes one learned word">Vergessen</string>
+    <string name="settings__learned__forget_all" comment="Button that removes every learned word">Alles vergessen</string>
+    <string name="settings__learned__forget_all_confirm" comment="Confirmation question before deleting all learned words">Alle gelernten Wörter vergessen? Wörter, die schon im Wörterbuch stehen, bleiben dort.</string>
+    <string name="settings__learned__tier_remembered" comment="Short name of the first learning stage, used as a folder title">Bemerkt</string>
+    <string name="settings__learned__tier_suggested" comment="Short name of the second learning stage, used as a folder title">Vorgeschlagen</string>
+    <string name="settings__learned__tier_promoted" comment="Short name of the third learning stage, used as a folder title">Im Wörterbuch</string>
+    <string name="settings__learned__forget_tier" comment="Button that removes every word at one learning stage">Diese vergessen</string>
+    <string name="settings__learned__forget_tier_confirm" comment="Confirmation question before deleting the words at one stage. The placeholder inserts a already-pluralised word count, e.g. &quot;3 Wörter&quot;.">{words} vergessen? Sonst wird nichts angefasst.</string>
+    <string name="settings__learned__forget_promoted_confirm" comment="Stronger confirmation before deleting words that reached the personal dictionary. The placeholder inserts an already-pluralised word count, e.g. &quot;3 Wörter&quot;.">{words} vergessen? Was hier steht, gehört zum Wörterbuch — die Autokorrektur lässt es in Ruhe, und Vergessen entfernt es auch dort.</string>
+    <string name="settings__learned__add_now" comment="Button that promotes a learned word into the personal dictionary immediately">Ins Wörterbuch übernehmen</string>
+    <string name="settings__learned__how_it_works" comment="Explanation shown at the top of the learned words screen">Ein Wort wird erst gemerkt, wenn es absichtlich getippt aussieht und nicht wie ein Vertipper. Ab dem zweiten Mal wird es vorgeschlagen, ab dem dritten steht es im Wörterbuch — von da an lässt die Autokorrektur es in Ruhe.\n\nAlles bleibt auf diesem Gerät. Im Inkognito-Modus, in Passwortfeldern und aus Diktaten wird nichts gelernt — ausschließlich aus dem, was du wirklich getippt hast.</string>
+    <string name="suggestion__forgot_word" comment="Toast after forgetting a learned word. The placeholder inserts the word.">„{word}“ vergessen</string>
+
     <string name="settings__udm__title_floris" comment="Title of the User Dictionary Manager activity for internal">Internes Benutzerwörterbuch</string>
     <string name="settings__udm__title_system" comment="Title of the User Dictionary Manager activity for system">System-Benutzerwörterbuch</string>
     <string name="settings__udm__no_words_in_dictionary" comment="String to show if no words are present in the dictionary">Dieses Wörterbuch enthält keine Wörter.</string>
@@ -400,16 +474,24 @@
     <string name="settings__udm__open_system_manager_ui" comment="Label of the Open system manager UI menu option">Öffne System Manager UI</string>
     <string name="settings__udm__dictionary_import_success" comment="Message for dictionary import success">Benutzerwörterbuch erfolgreich importiert!</string>
     <string name="settings__udm__dictionary_export_success" comment="Message for dictionary export success">Benutzerwörterbuch erfolgreich exportiert!</string>
+    <string name="settings__udm__add_from_contacts">Namen aus Kontakten hinzufügen</string>
+    <string name="settings__udm__import_from_contacts_file">Namen aus einer Kontaktdatei importieren</string>
+    <string name="settings__udm__contacts_confirm_message">{count} Namen in dieser Datei gefunden. Zum Wörterbuch hinzufügen?</string>
+    <string name="settings__udm__contacts_added_one">{name} zum Wörterbuch hinzugefügt</string>
+    <string name="settings__udm__contacts_added_many">{count} Namen zum Wörterbuch hinzugefügt</string>
+    <string name="settings__udm__contacts_added_none">Keine neuen Namen gefunden</string>
+    <string name="settings__udm__contacts_file_unreadable">Diese Datei konnte nicht gelesen werden</string>
+    <string name="settings__udm__contacts_no_picker">Keine Kontakte-App gefunden</string>
     <string name="settings__udm__dialog__title_add" comment="Label for the title (when in adding mode) in the user dictionary add/edit dialog">Wort hinzufügen</string>
     <string name="settings__udm__dialog__title_edit" comment="Label for the title (when in editing mode) in the user dictionary add/edit dialog">Wort bearbeiten</string>
     <string name="settings__udm__dialog__word_label" comment="Label for the word in the user dictionary add/edit dialog">Wort</string>
     <string name="settings__udm__dialog__word_error_empty" comment="Error label for the word in the user dictionary add/edit dialog">Bitte ein Wort eingeben</string>
-    <string name="settings__udm__dialog__word_error_invalid" comment="Error label for the word in the user dictionary add/edit dialog">Bitte ein Wort eingeben, das zu {regex} passt</string>
+    <string name="settings__udm__dialog__word_error_invalid">Dieses Feld nimmt ein einzelnes Wort — keine Leerzeichen, Kommas oder Semikolons. Für einen ganzen Satz oder mehrzeiligen Text lege stattdessen einen Textbaustein unter Prompts an.</string>
     <string name="settings__udm__dialog__freq_label" comment="Label for the frequency in the user dictionary add/edit dialog. The two decimal placeholders are the minimum and maximum frequency, both inclusive.">Häufigkeit (zwischen {f_min} und {f_max})</string>
     <string name="settings__udm__dialog__freq_error_empty" comment="Error label for the frequency in the user dictionary add/edit dialog">Bitte einen Häufigkeitswert eingeben</string>
     <string name="settings__udm__dialog__freq_error_invalid" comment="Error label for the frequency in the user dictionary add/edit dialog">Bitte eine gültige Zahl aus den angegebenen Grenzen eingeben</string>
     <string name="settings__udm__dialog__shortcut_label" comment="Label for the shortcut in the user dictionary add/edit dialog">Abkürzung (optional)</string>
-    <string name="settings__udm__dialog__shortcut_error_invalid" comment="Error label for the shortcut in the user dictionary add/edit dialog">Bitte einen Shortcut eingeben, der zu {regex} passt</string>
+    <string name="settings__udm__dialog__shortcut_error_invalid">Ein Kürzel ist ein einzelnes Wort — keine Leerzeichen, Kommas oder Semikolons.</string>
     <string name="settings__udm__dialog__locale_label" comment="Label for the language code in the user dictionary add/edit dialog">Sprachcode (optional)</string>
     <string name="settings__udm__dialog__locale_error_invalid" comment="Error label for the language code in the user dictionary add/edit dialog">Dieser Sprachcode entspricht nicht der Syntax. Der Code muss entweder ein Land (wie en), Land und Region (wie en_US) oder Land, Region und Script (wie en_US-script) sein.</string>
     <string name="settings__gestures__title" comment="Title of Gestures screen">Gesten</string>
@@ -432,9 +514,12 @@
     <string name="pref__gestures__swipe_left__label" comment="Preference title">Nach links wischen</string>
     <string name="pref__gestures__swipe_right__label" comment="Preference title">Nach rechts wischen</string>
     <string name="pref__gestures__space_bar_swipe_up__label" comment="Preference title">Leertaste nach oben wischen</string>
+    <string name="pref__gestures__space_bar_swipe_down__label" comment="Preference title">Leertaste nach unten wischen</string>
     <string name="pref__gestures__space_bar_swipe_left__label" comment="Preference title">Leertaste nach links wischen</string>
     <string name="pref__gestures__space_bar_swipe_right__label" comment="Preference title">Leertaste nach rechts wischen</string>
     <string name="pref__gestures__space_bar_long_press__label" comment="Preference title">Leertaste lang drücken</string>
+    <string name="pref__gestures__momentary_layer__label" comment="Preference title, keep short">Halten, um eine Ebene aufzuschlagen</string>
+    <string name="pref__gestures__momentary_layer__summary" comment="Preference summary, keep short (one line)">\?123 halten, auf ein Zeichen ziehen und loslassen — es wird eingefügt und die Buchstaben sind zurück</string>
     <string name="pref__gestures__delete_key_swipe_left__label" comment="Preference title">Löschtaste nach links wischen</string>
     <string name="pref__gestures__delete_key_long_press__label" comment="Preference title">Aktion bei lang gedrückter Löschtaste</string>
     <string name="pref__gestures__swipe_velocity_threshold__label" comment="Preference title">Gesten-Geschwindigkeitsschwelle</string>
@@ -448,6 +533,10 @@
     <string name="pref__other__settings_accent_color__label" comment="Label of accent color preference in Other">Akzentfarben der Einstellungen    </string>
     <string name="pref__other__settings_language__label" comment="Label of Settings language preference in Other">App-Sprache</string>
     <string name="pref__other__show_app_icon__label" comment="Label of Show app icon preference in Other">Zeige die App in der Übersicht</string>
+    <string name="pref__other__clear_cache__label">Zwischenspeicher leeren</string>
+    <string name="pref__other__clear_cache__summary">Temporäre Dateien: {size}</string>
+    <string name="pref__other__clear_cache__confirm">Leeren</string>
+    <string name="pref__other__clear_cache__message">Löscht temporäre Dateien, die die App neu erzeugen kann: eine gerade transkribierte geteilte Datei, heruntergeladene GIFs und Sticker, entpackte Bilder. Verlauf, Aufnahmen, Einstellungen und Wörterbücher bleiben unangetastet. Eine gerade laufende Aufnahme oder Transkription kann dadurch abbrechen.</string>
     <string name="pref__other__show_app_icon__summary_atleast_q" comment="Summary of Show app icon preference in Other for Android 10+">Immer aktiviert in Android 10+ aufgrund von System-Beschränkungen</string>
     <!-- About UI strings -->
     <string name="about__title" comment="Title of About activity">Über</string>
@@ -512,7 +601,12 @@
     <string name="backup_and_restore__back_up__destination_share_intent">Drittanbieter-Apps über das Teilen-Menü</string>
     <string name="backup_and_restore__back_up__files">Auswählen, wovon eine Sicherung erstellt werden soll</string>
     <string name="backup_and_restore__back_up__files_jetpref_datastore">Einstellungen</string>
+    <string name="backup_and_restore__back_up__files_provider_credentials">API-Schlüssel und Passwörter</string>
+    <string name="backup_and_restore__back_up__credentials_warning">Dieses Archiv enthält deine API-Schlüssel und Passwörter im Klartext, dazu dein Dictate-Cloud-Guthaben – wer es bekommt, kann auf deine Kosten diktieren. Gib es nicht weiter, und wenn du das schon getan hast, ändere den Schlüssel bei deinem Anbieter. Alles andere, was unten angehakt ist, geht mit – auch dein Transkriptionsverlauf und deine Zwischenablage.</string>
+    <string name="backup_and_restore__back_up__credentials_excluded_note">Dieses Archiv enthält keine API-Schlüssel, Passwörter und kein Dictate-Cloud-Guthaben, du kannst es also weitergeben – es stellt deine aber auch nicht wieder her. Alles andere, was unten angehakt ist, ist weiterhin enthalten, auch dein Transkriptionsverlauf und deine Zwischenablage.</string>
+    <string name="backup_and_restore__back_up__personal_content_note">Dieses Archiv enthält keine API-Schlüssel und Passwörter, aber alles, was unten angehakt ist – deinen Transkriptionsverlauf samt aufbewahrter Aufnahmen, deine Zwischenablage, deine Prompts und die Wörter, die die Tastatur von dir gelernt hat.</string>
     <string name="backup_and_restore__back_up__files_dictate_prompts">Gespeicherte Umformulierungs-Prompts</string>
+    <string name="backup_and_restore__back_up__files_personal_dictionary">Persönliches Wörterbuch und gelernte Wörter</string>
     <string name="backup_and_restore__back_up__files_ime_keyboard">Tastaturerweiterungen</string>
     <string name="backup_and_restore__back_up__files_ime_spelling">Rechtschreibeerweiterungen / Wörterbücher</string>
     <string name="backup_and_restore__back_up__files_ime_theme">Design-Erweiterungen</string>
@@ -528,6 +622,7 @@
     <string name="backup_and_restore__restore__metadata">Ausgewählte Sicherungsarchive</string>
     <string name="backup_and_restore__restore__metadata_warn_different_version">Dieses Sicherungsarchiv wurde in einer anderen als der aktuellen Version erstellt, was grundsätzlich unterstützt wird. Beachte jedoch, dass kleinere Probleme auftreten können oder einige Einstellungen aufgrund von Funktionsunterschieden möglicherweise nicht richtig übertragen werden.</string>
     <string name="backup_and_restore__restore__metadata_warn_different_vendor">Dieses Sicherungsarchiv wurde in einer Drittanbieter-App erstellt, was grundsätzlich nicht unterstützt wird. Es kann zu Datenverlust kommen, Wiederherstellung auf eigene Gefahr!</string>
+    <string name="backup_and_restore__restore__metadata_note_no_credentials">Diese Datensicherung enthält keine API-Schlüssel und Passwörter. Alles andere wird wiederhergestellt. Beim Zusammenführen bleiben die Schlüssel auf diesem Gerät erhalten; beim Überschreiben verschwinden sie – auch ein Dictate-Cloud-Wiederherstellungscode, den man nicht neu eintippen kann.</string>
     <string name="backup_and_restore__restore__metadata_error_invalid_metadata">Dieses Sicherungsarchiv enthält ungültige Metadaten. Entweder ist die Datei beschädigt oder sie wurde falsch modifiziert. Das Wiederherstellen dieser Datei ist nicht möglich, bitte eine andere wählen.</string>
     <string name="backup_and_restore__restore__metadata_error_nothing_to_restore">Dieses Sicherungsarchiv enthält keine wiederherstellbaren Dateien, bitte ein anderes auswählen.</string>
     <string name="backup_and_restore__restore__mode">Wiederherstellungsmodus</string>
@@ -550,7 +645,10 @@
     <string name="crash_multiple_notification__title" comment="Title of the notification for consecutive crashes">Dictate funktioniert zum wiederholten Male nicht …</string>
     <string name="crash_multiple_notification__body" comment="Body of the notification for consecutive crashes">Um eine endlose Absturzschleife zu verhindern, wurde automatisch auf die zuvor benutzte Tastatur zurückgegriffen. Tippen, um die Fehlermeldung anzuzeigen</string>
     <!-- Clipboard strings -->
+    <string name="editing__back_to_keyboard">Zurück zur Tastatur</string>
     <string name="clipboard__header_title">Zwischenablage</string>
+    <string name="clipboard__search_placeholder" comment="Hint inside the clipboard search field">Ausschnitte durchsuchen</string>
+    <string name="clipboard__search_no_results" comment="Shown when no clip contains what was typed">Kein Ausschnitt enthält das</string>
     <string name="clipboard__disabled__title">Der Verlauf der Zwischenablage ist aktuell deaktiviert</string>
     <string name="clipboard__disabled__message">{app_name}\'s Zwischenablageverlauf ermöglicht es dir schnell kopierte Texte und Bilder zu speichern und abzurufen, mit der Möglichkeit, Elemente anzuheften, eine automatische Bereinigung einzurichten und eine maximale Anzahl von Elementen festzulegen.</string>
     <string name="clipboard__disabled__enable_button">Verlauf für Zwischenablage aktivieren</string>
@@ -580,6 +678,10 @@
     <string name="pref__clipboard__sync_from_system_clipboard__label">Von Systemzwischenablage synchronisieren</string>
     <string name="pref__clipboard__sync_to_system_clipboard__label">Zur Systemzwischenablage synchronisieren</string>
     <string name="pref__clipboard__group_clipboard_suggestion__label">Vorschläge aus der Zwischenablage</string>
+    <string name="pref__clipboard__strip_tracking_params__label" comment="Preference title">Tracking aus Links entfernen</string>
+    <string name="pref__clipboard__strip_tracking_params__summary" comment="Preference summary">Entfernt utm_, si, fbclid und Ähnliches beim Einfügen</string>
+    <string name="pref__clipboard__trim_on_copy__label" comment="Preference title, keep short">Beim Kopieren kürzen</string>
+    <string name="pref__clipboard__trim_on_copy__summary" comment="Preference summary, keep short (one line)">Entfernt Leerzeichen und Umbrüche an den Enden</string>
     <string name="pref__clipboard__suggestion_enabled__label" comment="Preference title">Vorschläge aus der Zwischenablage</string>
     <string name="pref__clipboard__suggestion_enabled__summary" comment="Preference summary">Zuvor kopierte Inhalte vorschlagen</string>
     <string name="pref__clipboard__suggestion_timeout__label" comment="Preference title; Translators: This should form a sentence together with `pref__clipboard__suggestion_timeout__summary` and is the first part">Beschränkung für die Vorschläge der Zwischenablage</string>
@@ -729,6 +831,7 @@
     <string name="action__apply">Übernehmen</string>
     <string name="action__back_up">Sicherung erstellen</string>
     <string name="action__cancel">Abbrechen</string>
+    <string name="action__back">Zurück</string>
     <string name="action__clear">Leeren</string>
     <string name="action__create">Erstellen</string>
     <string name="action__default">Standard</string>
@@ -900,6 +1003,7 @@
     <string name="enum__swipe_action__move_cursor_start_of_page" comment="Enum value label">Bewege den Cursor zum Anfang der Seite</string>
     <string name="enum__swipe_action__move_cursor_end_of_page" comment="Enum value label">Bewege den Cursor zum Ende der Seite</string>
     <string name="enum__swipe_action__switch_to_clipboard_context" comment="Enum value label">Zwischenablage-Verlauf öffnen</string>
+    <string name="enum__swipe_action__switch_to_editing_context">Textbearbeitung öffnen</string>
     <string name="enum__swipe_action__shift" comment="Enum value label">Umschalt</string>
     <string name="enum__swipe_action__redo" comment="Enum value label">Wiederherstellen</string>
     <string name="enum__swipe_action__undo" comment="Enum value label">Rückgängig</string>
@@ -940,6 +1044,10 @@
         <item quantity="one">{v} Zeichen</item>
         <item quantity="other">{v} Zeichen</item>
     </plurals>
+    <plurals name="unit__words__written">
+        <item quantity="one">{v} Wort</item>
+        <item quantity="other">{v} Wörter</item>
+    </plurals>
     <plurals name="unit__candidates__written">
         <item quantity="one">{v} Vorschlag</item>
         <item quantity="other">{v} Vorschläge</item>
@@ -967,6 +1075,8 @@
     <string name="dictate__example_prompt_signoff_name">Grußformel</string>
     <string name="dictate__example_prompt_signoff_prompt">[Beste Grüße,]</string>
     <!-- Dictate strings -->
+    <string name="quick_action__ime_ui_mode_editing">Textbearbeitung</string>
+    <string name="quick_action__ime_ui_mode_editing__tooltip">Cursor bewegen, Text auswählen und bearbeiten</string>
     <string name="quick_action__ime_ui_mode_dictate">Dictate</string>
     <string name="quick_action__ime_ui_mode_dictate__tooltip">Tippen zum Diktieren, erneut tippen zum Transkribieren</string>
     <string name="quick_action__dictate_live_prompt">Live-Prompt</string>
@@ -979,14 +1089,25 @@
     <string name="about__feedback__email">contact@devemperor.net</string>
     <string name="about__feedback__subject">Dictate Feedback</string>
     <string name="setup__provider__title">Wähle, wie Dictate transkribiert</string>
-    <string name="setup__provider__choose_intro">Dictate wandelt deine Sprache mit einem KI-Dienst in Text um. Dafür gibt es zwei Wege, und beide werden vollständig unterstützt — nimm den, der dir lieber ist.</string>
+    <string name="setup__provider__choose_intro">Dictate wandelt deine Sprache mit einem KI-Dienst in Text um. Für die meisten passt einer der beiden Wege — und wenn du gar keinen Cloud-Dienst nutzen willst, stehen darunter zwei weitere.</string>
     <string name="setup__provider__choice_cloud_title">Guthaben in der App kaufen</string>
     <string name="setup__provider__choice_cloud_body">Dictate Cloud: kein Konto irgendwo, kein API-Schlüssel. Du kaufst Diktatminuten über Google Play, und sie verfallen nicht. Der bequeme Weg — und etwas teurer, als direkt zu einem Anbieter zu gehen.</string>
     <string name="setup__provider__choice_cloud_btn">Guthaben-Pakete anzeigen</string>
     <string name="setup__provider__choice_own_title">Eigenen KI-Anbieter nutzen</string>
     <string name="setup__provider__choice_own_body">Leg dir bei einem Anbieter deiner Wahl einen Schlüssel an — Groq ist für den Alltag kostenlos. Du behältst dein eigenes Konto und zahlst direkt beim Anbieter zu dessen Preisen. Dauert etwa zwei Minuten.</string>
     <string name="setup__provider__choice_own_btn">Eigenen Schlüssel einrichten</string>
-    <string name="setup__provider__back_to_choice">Zurück zu beiden Möglichkeiten</string>
+    <string name="setup__provider__back_to_choice">Zurück zu allen Möglichkeiten</string>
+    <string name="setup__provider__more_ways">Lieber ganz ohne Cloud-Dienst?</string>
+    <string name="setup__provider__choice_local_title">Auf deinem Gerät, offline</string>
+    <string name="setup__provider__choice_local_body">Ein Sprachmodell einmal herunterladen. Kein Konto, keine Kosten, und keine Aufnahme verlässt dein Telefon.</string>
+    <string name="setup__provider__choice_server_title">Eigener Server</string>
+    <string name="setup__provider__choice_server_body">Dictate auf einen selbst betriebenen Sprachserver richten — oder auf jeden OpenAI-kompatiblen Endpunkt.</string>
+    <string name="setup__provider__local_intro">Die Spracherkennung läuft dann auf deinem Telefon: Nichts wird irgendwohin geschickt, und es funktioniert ohne Verbindung. Wähle jetzt ein Modell zum Herunterladen — weitere kannst du später hinzufügen oder wechseln.</string>
+    <string name="setup__provider__local_recommended">Empfohlen für deine Sprache</string>
+    <string name="setup__provider__local_bigger">Genauer, aber ein deutlich größerer Download</string>
+    <string name="setup__provider__local_download_btn">Modell herunterladen</string>
+    <string name="setup__provider__local_use_btn">Dieses Modell verwenden</string>
+    <string name="setup__provider__local_all_models">Alle Modelle anzeigen</string>
     <string name="setup__provider__intro">Dictate wandelt deine Sprache mit Hilfe eines Online-KI-Dienstes in Text um. Zur Nutzung brauchst du einen eigenen, persönlichen Schlüssel für einen solchen Dienst.</string>
     <string name="setup__provider__what_is_key">Ein API-Schlüssel ist wie ein persönliches Passwort, mit dem Dictate den Dienst für dich nutzen kann. Einen zu erstellen ist kostenlos und dauert etwa zwei Minuten.</string>
     <string name="setup__provider__recommended">Wir empfehlen <b>Groq</b> — schnell und kostenlos für den täglichen Gebrauch.</string>
@@ -1034,6 +1155,17 @@
     <string name="dictate__floating_button_show_with_keyboard_title">Mit Dictate-Tastatur anzeigen</string>
     <string name="dictate__floating_button_show_with_keyboard_summary_on">Der Button erscheint auch, während die Dictate-Tastatur aktiv ist.</string>
     <string name="dictate__floating_button_show_with_keyboard_summary_off">Ausgeblendet, während die Dictate-Tastatur aktiv ist, da diese bereits eine Mikrofontaste hat.</string>
+    <string name="dictate__floating_button_apps_title">App-Sichtbarkeit</string>
+    <string name="dictate__floating_button_apps_summary_all">In jeder App</string>
+    <string name="dictate__floating_button_apps_summary_only">Nur in {n} Apps</string>
+    <string name="dictate__floating_button_apps_summary_except">Überall außer in {n} Apps</string>
+    <string name="dictate__floating_button_apps_scope_all">Jede App</string>
+    <string name="dictate__floating_button_apps_scope_only">Nur die Apps unten</string>
+    <string name="dictate__floating_button_apps_scope_except">Jede App außer denen unten</string>
+    <string name="dictate__floating_button_apps_note">Über einer ausgelassenen App wird der Button nie gezeichnet, und Dictate liest dort keine Textfelder. Eine App, die grundsätzlich etwas gegen Bedienungshilfen hat, merkt trotzdem, dass der Dienst eingeschaltet ist.</string>
+    <string name="dictate__floating_button_apps_list_title">Apps</string>
+    <string name="dictate__floating_button_apps_search">Apps durchsuchen</string>
+    <string name="dictate__floating_button_apps_none">Keine App für „{search_term}“ gefunden</string>
     <string name="dictate__floating_button_design_title">Button-Stil</string>
     <string name="dictate__floating_button_design_ring">Ring</string>
     <string name="dictate__floating_button_design_ring_summary">Kompakter Kreis mit einem Ring, der beim Aufnehmen und Transkribieren animiert.</string>
@@ -1094,6 +1226,8 @@
     <string name="dictate__error_transcription_failed">Transkription fehlgeschlagen.</string>
     <string name="dictate__error_unknown">Unbekannter Fehler bei der Transkription.</string>
     <string name="dictate__error_rewording_failed">Umformulierung fehlgeschlagen.</string>
+    <string name="dictate__error_rewording_default_model">%1$s ist das eingebaute Standardmodell von %2$s, nicht deine Wahl. Wähle unter KI-Anbieter ein Modell für die Umformulierung.</string>
+    <string name="dictate__notice_rewording_failed">Umformulierung fehlgeschlagen – Rohtext eingefügt</string>
     <string name="dictate__error_overlay_insert_clipboard">Diese App hat den Text nicht angenommen. Er liegt in der Zwischenablage — Feld gedrückt halten und einfügen.</string>
     <string name="dictate__error_invalid_api_key">Überprüfe deinen API-Schlüssel</string>
     <string name="dictate__error_quota_exceeded">Kontingent oder Limit erreicht</string>
@@ -1101,8 +1235,11 @@
     <string name="dictate__error_text_size_limit">Text zu lang zum Umformulieren</string>
     <string name="dictate__error_format_not_supported">Audioformat nicht unterstützt</string>
     <string name="dictate__error_timeout">Zeitüberschreitung der Anfrage</string>
+    <string name="dictate__error_timeout_on_device">Lokale Transkription zu langsam</string>
     <string name="dictate__error_network">Keine Internetverbindung</string>
     <string name="dictate__error_server">Anbieter nicht erreichbar – versuche es erneut</string>
+    <string name="dictate__error_try_on_device">Keine Verbindung – On-Device nutzen</string>
+    <string name="dictate__error_try_on_device_detail">Die Transkription auf dem Gerät braucht überhaupt keine Verbindung — das hilft, wenn ein Anbieter gesperrt ist, genauso wie ohne Empfang. Unter „KI-Anbieter“ einrichten und danach „Offline-Fallback“ einschalten, damit sie von selbst übernimmt.</string>
     <string name="dictate__action_settings">Einstellungen öffnen</string>
     <string name="dictate__action_error_details">Fehlerdetails anzeigen</string>
     <string name="dictate__error_details_title">Fehlerdetails</string>
@@ -1154,15 +1291,36 @@
     <string name="dictate__providers_status_unconfigured">Nicht konfiguriert</string>
     <string name="dictate__providers_cap_stt">Transkription</string>
     <string name="dictate__providers_cap_chat">Umformulierung</string>
-    <string name="dictate__providers_add_custom">Benutzerdefinierten Server hinzufügen</string>
-    <string name="dictate__providers_add_custom_summary">Beliebiger OpenAI-kompatibler Endpunkt</string>
+    <string name="dictate__providers_add_custom">Eigenen Server hinzufügen</string>
+    <string name="dictate__providers_add_custom_summary">Selbst gehostet oder jeder OpenAI-kompatible Endpunkt — für Spracherkennung und Umformulierung</string>
+    <string name="dictate__providers_azure_endpoint">Der Endpunkt steht im Portal neben dem Schlüssel auf der Seite „Keys and Endpoint“. MAI-Transcribe läuft nur in East US, West US, West US 2, North Europe, Southeast Asia und Central India.</string>
+    <string name="dictate__providers_ollama_no_stt">Ollama hat keinen Endpunkt für Spracherkennung und kann deshalb nur umformulieren. Zum Diktieren über einen eigenen Server richte einen Spracherkennungs-Server ein (etwa Speaches, faster-whisper-server oder whisper.cpp) und trage ihn unter „Eigenen Server hinzufügen“ ein — oder nutze die Erkennung auf dem Gerät, die ganz ohne Server auskommt.</string>
     <string name="dictate__providers_custom_title">Benutzerdefinierter Server</string>
     <string name="dictate__providers_field_name">Name</string>
     <string name="dictate__providers_field_transcription_model">Transkriptionsmodell</string>
     <string name="dictate__providers_field_chat_model">Umformulierungsmodell</string>
     <string name="dictate__providers_test">Verbindung testen</string>
-    <string name="dictate__providers_test_success">Verbunden · {count} Modelle</string>
-    <string name="dictate__providers_test_failed">Verbindung fehlgeschlagen</string>
+    <string name="dictate__providers_test_transcribe">Transkription testen</string>
+    <string name="dictate__providers_check_no_key">Gib zuerst deinen API-Schlüssel ein.</string>
+    <string name="dictate__providers_check_credentials_ok">Zugangsdaten bestätigt · {count} Modelle</string>
+    <string name="dictate__providers_check_credentials_ok_nocount">Zugangsdaten bestätigt</string>
+    <string name="dictate__providers_check_endpoint_ok">Server erreicht · {count} Modelle</string>
+    <string name="dictate__providers_check_credentials_untested">Transkription nicht getestet.</string>
+    <string name="dictate__providers_check_transcription_ok">Transkription bestätigt</string>
+    <string name="dictate__providers_check_transcription_text">Zurückgekommen als: „{text}“</string>
+    <string name="dictate__providers_check_transcription_empty">Die Anfrage ging durch, aber es kam kein Text zurück – die Verbindung steht, dieses Modell hat die Probe nicht verstanden.</string>
+    <string name="dictate__providers_check_failed_connection">Verbindungstest fehlgeschlagen</string>
+    <string name="dictate__providers_check_failed_transcription">Transkriptionstest fehlgeschlagen</string>
+    <string name="dictate__providers_check_err_auth">Der Schlüssel wurde abgelehnt. Prüfe ihn und ob die Adresse zum selben Konto gehört.</string>
+    <string name="dictate__providers_check_err_quota">Der Schlüssel funktioniert, aber das Konto hat kein Guthaben mehr oder liegt über einem Limit. Prüfe deinen Tarif beim Anbieter.</string>
+    <string name="dictate__providers_check_err_network">Der Server war nicht erreichbar. Prüfe die Adresse und deine Internetverbindung.</string>
+    <string name="dictate__providers_check_err_timeout">Keine Antwort in der vorgegebenen Zeit. Der Anbieter ist vielleicht ausgelastet – versuch es noch einmal.</string>
+    <string name="dictate__providers_check_err_server">Der Anbieter meldet einen eigenen Fehler. Hier gibt es nichts zu ändern; versuch es später noch einmal.</string>
+    <string name="dictate__providers_check_err_format">Der Anbieter hat die Sprachprobe abgelehnt. Er nimmt dieses Format womöglich nicht an.</string>
+    <string name="dictate__providers_check_err_unknown">Die Anfrage ist fehlgeschlagen.</string>
+    <string name="dictate__providers_azure_link_signup">Azure-Konto erstellen</string>
+    <string name="dictate__providers_azure_link_portal">Azure-Portal</string>
+    <string name="dictate__providers_azure_link_guide">Einrichtungsanleitung</string>
     <string name="dictate__cloud_title">Dictate Cloud</string>
     <string name="dictate__cloud_row_summary_none">Diktat-Guthaben kaufen — ohne API-Schlüssel</string>
     <string name="dictate__cloud_row_summary_balance">Noch {minutes} Minuten Guthaben</string>
@@ -1178,6 +1336,7 @@
     <string name="dictate__cloud_packs_title">Guthaben-Pakete</string>
     <string name="dictate__cloud_topup_title">Aufladen</string>
     <string name="dictate__cloud_pack_minutes">{minutes} Minuten Diktat</string>
+    <string name="dictate__cloud_pack_savings">{percent} % günstiger</string>
     <string name="dictate__cloud_shop_unavailable">Die Guthaben-Pakete lassen sich hier nicht anzeigen. Meist heißt das, dass die App nicht über Google Play installiert wurde oder auf diesem Gerät kein Play-Konto angemeldet ist. Ein eigener API-Schlüssel funktioniert in beiden Fällen.</string>
     <string name="dictate__cloud_activate_title">Guthaben ist bereit</string>
     <string name="dictate__cloud_activate_body">Du hast Guthaben, aber das Diktat läuft gerade über einen anderen Anbieter. Wechsle, wann immer du willst — ohne dich ändert sich nichts.</string>
@@ -1225,6 +1384,8 @@
     <string name="dictate__cloud_other_way_body">Du kannst jederzeit auf deinen eigenen API-Schlüssel wechseln und wieder zurück. Dein Guthaben bleibt, wo es ist.</string>
 
     <string name="dictate__providers_network_group">Netzwerk</string>
+    <string name="dictate__request_timeout_title">Zeitlimit für Anfragen</string>
+    <string name="dictate__request_timeout_summary">{v} s · höher stellen für einen langsamen eigenen Server</string>
     <string name="dictate__proxy_title">Proxy</string>
     <string name="dictate__proxy_summary_off">Aus · direkte Verbindung</string>
     <string name="dictate__proxy_enabled_title">Proxy verwenden</string>
@@ -1278,7 +1439,10 @@
     <string name="dictate__paragraph_split_off">Aus</string>
     <string name="dictate__paragraph_split_value">Nach {n} Wörtern</string>
     <string name="dictate__realtime_title">Echtzeit-Transkription</string>
-    <string name="dictate__realtime_summary">Zeigt Text live beim Sprechen an, für Anbieter, die das unterstützen</string>
+    <string name="dictate__realtime_summary">Transkribiert schon beim Sprechen statt erst nach dem Stoppen, für Anbieter, die das unterstützen</string>
+    <string name="dictate__realtime_mode_off">Aus</string>
+    <string name="dictate__realtime_mode_live">Text beim Sprechen anzeigen</string>
+    <string name="dictate__realtime_mode_at_end">Text erst beim Stoppen anzeigen</string>
     <string name="dictate__longform_title">Langform-Diktat</string>
     <string name="dictate__longform_summary">Transkribiere lange Diktate im Hintergrund, Stück für Stück, während du weiterredest – tippe während der Aufnahme auf „Weiter“, um den aktuellen Teil zu senden, sodass am Ende keine lange Wartezeit entsteht.</string>
     <string name="dictate__longform_autosplit_title">Intelligentes Auto-Teilen</string>
@@ -1337,6 +1501,26 @@
     <string name="dictate__custom_words_title">Eigene Wörter</string>
     <string name="dictate__custom_words_summary_empty">Namen oder Fachbegriffe hinzufügen, die korrekt geschrieben werden sollen</string>
     <string name="dictate__custom_words_placeholder">z. B. FlorisBoard, Kubernetes, Renée, OAuth, Anthropic</string>
+    <string name="dictate__custom_words_summary">{count} Wörter · etwa {tokens} von {budget} Tokens</string>
+    <string name="dictate__custom_words_budget_info">Jedes Wort hier wird bei jeder Diktatanfrage mitgeschickt, und das Sprachmodell liest davon nur etwa {budget} Tokens Kontext. Deine Liste belegt davon etwa {tokens}.</string>
+    <string name="dictate__custom_words_budget_over">Deine Liste ist länger, als das Sprachmodell liest. Etwa {fits} deiner {count} Wörter kommen an; der Rest wird bei jedem Diktat mitgeschickt und ignoriert. Für einen größeren Wortschatz nimm eigene Zuordnungen — die sind exakt, funktionieren offline und kosten nichts.</string>
+    <string name="dictate__custom_words_import">Wortliste importieren</string>
+    <string name="dictate__custom_words_export">Wortliste exportieren</string>
+    <string name="dictate__custom_words_export_filename">dictate_words.txt</string>
+    <string name="dictate__custom_words_import_title">Wortliste importieren</string>
+    <string name="dictate__custom_words_import_fitting">{count} neue Wörter aus dieser Datei passen in deine Liste.</string>
+    <string name="dictate__custom_words_import_known">{count} waren schon darin.</string>
+    <string name="dictate__custom_words_import_nofit">{count} blieben übrig — das Sprachmodell liest nur etwa {budget} Tokens Kontext, sie wären also bei jedem Diktat mitgeschickt und ignoriert worden.</string>
+    <string name="dictate__custom_words_import_unusable">{count} Zeilen enthielten nichts Schreibbares und wurden übersprungen.</string>
+    <string name="dictate__custom_words_import_truncated">Nur die ersten {count} Einträge der Datei wurden gelesen.</string>
+    <string name="dictate__custom_words_import_also_dictionary">Auch ins persönliche Wörterbuch aufnehmen</string>
+    <string name="dictate__custom_words_import_also_dictionary_summary">Diese Liste sagt nur dem Sprachmodell, wie ein Wort geschrieben wird. Das persönliche Wörterbuch ist das, was die Tastatur beim Tippen benutzt — es hat keine Längengrenze, es kommt also jedes Wort der Datei hinein, nicht nur die, die oben hineinpassen.</string>
+    <string name="dictate__custom_words_import_empty">Keine Wörter in dieser Datei gefunden</string>
+    <string name="dictate__custom_words_import_done">{count} Wörter hinzugefügt</string>
+    <string name="dictate__custom_words_import_done_dictionary">{count} Wörter hinzugefügt und {dict} ins persönliche Wörterbuch</string>
+    <string name="dictate__file_unreadable">Diese Datei konnte nicht gelesen werden</string>
+    <string name="dictate__file_export_done">Datei gespeichert</string>
+    <string name="dictate__file_export_failed">Datei konnte nicht geschrieben werden</string>
     <string name="dictate__rewording_group">Umformulierung (KI-Bearbeitung)</string>
     <string name="dictate__rewording_title">Umformulierung (KI)</string>
     <string name="dictate__rewording_summary_on">An – mit KI umformulieren, übersetzen und formatieren</string>
@@ -1365,7 +1549,11 @@
     <string name="dictate__prompt_name_title">Name</string>
     <string name="dictate__prompt_name_placeholder">z. B. Grammatik korrigieren</string>
     <string name="dictate__prompt_text_title">Prompt</string>
-    <string name="dictate__prompt_text_placeholder">Anweisung, die an das KI-Modell gesendet wird</string>
+    <string name="dictate__prompt_text_placeholder">Anweisung an die KI — oder [Text in Klammern], um ihn unverändert einzufügen</string>
+    <string name="dictate__prompt_trigger_title">Tippkürzel (optional)</string>
+    <string name="dictate__prompt_trigger_placeholder">z. B. ;sig</string>
+    <string name="dictate__prompt_trigger_error_invalid">Ein Kürzel ist ein Wort ohne Leerzeichen, höchstens 32 Zeichen.</string>
+    <string name="dictate__prompt_trigger_error_duplicate">Wird bereits von „{name}“ verwendet.</string>
     <string name="dictate__prompt_requires_selection_title">Erfordert Auswahl</string>
     <string name="dictate__prompt_requires_selection_summary">Wirkt auf den ausgewählten Text und ersetzt ihn</string>
     <string name="dictate__prompt_auto_apply_title">Automatisch anwenden</string>
@@ -1393,6 +1581,7 @@
     <string name="dictate__prompt_library_all">Alle</string>
     <string name="dictate__prompt_library_add">Hinzufügen</string>
     <string name="dictate__prompt_library_added">Hinzugefügt</string>
+    <string name="dictate__prompt_library_add_again">Erneut hinzufügen</string>
     <string name="dictate__prompt_library_empty">Keine Prompts passen zu deiner Suche.</string>
     <string name="dictate__prompt_library_error">Die Community-Bibliothek konnte nicht geladen werden. Prüfe deine Verbindung und versuche es erneut.</string>
     <string name="dictate__prompt_library_retry">Erneut versuchen</string>
@@ -1407,6 +1596,34 @@
     <string name="dictate__file_preparing">Datei wird vorbereitet…</string>
     <string name="dictate__file_too_large">Datei ist zu groß – der Anbieter akzeptiert höchstens 25 MB.</string>
     <string name="dictate__file_read_error">Die ausgewählte Datei konnte nicht gelesen werden.</string>
+    <string name="dictate__import_share_label">Transkribieren</string>
+    <string name="dictate__import_title">Datei transkribieren</string>
+    <string name="dictate__import_menu">Datei transkribieren</string>
+    <string name="dictate__import_menu_summary">Audio- oder Videodatei wählen und nachlesen, was gesagt wird</string>
+    <string name="dictate__import_step_copy">Datei übernehmen</string>
+    <string name="dictate__import_step_extract">Ton aus dem Video holen</string>
+    <string name="dictate__import_step_prepare">Audio vorbereiten</string>
+    <string name="dictate__import_step_upload">Hochladen</string>
+    <string name="dictate__import_step_transcribe">Mit {provider} transkribieren</string>
+    <string name="dictate__import_step_transcribe_local">Auf dem Gerät transkribieren</string>
+    <string name="dictate__import_step_finish">Abschließen</string>
+    <string name="dictate__import_step_percent">{v} %</string>
+    <string name="dictate__import_step_part">Teil {current} von {total}</string>
+    <string name="dictate__import_result_label">Transkript</string>
+    <string name="dictate__import_prompt_button">Überarbeiten</string>
+    <string name="dictate__import_revert">Zurücksetzen</string>
+    <string name="dictate__import_copy">Kopieren</string>
+    <string name="dictate__import_copied">Kopiert!</string>
+    <string name="dictate__import_save">Als Datei speichern</string>
+    <string name="dictate__import_saved">Transkript gespeichert.</string>
+    <string name="dictate__import_save_failed">Das Transkript konnte nicht gespeichert werden.</string>
+    <string name="dictate__import_search">Im Transkript suchen</string>
+    <string name="dictate__import_search_hits">{current}/{total}</string>
+    <string name="dictate__import_search_none">0/0</string>
+    <string name="dictate__import_retry">Erneut versuchen</string>
+    <string name="dictate__import_no_file">Es wurde keine Audiodatei geteilt.</string>
+    <string name="dictate__import_not_audio">Diese Datei enthält kein Audio.</string>
+    <string name="dictate__import_only_first">Nur die erste Datei wird transkribiert – {count} weitere wurden ausgelassen.</string>
     <string name="dictate__setup_description">Richte deinen KI-Anbieter und API-Schlüssel ein, damit du mit dem Mikrofon diktieren kannst.</string>
     <string name="dictate__setup_configure_btn">Dictate einrichten</string>
     <string name="setup__grant_mic_permission__title">Mikrofonzugriff</string>
@@ -1463,6 +1680,16 @@
     <string name="dictate__mappings_field_to_placeholder">z. B. GitHub</string>
     <string name="dictate__mappings_group">Ersetzungsregeln</string>
     <string name="dictate__mappings_matchcase_summary">Nur ersetzen, wenn die Groß-/Kleinschreibung genau übereinstimmt.</string>
+    <string name="dictate__mappings_import">Regeln importieren</string>
+    <string name="dictate__mappings_export">Regeln exportieren</string>
+    <string name="dictate__mappings_export_filename">dictate_mappings.tsv</string>
+    <string name="dictate__mappings_import_title">Regeln importieren</string>
+    <string name="dictate__mappings_import_message">{count} neue Regeln aus dieser Datei. Zu deiner Liste hinzufügen?</string>
+    <string name="dictate__mappings_import_known">{count} waren schon darin.</string>
+    <string name="dictate__mappings_import_unusable">{count} Zeilen nannten keine Ersetzung und wurden übersprungen.</string>
+    <string name="dictate__mappings_import_format">Eine Regel pro Zeile: was gehört wird, ein Tabulator, was daraus werden soll.</string>
+    <string name="dictate__mappings_import_empty">Keine Regeln in dieser Datei gefunden</string>
+    <string name="dictate__mappings_import_done">{count} Regeln hinzugefügt</string>
     <string name="dictate__mappings_matchcase_title">Groß-/Kleinschreibung beachten</string>
     <string name="dictate__mappings_opt_caseinsensitive">Groß-/Kleinschreibung wird ignoriert</string>
     <string name="dictate__mappings_opt_casesensitive">Groß-/Kleinschreibung beachten</string>
@@ -1474,7 +1701,10 @@
     <string name="dictate__wear_standalone_summary">Sende deinen API-Key an die Uhr, damit sie auch ohne Handy in der Nähe diktieren kann.</string>
     <string name="dictate__wear_standalone_title">Schlüssel mit Uhr synchronisieren</string>
     <string name="emoji__search__hint">Emoji suchen</string>
+    <string name="emoji__row__open_panel">Alle Emojis öffnen</string>
     <string name="emoji__search__no_results">Keine passenden Emojis</string>
+    <string name="pref__suggestion__math_suggestions__label" comment="Preference title">Rechner in der Vorschlagsleiste</string>
+    <string name="pref__suggestion__math_suggestions__summary" comment="Preference summary">Rechenaufgabe und = eintippen, das Ergebnis wird vorgeschlagen</string>
     <string name="pref__suggestion__api30_inline_suggestions_enabled__label">Autofill-Vorschläge des Systems</string>
     <string name="pref__suggestion__block_possibly_offensive__summary">Verhindert, dass möglicherweise anstößige Wörter beim Tippen vorgeschlagen werden</string>
     <string name="quick_action__dictate_reinsert">Verlauf</string>
@@ -1483,7 +1713,6 @@
     <string name="dictate__providers_field_transcription_rewording_model">Transkriptions- &amp; Umformulierungsmodell</string>
     <string name="dictate__providers_single_call_title">Single-Call (multimodal)</string>
     <string name="dictate__providers_single_call_summary">Ein audiofähiges Modell transkribiert und formatiert in einer einzigen Anfrage.</string>
-    <string name="dictate__providers_single_call_pick_audio">Wähle ein audiofähiges Modell (mit 🎤 in der Modellliste markiert).</string>
     <string name="dictate__providers_rewording_single_call_note">Wird gerade nicht genutzt – dein Transkriptions-Anbieter übernimmt die Umformulierung in seinem Single-Call.</string>
     <string name="dictate__wear_title">Wear OS</string>
     <string name="dictate__wear_summary">Optionen fürs Diktieren von einer gekoppelten Uhr</string>
@@ -1535,6 +1764,26 @@
     <string name="dictate__history_clear_title">Verlauf löschen?</string>
     <string name="dictate__history_clear_message">Dadurch werden alle Verlaufseinträge und alle gespeicherten Aufnahmen dauerhaft gelöscht.</string>
     <string name="dictate__history_clear_confirm">Alle löschen</string>
+    <string name="dictate__history_export_title">Export in einen Ordner</string>
+    <string name="dictate__history_export_summary">Jedes neue Diktat wird zusätzlich als einfache Textdatei in diesen Ordner geschrieben, sobald es fertig ist.</string>
+    <string name="dictate__history_export_folder">Ordner</string>
+    <string name="dictate__history_export_folder_unset">Nicht festgelegt</string>
+    <string name="dictate__history_export_folder_unavailable">Ordner nicht verfügbar — bitte erneut auswählen</string>
+    <string name="dictate__history_export_choose">Ordner auswählen</string>
+    <string name="dictate__history_export_change">Ändern</string>
+    <string name="dictate__history_export_disconnect">Trennen</string>
+    <string name="dictate__history_export_audio_title">Aufnahme mitexportieren</string>
+    <string name="dictate__history_export_audio_summary">Speichert das Audio neben dem Transkript.</string>
+    <string name="dictate__history_export_audio_needs_retention">Erfordert „Audio speichern“.</string>
+    <string name="dictate__history_export_all">Jetzt alles exportieren</string>
+    <string name="dictate__history_export_all_summary">Schreibt jedes Diktat, das noch nicht im Ordner liegt — die von vor der Auswahl, und alle, die nicht geschrieben werden konnten, während der Ordner nicht erreichbar war.</string>
+    <string name="dictate__history_export_all_result">{written} geschrieben, {skipped} bereits vorhanden, {failed} fehlgeschlagen</string>
+    <string name="dictate__history_export_last_failure">Ein Schreibvorgang ist {when} fehlgeschlagen. „Jetzt alles exportieren“ holt das Fehlende nach.</string>
+    <string name="dictate__history_export_warning_title">Was dort landet</string>
+    <string name="dictate__history_export_warning_message">Der Ordner enthält ab jetzt den Text jedes Diktats, und auf Wunsch auch die Aufnahmen. Alles, was ihn synchronisiert — ein Cloud-Client, ein Backup-Werkzeug, eine andere App — trägt diese Transkripte vom Gerät.\n\nDictate schreibt weiter, bis du den Ordner trennst, und löscht niemals darin: Einträge, die aus dem Verlauf fallen, bleiben im Ordner. Passwort- und Inkognito-Felder werden nie aufgezeichnet und deshalb auch nie exportiert.</string>
+    <string name="dictate__history_export_needs_history">Der Ordner-Export schreibt, was der Verlauf aufzeichnet — dafür muss der Verlauf eingeschaltet sein.</string>
+    <string name="dictate__history_export_enable_history">Verlauf einschalten</string>
+    <string name="dictate__history_export_pick_failed">Kein Schreibzugriff auf diesen Ordner</string>
     <string name="dictate__stats_empty">Noch keine Diktate — deine Statistik erscheint hier, sobald du diktierst.</string>
     <string name="dictate__stats_time_saved">Gesparte Zeit</string>
     <string name="dictate__stats_time_saved_sub">gegenüber Tippen</string>
@@ -1579,6 +1828,10 @@
     <string name="dictate__action_save_audio">Audio speichern</string>
     <string name="dictate__audio_saved">Audio in Downloads/Dictate gespeichert: %s</string>
     <string name="dictate__audio_save_failed">Audio konnte nicht gespeichert werden</string>
+    <string name="dictate__instant_recording_mode_off">Aus</string>
+    <string name="dictate__instant_recording_mode_always">Bei jedem Öffnen der Tastatur</string>
+    <string name="dictate__instant_recording_mode_after_switch">Nur nach dem Wechsel zu {app_name}</string>
+    <string name="dictate__instant_recording_in_numeric">Auch in Zahlenfeldern</string>
     <string name="dictate__instant_recording_skip_numeric_title">Zahlenfelder überspringen</string>
     <string name="dictate__instant_recording_skip_numeric_summary">Bei Zahlen-, Telefon- oder PIN-Feldern nicht automatisch starten</string>
     <string name="settings__localization__subtype_status_words">Vorschläge</string>
@@ -1587,10 +1840,19 @@
     <string name="settings__localization__subtype_status_context">Kontext</string>
     <string name="pref__suggestion__auto_correct__label">Autokorrektur</string>
     <string name="pref__suggestion__auto_correct__summary">Tippfehler beim Leerzeichen automatisch korrigieren</string>
+    <string name="pref__correction__auto_correct_strength__label">Stärke der Autokorrektur</string>
+    <string name="enum__auto_correct_strength__cautious">Vorsichtig</string>
+    <string name="enum__auto_correct_strength__cautious__description">Korrigiert nur ein offensichtliches Verrutschen des Fingers. Ungewöhnliche Schreibweisen bleiben unangetastet.</string>
+    <string name="enum__auto_correct_strength__balanced">Ausgewogen</string>
+    <string name="enum__auto_correct_strength__balanced__description">Korrigiert alltägliche Tippfehler, auch den Griff zur Nachbartaste. Empfohlen.</string>
+    <string name="enum__auto_correct_strength__aggressive">Aggressiv</string>
+    <string name="enum__auto_correct_strength__aggressive__description">Korrigiert auch weiter entfernte Wörter — und ersetzt hin und wieder eines, das du so wolltest.</string>
     <string name="pref__suggestion__multilingual_typing__label">Mehrsprachiges Tippen</string>
     <string name="pref__suggestion__multilingual_typing__summary">Wörter aus allen deinen Tastatursprachen akzeptieren</string>
     <string name="pref__suggestion__next_word_prediction__label">Wortvorschläge</string>
     <string name="pref__suggestion__next_word_prediction__summary">Schlägt wahrscheinliche nächste Wörter vor, sobald ein Wort fertig ist</string>
+    <string name="pref__suggestion__ignore_app_suggestion_block__label">Apps übergehen, die Vorschläge abschalten</string>
+    <string name="pref__suggestion__ignore_app_suggestion_block__summary">Trotzdem anzeigen, außer in Passwortfeldern</string>
     <string name="suggestion__added_to_dictionary">\"{word}\" zum Wörterbuch hinzugefügt</string>
     <string name="suggestion__already_in_dictionary">\"{word}\" ist bereits im Wörterbuch</string>
     <string name="dictate__legacy_record">Aufnehmen</string>
@@ -1745,6 +2007,104 @@
     <string name="apptour53__outro_eyebrow">Das war 5.3</string>
     <string name="apptour53__outro_title">Viel Freude beim Diktieren</string>
     <string name="apptour53__outro_body">Dazu viele Kleinigkeiten: Jeder Anbieter trägt sein eigenes Logo, die Aufnahmeanzeige kann still, pulsierend oder pegelreaktiv sein, die Prompt-Ausgabe kann das Originaltranskript daneben behalten, und Absätze brechen nicht mehr nach Abkürzungen. Alle Touren findest du erneut unter Einstellungen › Über.</string>
+
+    <string name="apptour60__cta_try">Ausprobieren</string>
+    <string name="apptour60__art_minutes">Minuten</string>
+    <string name="apptour60__art_speed">1,5×</string>
+    <string name="apptour60__intro_eyebrow">Dictate 6.0</string>
+    <string name="apptour60__intro_title">Guthaben, Chinesisch, günstigere Diktate</string>
+    <string name="apptour60__intro_body">Diese Version bringt einen zweiten Weg hinein — Guthaben kaufen statt eigenem API-Schlüssel —, dazu Pinyin für Chinesisch, sieben Sprachen mit neuen Wörterbüchern und Aufnahmen, die weniger kosten.</string>
+    <string name="apptour60__cloud_eyebrow">Neu: Dictate Cloud</string>
+    <string name="apptour60__cloud_title">Minuten kaufen statt Schlüssel besorgen</string>
+    <string name="apptour60__cloud_body">Wer keinen Anbieter-Account anlegen möchte, kauft jetzt einfach Guthaben. Ja, das läuft über unseren Server — aber weder deine Aufnahmen noch deine Texte werden dort gespeichert, sie gehen direkt weiter. Der gesamte Servercode ist offen und nachlesbar. Dein eigener Schlüssel funktioniert unverändert weiter.</string>
+    <string name="apptour60__speedup_eyebrow">API-Kosten sparen</string>
+    <string name="apptour60__speedup_title">Dieselben Worte, weniger Minuten</string>
+    <string name="apptour60__speedup_body">Aufnahmen lassen sich vor dem Hochladen stauchen, ohne dass die Stimme höher klingt. Die meisten Anbieter rechnen nach Audiodauer ab — eine um ein Drittel kürzere Aufnahme kostet dann auch ein Drittel weniger. Lange Diktate werden außerdem gepackt, statt abgewiesen zu werden.</string>
+    <string name="apptour60__chinese_eyebrow">Neu: Pinyin</string>
+    <string name="apptour60__chinese_title">Chinesisch so tippen, wie man es tippt</string>
+    <string name="apptour60__chinese_body">Pinyin mit Kandidatenzeile — bisher gab es nur Zhengma, das kaum jemand benutzt. Dazu ein On-Device-Modell, das wirklich auf Chinesisch trainiert wurde, und ein Anbieter, der auch vom Festland aus erreichbar ist.</string>
+    <string name="apptour60__emoji_eyebrow">Emoji</string>
+    <string name="apptour60__emoji_title">Emojis in deiner Sprache suchen</string>
+    <string name="apptour60__emoji_body">Die Emoji-Suche kannte sechs Sprachen. Jetzt sind es über vierzig — such nach „heart", „心" oder „قلب" und du landest beim selben Emoji. Die Suche folgt der Sprache deiner Tastatur.</string>
+    <string name="apptour60__languages_eyebrow">Wörterbücher</string>
+    <string name="apptour60__languages_title">Sieben Sprachen, die keine Vorschläge hatten</string>
+    <string name="apptour60__languages_body">Arabisch, Bengalisch, Finnisch, Hindi, Indonesisch, Tamil und Urdu bekommen jetzt Wortvorschläge und Autokorrektur. Isländisch und Georgisch enthielten schlicht die falschen Sprachen und wurden neu gebaut. Und die Langdruck-Zeichen von 19 Layouts richten sich danach, was in der Sprache wirklich geschrieben wird.</string>
+    <string name="apptour60__more_eyebrow">Außerdem</string>
+    <string name="apptour60__more_title">Viele kleine Dinge</string>
+    <string name="apptour60__more_body">Stopp gedrückt halten bricht eine hängende Transkription ab. Der schwebende Knopf meldet keinen Erfolg mehr, den er nicht prüfen konnte, und geht mit dem Bildschirm aus. Glide-Tippen kennt jetzt deine eigenen Wörter. Und der Absturz direkt nach dem Update ist behoben.</string>
+    <string name="apptour60__outro_eyebrow">Das war 6.0</string>
+    <string name="apptour60__outro_title">Viel Freude damit</string>
+    <string name="apptour60__outro_body">Egal wie du Dictate benutzt — eigener Schlüssel, eigener Server, ein Modell auf dem Gerät oder Guthaben: an den jeweils anderen Wegen hat sich nichts geändert. Alle Touren findest du erneut unter Einstellungen › Über.</string>
+    <string name="apptour61__cta_try">Ausprobieren</string>
+    <string name="apptour61__art_folder">Sticker</string>
+    <string name="apptour61__art_share">Teilen mit</string>
+    <string name="apptour61__art_typed">udn</string>
+    <string name="apptour61__art_fixed">und</string>
+    <string name="apptour61__intro_eyebrow">Dictate 6.1</string>
+    <string name="apptour61__intro_title">Sticker, Sprachnachrichten und eine Autokorrektur, die den Tippfehler endlich sieht</string>
+    <string name="apptour61__intro_body">Zeig der Tastatur einen Ordner mit deinen eigenen Stickern, teil eine Sprachnachricht direkt an Dictate, um zu erfahren, was drinsteht, und bekomm eine Autokorrektur, die den Fehler endlich bemerkt, für den sie gebaut war, ihn zu übersehen.</string>
+    <string name="apptour61__stickers_eyebrow">Neu: deine eigenen Sticker</string>
+    <string name="apptour61__stickers_title">Ein Ordner auf dem Handy, auf der Tastatur</string>
+    <string name="apptour61__stickers_body">Zeig Dictate irgendeinen Ordner, und seine Bilder werden zu Stickern — Unterordner werden zu Reitern, mit eigenen Favoriten und Zuletzt-Benutzten. Aus jeder App über das Teilen-Menü hinzufügen, löschen ohne die Tastatur zu verlassen. Was eine Chat-App wirklich annimmt, ist nicht das, was sie behauptet anzunehmen — deshalb wird jeder Sticker einmal beim Hineinlegen in Form gebracht und von dort einfach verschickt.</string>
+    <string name="apptour61__share_eyebrow">Neu: an Dictate teilen</string>
+    <string name="apptour61__share_title">Erfahren, was diese Sprachnachricht sagt</string>
+    <string name="apptour61__share_body">Dictate steht jetzt im Teilen-Menü für Audio und Video. Teil eine Sprachnachricht dorthin, und es öffnet sich ein Bildschirm, der von selbst zu transkribieren beginnt — kein Feld zu suchen, kein Knopf zu drücken. Das Transkript ist durchsuchbar, und lange Aufnahmen werden in Stücken verarbeitet, statt abgewiesen zu werden.</string>
+    <string name="apptour61__autocorrect_eyebrow">Autokorrektur</string>
+    <string name="apptour61__autocorrect_title">Der Tippfehler, den sie nicht sehen konnte</string>
+    <string name="apptour61__autocorrect_body">Die Regel, die entschied, ob ein Wort korrigiert werden darf, ließ einen Finger durch, der fast bis zur Nachbartaste gerutscht war — aber nie einen, der sauber darauf landete, und genau das ist der gewöhnliche Vertipper. Das ist behoben, und wie beherzt korrigiert wird, stellst du jetzt selbst ein. Das Wort, das die Leertaste nehmen wird, ist in deiner Akzentfarbe markiert, und die Rücktaste gibt direkt danach genau das zurück, was du getippt hast.</string>
+    <string name="apptour61__contacts_eyebrow">Kontakte</string>
+    <string name="apptour61__contacts_title">Namen, die nicht mehr unterringelt werden</string>
+    <string name="apptour61__contacts_body">Die Namen deiner Kontakte können ins persönliche Wörterbuch, damit die Tastatur sie nicht mehr für Tippfehler hält und stattdessen vorschlägt. Sie fragt dabei nicht nach Zugriff auf dein Adressbuch — du wählst die Namen selbst aus oder importierst eine vCard. Gelesen wird nichts, was du nicht übergeben hast.</string>
+    <string name="apptour61__models_eyebrow">Gemini und Deepgram Flux</string>
+    <string name="apptour61__models_title">Zwei Anbieter, die besser zuhören gelernt haben</string>
+    <string name="apptour61__models_body">Google hat eigene Sprache-zu-Text-Modelle veröffentlicht, Gemini transkribiert also nicht mehr mit einem Chatmodell unter Anweisung — und kann es jetzt auch live. Deepgrams Flux entscheidet selbst, wann du zu Ende gesprochen hast, statt eine Stille abzuwarten. Und wer mehrere Sprachen spricht, kann jetzt sagen welche, statt sich für eine zu entscheiden und zu hoffen.</string>
+    <string name="apptour61__more_eyebrow">Außerdem</string>
+    <string name="apptour61__more_title">Viele kleine Dinge</string>
+    <string name="apptour61__more_body">Vorlagen lassen sich mit einem getippten Kürzel auslösen, nicht nur mit einem Tipp. Russisch kann phonetisch getippt werden, und Französisch findet seine Akzente aus den bloßen Buchstaben. Sehr breite Tablets bekommen im Querformat wieder eine Tastatur. Und der Vorschläge-Schalter schaltet die Vorschläge jetzt wirklich ab — auch dann, wenn eine App es für dich tun will.</string>
+    <string name="apptour61__outro_eyebrow">Das war 6.1</string>
+    <string name="apptour61__outro_title">Dieselbe Tastatur, weniger Kanten</string>
+    <string name="apptour61__outro_body">An der Art, wie du bisher diktierst, ändert sich nichts — eigener Schlüssel, eigener Server oder ein Modell auf dem Gerät. Alle Touren findest du erneut unter Einstellungen › Über.</string>
+    <string name="apptour62__cta_try">Ausprobieren</string>
+    <string name="apptour62__cta_manage">Wo man es ausschaltet</string>
+    <string name="apptour62__art_word">Zoya</string>
+    <string name="apptour62__art_emoji_word">Kuchen</string>
+    <string name="apptour62__art_emoji">🍰</string>
+    <string name="apptour62__intro_eyebrow">Dictate 6.2</string>
+    <string name="apptour62__intro_title">Sie lernt deine Wörter — und hat fünf neue Looks</string>
+    <string name="apptour62__intro_body">Die Tastatur kann sich jetzt die Wörter merken, die kein Wörterbuch kennt, die Tasten können die App durchscheinen lassen, und beide Daumen bekommen ihre eigene Hälfte. Dazu eine Handvoll kleiner Helfer für das, was du jeden Tag tust.</string>
+    <string name="apptour62__learning_eyebrow">Neu: sie lernt beim Tippen</string>
+    <string name="apptour62__learning_title">Die Wörter, die kein Wörterbuch kennt</string>
+    <string name="apptour62__learning_body">Tippe einen Namen oder Fachbegriff oft genug, und die Tastatur behält ihn: Sie markiert ihn nicht mehr als Fehler, sondern schlägt ihn vor. Dieses Update schaltet das bei allen ein, auch bei dir, falls du es aus hattest. Im Inkognito-Modus, in Passwortfeldern und bei allem, was du nicht Taste für Taste getippt hast, wird nichts gelernt; alles bleibt auf diesem Gerät, und der Knopf unten öffnet die Liste — und den Schalter.</string>
+    <string name="apptour62__themes_eyebrow">Fünf neue Designs</string>
+    <string name="apptour62__themes_title">Glass, Sand, Deep und ein dunkles E-Ink</string>
+    <string name="apptour62__themes_body">Dictate Glass lässt die App durch die Lücken zwischen den Tasten scheinen, während die Tasten selbst deckend genug bleiben, um darauf zu lesen; Glass Clear geht weiter und sieht besser aus — um den Preis, dass in Apps, die hinter der Tastatur zeichnen, deren Text durchschlägt. Sand ist ein warmes helles Design, Deep ein ruhiges dunkles, und E-Ink hat endlich eine Nachtvariante — die automatische Umschaltung reicht dir also nach Einbruch der Dunkelheit keine weiße Tastatur mehr.</string>
+    <string name="apptour62__split_eyebrow">Neu: geteilte Tastatur</string>
+    <string name="apptour62__split_title">Beide Daumen, ohne Strecken</string>
+    <string name="apptour62__split_body">Eine neue Schnellaktion neben Einhand und Schwebend zieht die Reihen auseinander, damit jeder Daumen bei seiner Hälfte bleibt. Jedes Layout teilt sich, nicht nur QWERTZ, weil die Naht aus den Tastenbreiten berechnet und nicht in jedes Layout geschrieben wird. Und im Querformat bleibt die App jetzt sichtbar, wann immer für beides Platz ist.</string>
+    <string name="apptour62__emoji_eyebrow">Emoji</string>
+    <string name="apptour62__emoji_title">Das Wort findet sein Emoji</string>
+    <string name="apptour62__emoji_body">Tippe ein Wort, und das Emoji, das es bedeutet, steht in der Vorschlagsleiste — in rund fünfzig Sprachen, aus denselben Daten, die auch das System benutzt. Es fährt neben den Vorschlägen mit, statt einem von ihnen den Platz zu nehmen. Dazu kommt eine optionale Reihe deiner angehefteten und zuletzt benutzten Emojis über den Tasten.</string>
+    <string name="apptour62__helpers_eyebrow">Vier kleine Helfer</string>
+    <string name="apptour62__helpers_title">Inkognito, saubere Links und die Antwort auf die Rechnung</string>
+    <string name="apptour62__helpers_body">Der Inkognito-Modus verhindert, dass etwas gemerkt wird, solange er an ist — nichts gelernt, nichts behalten. Aus eingefügten Links lassen sich die Tracking-Parameter entfernen, noch bevor sie im Feld landen. Tippe eine Rechnung mit = am Ende, und die Antwort erscheint als Vorschlag. Und wenn die Zahlenreihe an ist, zeigen die Buchstaben wieder ihre Ziffern.</string>
+    <string name="apptour62__selection_eyebrow">Auswählen und springen</string>
+    <string name="apptour62__selection_title">Sieh, was du ausgewählt hast</string>
+    <string name="apptour62__selection_body">Die Reihe, die während einer Auswahl bisher leer stand, zählt jetzt deren Wörter und Zeichen. Neue Tasten springen an den Anfang und ans Ende des Feldes, und beim Kopieren können die überflüssigen Leerzeichen an den Rändern zurückbleiben. Die Aktionsreihe tritt beiseite, sobald eine Auswahl beginnt, statt dazwischenzureden.</string>
+    <string name="apptour62__clipboard_eyebrow">Zwischenablage</string>
+    <string name="apptour62__clipboard_title">Finde einen Eintrag an dem, was drinsteht</string>
+    <string name="apptour62__clipboard_body">Die Zwischenablage lässt sich jetzt durchsuchen, über alles hinweg, was darin liegt. Was du gerade kopiert hast, wird als Pille in der Vorschlagsleiste angeboten, die du wegwischen kannst, und denselben Text zweimal zu kopieren zählt als zweimal — er kommt also wieder. Löschst du einen Eintrag, wird jetzt auch die Datei dahinter gelöscht, statt das Bild auf dem Handy zu lassen.</string>
+    <string name="apptour62__gestures_eyebrow">Gesten</string>
+    <string name="apptour62__gestures_title">\?123 halten, schieben, loslassen</string>
+    <string name="apptour62__gestures_body">Halte die Symboltaste, schiebe auf das gewünschte Zeichen und lass los: Es wird eingefügt und die Buchstaben sind zurück, ohne Hin- und Herschalten. Ein Wisch nach oben auf der Leertaste erreicht jetzt die Zeile darüber, nicht nur das Wort davor. Und der Abstand zwischen den Tasten lässt sich über einen Bereich einstellen, den man auch sieht.</string>
+    <string name="apptour62__export_eyebrow">Neu: Diktate als Dateien</string>
+    <string name="apptour62__export_title">Jedes Diktat in einen Ordner deiner Wahl</string>
+    <string name="apptour62__export_body">Wähle einmal einen Ordner, und jedes fertige Diktat wird dort zusätzlich als einfache Textdatei abgelegt, in dem Moment, in dem es fertig ist. Was auch immer diesen Ordner beobachtet — eine Notiz-App, ein Sync-Dienst, dein Backup — bekommt deine Texte, ohne dass Dictate dessen Sprache lernen müsste.</string>
+    <string name="apptour62__more_eyebrow">Außerdem</string>
+    <string name="apptour62__more_title">Viele kleine Dinge</string>
+    <string name="apptour62__more_body">Vorschläge sehen jetzt in jeder Sprache die zwei Wörter vor dem Cursor, nicht nur im Englischen. Ein Backup lässt sich ohne deine API-Schlüssel erstellen und damit gefahrlos weitergeben. Azures eigene Transkriptionsmodelle sind erreichbar, die Wahl eines Modells für den Offline-Betrieb schaltet jetzt auch auf die Offline-Engine um, und jede Anfrage hat eine Frist, die zur Wartezeit passt. Diktate erscheinen im Verlauf, sobald sie abgeschickt sind, Importe sagen, in welchem Schritt sie stecken, und lassen sich abbrechen, und Text landet zuverlässiger in den Apps, die sich damit schwertaten.</string>
+    <string name="apptour62__outro_eyebrow">Das ist 6.2</string>
+    <string name="apptour62__outro_title">Dieselbe Tastatur, mehr davon deine</string>
+    <string name="apptour62__outro_body">An der Art, wie du diktierst, ändert sich nichts — eigener Schlüssel, eigener Server oder ein Modell auf dem Gerät. Alle Touren findest du erneut unter Einstellungen › Über.</string>
     <string name="changelog__v5_0_0">• NEU: Wischtippen — streiche über die Tasten, um ganze Wörter zu schreiben, mit Wörterbüchern pro Sprache, die bei Bedarf geladen werden. 👆\n• NEU: Wortvorschläge &amp; Autokorrektur — Tippfehler werden automatisch korrigiert und dein getipptes Wort bleibt einen Fingertipp entfernt. ✨\n• NEU: Echtzeit-Transkription — sieh deine Worte erscheinen, während du sprichst, mit OpenAI, Deepgram, Soniox, AssemblyAI und ElevenLabs. ⚡\n• NEU: Drei weitere Transkriptionsanbieter — ElevenLabs Scribe, Deepgram und AssemblyAI. ☁️\n• NEU: Klassisches Diktier-Layout — der tastaturfreie Sprachbildschirm aus Dictate 3 ist zurück, fest oder nur ein Wischen entfernt. 🎙️\n• NEU: Community-Prompt-Bibliothek — Umformulierungs-Prompts durchstöbern und teilen. 📚\n• NEU: Diktier-Statistik mit Meilensteinen. 📊\n• NEU: Offline-Modell NVIDIA Parakeet, plus ein Stillefilter, der leere Aufnahmen überspringt. 📴\n• Mehr: ein stabilerer schwebender Button, Reasoning-Aufwand, haptisches Feedback, ein neues E-Reader-Design und Dutzende Fehlerbehebungen. 🛠️</string>
     <string name="media__tab__gifs">GIFs</string>
     <string name="prefs__media__gif__title">GIFs</string>
@@ -1801,4 +2161,93 @@
     <string name="dictate__action_top_up">Guthaben aufladen</string>
     <string name="dictate__promo_low_credit_message">Guthaben fast leer.</string>
     <string name="dictate__promo_low_credit_action">Aufladen</string>
+    <string name="prefs__media__sticker__title">Sticker</string>
+    <string name="prefs__media__sticker_folder__title">Sticker-Ordner</string>
+    <string name="prefs__media__sticker_folder__summary_unset">Ordner mit eigenen Bildern auswählen</string>
+    <string name="prefs__media__sticker_folder_clear">Ordner vergessen</string>
+    <string name="prefs__media__sticker_rescan">Ordner neu einlesen</string>
+    <string name="prefs__media__sticker_rescan__summary">Nach dem Hinzufügen oder Löschen von Dateien verwenden</string>
+    <string name="prefs__media__sticker_thumbnail_size">Stickergröße</string>
+    <string name="prefs__media__sticker_history_recent_max_size">Anzahl gemerkter zuletzt verwendeter Sticker</string>
+    <string name="prefs__media__sticker_confirm_before_insert">Vor dem Senden bestätigen</string>
+    <string name="prefs__media__sticker_confirm_before_insert__summary">Einmal tippen wählt den Sticker aus, noch einmal sendet ihn. Ein schneller Doppeltipp sendet sofort</string>
+    <string name="prefs__media__sticker_pinned_reset">Lieblingssticker löschen</string>
+    <string name="prefs__media__sticker_history_reset">Zuletzt verwendete Sticker löschen</string>
+    <string name="sticker__title">Sticker</string>
+    <string name="sticker__category_all">Alle</string>
+    <string name="sticker__section_favorites">Favoriten</string>
+    <string name="sticker__section_recent">Zuletzt verwendet</string>
+    <string name="sticker__section_rest">Alle Sticker</string>
+    <string name="sticker__pin">Zu Favoriten hinzufügen</string>
+    <string name="sticker__unpin">Aus Favoriten entfernen</string>
+    <string name="sticker__reorder">Position ändern</string>
+    <string name="sticker__reorder_hint">Mit den Pfeilen verschieben</string>
+    <string name="sticker__reorder_earlier">Nach vorne schieben</string>
+    <string name="sticker__reorder_later">Nach hinten schieben</string>
+    <string name="sticker__search">Sticker suchen</string>
+    <string name="sticker__search_placeholder">Nach Dateinamen suchen</string>
+    <string name="sticker__search_no_results">Kein Sticker mit diesem Namen</string>
+    <string name="sticker__setup_needed">Wähle einen Ordner, um eigene Sticker zu verwenden</string>
+    <string name="sticker__setup_needed_action">Einstellungen öffnen</string>
+    <string name="sticker__folder_empty">Keine Bilder in diesem Ordner</string>
+    <string name="sticker__access_lost">Der Sticker-Ordner kann nicht mehr gelesen werden. Wähle ihn erneut aus.</string>
+    <string name="sticker__folder_pick_failed">Der Zugriff auf diesen Ordner konnte nicht behalten werden</string>
+    <string name="sticker__rescan_done">{n} Sticker gefunden</string>
+    <string name="sticker__rescan_done_converted">{n} Sticker gefunden, {converted} umgewandelt</string>
+    <string name="sticker__copied_to_clipboard">Diese App nimmt keine Sticker an — in die Zwischenablage kopiert, zum Einfügen lange drücken</string>
+    <string name="sticker__insert_failed">Sticker konnte nicht eingefügt werden</string>
+    <string name="quick_action__ime_ui_mode_sticker">Sticker</string>
+    <string name="quick_action__ime_ui_mode_sticker__tooltip">Eigene Sticker einfügen</string>
+    <string name="prefs__media__sticker_add">Sticker hinzufügen</string>
+    <string name="prefs__media__sticker_add__summary">Bilder in den Ordner kopieren. Du kannst ein Bild auch aus jeder App zu Dictate teilen.</string>
+    <string name="prefs__media__sticker_import_whatsapp">Aus WhatsApp holen</string>
+    <string name="prefs__media__sticker_import_whatsapp__summary">Öffnet die Dateiauswahl im Sticker-Ordner von WhatsApp. Tastaturen wie die von Samsung legen ihre Sticker dort ab, wo keine andere App lesen darf — die teilst du stattdessen zu Dictate.</string>
+    <string name="sticker__import_share_label">Als Sticker speichern</string>
+    <string name="sticker__import_added">{n} hinzugefügt</string>
+    <string name="sticker__import_duplicate">{n} schon vorhanden</string>
+    <string name="sticker__import_unsupported">{n} nicht verwendbar</string>
+    <string name="sticker__import_failed">{n} fehlgeschlagen</string>
+    <string name="sticker__import_nothing">Nichts hinzuzufügen</string>
+    <string name="sticker__import_no_folder">Wähle zuerst einen Sticker-Ordner</string>
+    <string name="sticker__import_needs_write">Wähle den Sticker-Ordner erneut, damit Hinzufügen und Löschen erlaubt ist</string>
+    <string name="sticker__forget_recent">Aus „Zuletzt verwendet“ entfernen</string>
+    <string name="sticker__delete_file">Datei löschen</string>
+    <string name="sticker__delete_confirm">Wirklich löschen?</string>
+    <string name="sticker__delete_failed">Datei konnte nicht gelöscht werden</string>
+    <string name="prefs__media__emoji__title">Emojis</string>
+    <string name="prefs__media__sticker_import_source">Aus einer App holen</string>
+    <string name="prefs__media__sticker_import_source__summary">Öffnet die Dateiauswahl direkt in einem Ordner, in den eine andere App schreibt</string>
+    <string name="prefs__media__sticker_packs">Sticker-Packs</string>
+    <string name="prefs__media__sticker_packs__summary">Die Ordner anlegen, umbenennen und löschen, in die deine Sticker einsortiert sind</string>
+    <string name="sticker__source_whatsapp">WhatsApp</string>
+    <string name="sticker__source_whatsapp_business">WhatsApp Business</string>
+    <string name="sticker__source_telegram">Telegram</string>
+    <string name="sticker__source_downloads">Downloads</string>
+    <string name="sticker__source_pictures">Bilder</string>
+    <string name="sticker__source_dcim">Kamera</string>
+    <string name="sticker__source_hint">Das sind Startpunkte, keine Zusagen — gibt es den Ordner nicht, öffnet die Auswahl wie gewohnt. Apps, die ihre Sticker für sich behalten, etwa die Samsung-Tastatur, kann man nur zu Dictate teilen.</string>
+    <string name="sticker__import_progress">Kopiere {done} von {total}</string>
+    <string name="sticker__import_cancel">Zum Anhalten tippen. Was kopiert ist, bleibt.</string>
+    <string name="sticker__refused_declares_nothing">Diese App nimmt keine Bilder von der Tastatur an — in die Zwischenablage kopiert, zum Einfügen lange drücken</string>
+    <string name="sticker__refused_accepts_only">Diese App nimmt nur {accepted}, dieser Sticker ist {own} — in die Zwischenablage kopiert, zum Einfügen lange drücken</string>
+    <string name="sticker__move_to_pack">In ein Pack verschieben</string>
+    <string name="sticker__pack_none">Kein Pack</string>
+    <string name="sticker__move_failed">Sticker konnte nicht verschoben werden</string>
+    <string name="sticker__pack_new">Pack anlegen</string>
+    <string name="sticker__pack_name">Name des Packs</string>
+    <string name="sticker__pack_rename">Umbenennen</string>
+    <string name="sticker__pack_reorder_hint">Zum Verschieben ein Pack gedrückt halten</string>
+    <string name="sticker__pack_icon_set">Als Pack-Symbol verwenden</string>
+    <string name="sticker__pack_icon_clear">Pack-Symbol entfernen</string>
+    <string name="sticker__pack_delete">Pack löschen</string>
+    <string name="sticker__pack_delete_confirm">Das Pack \"{name}\" und die {n} Sticker darin löschen?</string>
+    <string name="sticker__pack_failed">Hat nicht geklappt — der Ordner ist womöglich schreibgeschützt</string>
+    <string name="sticker__packs_loading">Ordner wird gelesen…</string>
+    <string name="sticker__packs_empty">Noch keine Packs. Ein Pack ist ein Unterordner deines Sticker-Ordners.</string>
+    <string name="sticker__share">Über Teilen senden</string>
+    <string name="sticker__insert_as_gif">Als GIF einfügen</string>
+    <string name="sticker__source_browse">Dateien durchsuchen…</string>
+    <string name="sticker__source_threema">Threema</string>
+    <string name="sticker__source_signal">Signal</string>
+    <string name="sticker__source_stickers_folder">Sticker-Ordner</string>
 </resources>

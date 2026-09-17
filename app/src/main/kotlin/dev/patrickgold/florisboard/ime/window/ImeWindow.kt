@@ -64,6 +64,7 @@ import dev.patrickgold.florisboard.app.FlorisPreferenceStore
 import dev.patrickgold.florisboard.app.devtools.DevtoolsOverlay
 import dev.patrickgold.florisboard.dictate.DictateLegacyLayout
 import dev.patrickgold.florisboard.dictate.gif.GifPanel
+import dev.patrickgold.florisboard.dictate.sticker.StickerPanel
 import dev.patrickgold.florisboard.dictate.ui.DictateHistoryLayout
 import dev.patrickgold.florisboard.dictate.ui.DictateInputLayout
 import dev.patrickgold.florisboard.dictate.ui.LegacyDictateLayout
@@ -71,6 +72,7 @@ import dev.patrickgold.florisboard.dictate.ui.LegacyLayoutState
 import dev.patrickgold.florisboard.dictate.ui.legacySwipeToggle
 import dev.patrickgold.florisboard.ime.ImeUiMode
 import dev.patrickgold.florisboard.ime.clipboard.ClipboardInputLayout
+import dev.patrickgold.florisboard.ime.editor.EditingPanel
 import dev.patrickgold.florisboard.ime.input.LocalInputFeedbackController
 import dev.patrickgold.florisboard.ime.keyboard.ProvideKeyboardRowBaseHeight
 import dev.patrickgold.florisboard.ime.media.MediaInputLayout
@@ -136,6 +138,7 @@ fun ImeRootWindow() {
         ImeWindow()
         BottomSheetWindow()
         ImeSystemUi()
+        ImeWindowBlur()
     }
 }
 
@@ -260,19 +263,27 @@ private fun ImeInnerWindow() {
                             )
                         }
                     // Swipe mode, showing the modern keyboard: a horizontal swipe anywhere returns to the
-                    // dictation UI (intercepted before the keys). Glide typing is suppressed only while
-                    // this exact branch is composed – a DisposableEffect flips it back on the way out, so
-                    // it can never get stuck off on the normal keyboard.
+                    // dictation UI. Two detectors, one per zone (#290): over the keys it has to be
+                    // intercepted, because they answer their own touch stream and give nothing away; over
+                    // everything above them it must not be, because that row scrolls sideways — rewording
+                    // prompts, candidates, autofill chips — and whoever takes the drag should keep it.
+                    // Glide typing is suppressed only while this exact branch is composed – a
+                    // DisposableEffect flips it back on the way out, so it can never get stuck off on the
+                    // normal keyboard.
                     legacyLayout == DictateLegacyLayout.SWIPE && showModernKeyboard -> {
                         DisposableEffect(Unit) {
                             LegacyLayoutState.suppressGlide.value = true
                             onDispose { LegacyLayoutState.suppressGlide.value = false }
                         }
                         Column(
-                            modifier = Modifier.legacySwipeToggle(intercept = true) {
-                                showModernKeyboard = false
-                            },
-                        ) { TextInputLayout() }
+                            modifier = Modifier.legacySwipeToggle { showModernKeyboard = false },
+                        ) {
+                            TextInputLayout(
+                                keyboardModifier = Modifier.legacySwipeToggle(intercept = true) {
+                                    showModernKeyboard = false
+                                },
+                            )
+                        }
                     }
                     else -> TextInputLayout()
                 }
@@ -281,6 +292,11 @@ private fun ImeInnerWindow() {
                 ImeUiMode.DICTATE -> ProvideActualLayoutDirection { DictateInputLayout() }
                 ImeUiMode.HISTORY -> ProvideActualLayoutDirection { DictateHistoryLayout() }
                 ImeUiMode.GIF -> ProvideActualLayoutDirection { GifPanel() }
+                ImeUiMode.STICKER -> ProvideActualLayoutDirection { StickerPanel() }
+                // The cursor pad keeps the *actual* layout direction like every other panel: its arrows
+                // are auto-mirrored icons, so a right-to-left script gets a pad that points the way its
+                // text runs (issue #386).
+                ImeUiMode.EDITING -> ProvideActualLayoutDirection { EditingPanel() }
             }
             ImeSystemUiFloating()
         }

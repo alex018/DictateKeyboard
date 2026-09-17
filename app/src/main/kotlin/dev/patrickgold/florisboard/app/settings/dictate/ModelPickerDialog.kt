@@ -95,6 +95,7 @@ fun ModelPickerDialog(
                     preset, apiKey,
                     baseUrlOverride = preset.baseUrl,
                     trustUserCerts = prefs.dictate.trustUserCertificates.get(),
+                    timeoutSeconds = prefs.dictate.requestTimeout.get().toLong(),
                 )
                 .listModels()
             val ids = models.map { it.id }
@@ -134,15 +135,21 @@ fun ModelPickerDialog(
         ModelKind.CHAT -> preset.curatedChatModels
     }
     val candidates = remember(curated, fetched, audioModelIds, transcriptionModelIds, query, current) {
-        // Gemini transcribes via its multimodal chat models (no STT-tagged ids exist), so its live STT
-        // catalog is the chat catalog rather than the keyword-filtered subset.
+        // Gemini transcribes via its multimodal chat models, so its live STT catalog is the chat catalog
+        // rather than the keyword-filtered subset. Since #292 that is no longer the whole story: Google
+        // also ships dedicated STT models (gemini-3.5-transcribe), which the chat filter throws out by
+        // name. For Gemini's transcription list, accept either family.
         val liveKind = if (preset.id == "gemini") ModelKind.CHAT else kind
+        val geminiStt = preset.id == "gemini" && kind == ModelKind.TRANSCRIPTION
         // For transcription, also include models the catalog flagged by MODALITY — both audio-input chat
         // models (#132) and dedicated STT models (#157) — so they surface even when the id doesn't match
         // the name heuristic (e.g. OpenRouter's mai-transcribe / parakeet / chirp).
         val audioForTranscription =
             if (kind == ModelKind.TRANSCRIPTION) audioModelIds + transcriptionModelIds else emptyList()
-        (curated + audioForTranscription + fetched.filter { matchesKind(it, liveKind) } + current)
+        val live = fetched.filter {
+            matchesKind(it, liveKind) || (geminiStt && matchesKind(it, ModelKind.TRANSCRIPTION))
+        }
+        (curated + audioForTranscription + live + current)
             .map { it.trim() }
             .filter { it.isNotEmpty() }
             .distinct()
@@ -205,8 +212,6 @@ fun ModelPickerDialog(
                     ModelRow(
                         label = model,
                         selected = model.equals(current, ignoreCase = true),
-                        // Mark models the catalog reports as accepting audio input (issue #130/#132).
-                        audio = audioModelIds.contains(model),
                         onClick = { onPick(model); onDismiss() },
                     )
                 }
@@ -216,7 +221,7 @@ fun ModelPickerDialog(
 }
 
 @Composable
-private fun ModelRow(label: String, selected: Boolean, audio: Boolean = false, onClick: () -> Unit) {
+private fun ModelRow(label: String, selected: Boolean, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -229,10 +234,10 @@ private fun ModelRow(label: String, selected: Boolean, audio: Boolean = false, o
             modifier = Modifier.weight(1f),
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
         )
-        // Audio-input capable (usable for single-call multimodal); helps the user spot those models.
-        if (audio) {
-            Text("🎤", modifier = Modifier.padding(end = 8.dp))
-        }
+        // No capability badge here any more. A 🎤 used to mark what the catalog called audio-capable, and
+        // it was wrong often enough to send people away from models that work (#313). The modality data
+        // still decides which ids *appear* in the transcription list, where being wrong only ever adds an
+        // entry — claiming something about a particular model is the part that had to go.
         if (selected) {
             Icon(Icons.Default.Check, contentDescription = null)
         }

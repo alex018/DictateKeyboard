@@ -9,7 +9,7 @@
     <string name="one_handed__move_start_btn_content_description" comment="Content description for the one-handed move to left button">Posunout klávesnici doleva.</string>
     <string name="one_handed__move_end_btn_content_description" comment="Content description for the one-handed move to right button">Posunout klávesnici doprava.</string>
     <!-- Media strings -->
-    <string name="settings__media__title">Emotikony a GIFs</string>
+    <string name="settings__media__title">Emoji, GIFy a samolepky</string>
     <string name="media__tab__emojis" comment="Tab description for emojis in the media UI">Emotikony</string>
     <string name="media__tab__emoticons" comment="Tab description for emoticons in the media UI">Emotikony</string>
     <string name="media__tab__kaomoji" comment="Tab description for kaomoji in the media UI">Kaomoji</string>
@@ -18,6 +18,8 @@
     <string name="prefs__media__emoji_history__title" comment="Preference group title">Historie emotikonů</string>
     <string name="prefs__media__emoji_history_enabled" comment="Preference title">Zapnout historii emotikonů</string>
     <string name="prefs__media__emoji_history_enabled__summary" comment="Preference summary">Uchovávat nedávno použité emotikony pro rychlý přístup</string>
+    <string name="prefs__media__emoji_row_enabled">Řádek emodži</string>
+    <string name="prefs__media__emoji_row_enabled__summary">Zobrazit nad klávesnicí řádek s připnutými a nedávno použitými emodži</string>
     <string name="prefs__media__emoji_history_pinned_update_strategy" comment="Preference title">Strategie aktualizace (připnuté)</string>
     <string name="prefs__media__emoji_history_recent_update_strategy" comment="Preference title">Strategie aktualizace (nedávné)</string>
     <string name="prefs__media__emoji_history_max_size">Maximální počet položek k uchování</string>
@@ -58,6 +60,10 @@
     <string name="quick_action__arrow_left__tooltip">Vykonat šipku vlevo</string>
     <string name="quick_action__arrow_right" comment="Please mind the limited available space for the quick action strings">Šipka vpravo</string>
     <string name="quick_action__arrow_right__tooltip">Vykonat šipku vpravo</string>
+    <string name="quick_action__move_start_of_page" comment="Please mind the limited available space for the quick action strings">Začátek textu</string>
+    <string name="quick_action__move_start_of_page__tooltip">Přejít na začátek textu</string>
+    <string name="quick_action__move_end_of_page" comment="Please mind the limited available space for the quick action strings">Konec textu</string>
+    <string name="quick_action__move_end_of_page__tooltip">Přejít na konec textu</string>
     <string name="quick_action__ime_hide_ui" comment="Please mind the limited available space for the quick action strings">Skrýt klávesnici</string>
     <string name="quick_action__ime_hide_ui__tooltip">Provést skrytí klávesnice</string>
     <string name="quick_action__clipboard_clear_primary_clip__tooltip">Vykonat vymazání primární položky schránky</string>
@@ -67,6 +73,7 @@
     <string name="quick_action__clipboard_cut__tooltip">Vykonat vyjmutí do schránky</string>
     <string name="quick_action__clipboard_paste" comment="Please mind the limited available space for the quick action strings">Vložit</string>
     <string name="quick_action__clipboard_paste__tooltip">Vykonat vložení schránky</string>
+    <string name="quick_action__clipboard_select">Vybrat</string>
     <string name="quick_action__clipboard_select_all" comment="Please mind the limited available space for the quick action strings">Vybrat vše</string>
     <string name="quick_action__clipboard_select_all__tooltip">Vykonat vybrání všeho do schránky</string>
     <string name="quick_action__forward_delete" comment="Please mind the limited available space for the quick action strings">Smazat za</string>
@@ -94,8 +101,14 @@
     <string name="quick_action__floating_window_mode__tooltip">Přepnout režim okna plovoucí klávesnice</string>
     <string name="quick_action__one_handed_mode" comment="Please mind the limited available space for the quick action strings">Jedna ruka</string>
     <string name="quick_action__one_handed_mode__tooltip">Přepnout režim jedné ruky</string>
+    <string name="quick_action__split_layout" comment="Please mind the limited available space for the quick action strings">Rozdělená</string>
+    <string name="quick_action__split_layout__tooltip">Přepnout rozdělenou klávesnici</string>
     <string name="quick_action__resize_mode" comment="Please mind the limited available space for the quick action strings">Změnit velikost</string>
     <string name="quick_action__resize_mode__tooltip">Přepnout režim změny velikosti</string>
+    <string name="quick_action__toggle_number_row" comment="Quick action that shows or hides the row of digit keys above the letters. Please mind the limited available space for the quick action strings">Číselná řada</string>
+    <string name="quick_action__toggle_number_row__tooltip">Zobrazit nebo skrýt číselnou řadu</string>
+    <string name="quick_action__view_numeric_advanced" comment="Quick action that replaces the whole keyboard with a number pad (digits, arithmetic signs, brackets). Not to be confused with the number row above. Please mind the limited available space for the quick action strings">Číselná klávesnice</string>
+    <string name="quick_action__view_numeric_advanced__tooltip">Přepnout na číselnou klávesnici</string>
     <string name="quick_action__drag_marker" comment="This action is only used as a placeholder in the actions editor drag and drop screen and only visible in debug mode">Značka přes.</string>
     <string name="quick_action__drag_marker__tooltip" comment="This action is only used as a placeholder in the actions editor drag and drop screen and only visible in debug mode">Aktuální pozice značky přesouvání</string>
     <string name="quick_action__noop" comment="Noop=no operation; this action is only used as a placeholder in the actions editor drag and drop screen">Žádné</string>
@@ -124,13 +137,22 @@
     <string name="settings__search__clear_recent" comment="Button to clear the recent searches">Vymazat nedávná hledání</string>
     <string name="settings__search__popular" comment="Header above a small list of popular settings shortcuts">Oblíbené</string>
     <string name="settings__search__no_results" comment="Shown when a settings search returns nothing">Nebyla nalezena žádná nastavení</string>
+    <string name="settings__search__keywords__text_expansion" comment="NOT SHOWN ANYWHERE — extra search terms that lead to the typing-shortcut setting, which lets a short trigger expand into a saved block of text. Translate as the words people in your language would actually type when looking for that feature, separated by spaces. Do not translate word for word; add or drop terms as makes sense.">textová zkratka rozbalení textu úryvek makro automatický text šablona snippet text expansion</string>
+    <string name="settings__search__keywords__selection_metrics" comment="NOT SHOWN ANYWHERE — extra search terms that lead to the setting which shows how many words and characters are selected. Translate as the words people in your language would actually type when looking for it, separated by spaces. Do not translate word for word.">počet slov počítadlo slov znaky délka statistika</string>
+    <string name="settings__search__keywords__trim_on_copy" comment="NOT SHOWN ANYWHERE — extra search terms that lead to the setting which removes spaces and line breaks at the ends of copied text. Translate as the words people in your language would actually type when looking for it, separated by spaces. Do not translate word for word.">oříznutí mezery odstranit vyčistit kopírovat vyjmout</string>
+    <string name="settings__search__keywords__clear_cache">mezipaměť cache úložiště místo dočasné soubory uvolnit smazat vyčistit</string>
+    <string name="settings__search__keywords__momentary_layer">podržet přeject symbol vrstva interpunkce dočasně okamžitě 123 iphone</string>
+    <string name="settings__search__keywords__emoji_row">emodži emoji řádek lišta nedávné použité nad klávesnicí rychlý</string>
+    <string name="settings__search__keywords__request_timeout">časový limit timeout pomalé čekání spojení sekundy</string>
     <string name="settings__localization__title" comment="Title of languages and Layout screen">Jazyky a rozložení</string>
     <string name="settings__localization__display_language_names_in__label" comment="Label of Display language names in preference">Zobrazovat názvy jazyků v</string>
     <string name="settings__localization__display_keyboard_labels_in_subtype_language" comment="Label of Display keyboard labels in subtype language preference">Zobrazit popisky kláves v jazyce podtypu</string>
     <string name="settings__localization__group_subtypes__label" comment="Label of subtypes group">Podtypy</string>
     <string name="settings__localization__subtype_add_title" comment="Title of subtype dialog when adding a new subtype">Přidat podtyp</string>
     <string name="settings__localization__language_pack_title" comment="Title of the language pack manager screen for managing installed and custom language packs">Spravovat nainstalované jazykové balíčky</string>
-    <string name="settings__localization__language_pack_summary" comment="Summary of preference item for adding a new language pack">Experimentální: rozšíření přidávající konkrétní jazyky (zatím čínština podle tvarů).</string>
+    <string name="settings__localization__language_pack_summary" comment="Summary of preference item for adding a new language pack">Rozšíření přidávající vstupní metodu: čínský pinyin a metody podle tvarů.</string>
+    <string name="settings__localization__subtype_download_title">Jazyková data</string>
+    <string name="settings__localization__subtype_download_message">Přidáním jazyka {language_name} se stáhne {size} seznamů slov a kontextových dat. Návrhy a automatické opravy je potřebují. Stahování začne ihned a může využít mobilní data.</string>
     <string name="settings__localization__subtype_edit_title" comment="Title of subtype dialog when editing an existing subtype">Upravit podtyp</string>
     <string name="settings__localization__subtype_locale" comment="Label for locale dropdown in subtype dialog">Hlavní jazyk</string>
     <string name="settings__localization__subtype_popup_mapping" comment="Label for popup mapping dropdown in subtype screen">Mapování vyskakovacích nabídek</string>
@@ -159,12 +181,16 @@
     <string name="settings__localization__subtype_error_fields_no_value" comment="Error message shown in subtype editor if at least one field is set to '- select -' (means no value specified)">Minimálně jedno pole nemá vybranou hodnotu. Vyberte ji prosím.</string>
     <string name="settings__localization__subtype_error_layout_not_installed" comment="Error message shown in subtype list when a layout is not installed, where %s will be replaced by the layout ID">{layout_id} (nenainstalováno)</string>
     <string name="settings__localization__subtype_missing_language_pack_title">Vyžadován slovník</string>
-    <string name="settings__localization__subtype_missing_language_pack_message">Tento jazyk vyžaduje stažitelný slovník pro návrhy slov a převod (např. Rómadži → Kana). Dokud není nainstalován, psaní funguje, ale převod nic nedělá.</string>
+    <string name="settings__localization__subtype_missing_language_pack_message">Tato vstupní metoda potřebuje stažitelnou tabulku, aby psaný text převedla na znaky. Dokud není nainstalována, klávesy fungují, ale nic se nepřevádí.</string>
+    <string name="settings__localization__subtype_language_pack_auto_title">Tabulka se stáhne sama</string>
+    <string name="settings__localization__subtype_language_pack_auto_message">Tato vstupní metoda převádí psaný text na znaky pomocí tabulky o velikosti asi 3 MB. Stáhne se jednou, hned po uložení tohoto podtypu.</string>
     <string name="settings__localization__subtype_missing_language_pack_action">Stáhnout slovník</string>
     <string name="settings__localization__group_layouts__label" comment="Label of layouts group">Rozložení</string>
     <string name="settings__localization__subtype_delete_confirmation_title" comment="Title of the subtype delete confirmation dialog">Potvrzení odstranění</string>
     <string name="settings__localization__subtype_delete_confirmation_warning" comment="Warning message in the confirmation dialog to confirm the user's intent to delete">Opravdu chcete odstranit tento podtyp?</string>
     <string name="settings__theme__title" comment="Title of the Theme screen">Motiv</string>
+    <string name="pref__theme__high_contrast__label" comment="Label of the switch that turns on the measured high-contrast theme pair">Vysoký kontrast</string>
+    <string name="pref__theme__high_contrast__summary" comment="Summary of the high-contrast switch. 7:1 is the WCAG AAA contrast ratio for body text; keep the ratio as digits.">Orámované klávesy, každý popisek změřen na 7:1. Nastaví den i noc.</string>
     <string name="pref__theme__mode__label" comment="Label of the theme mode preference">Režim motivu</string>
     <string name="pref__theme__sunrise_time__label" comment="Label of the sunrise time preference">Čas východu slunce</string>
     <string name="pref__theme__sunset_time__label" comment="Label of the sunset time preference">Čas západu slunce</string>
@@ -307,6 +333,7 @@
     <string name="snygg__rule_element__smartbar_candidate_clip">Navržená položka v chytré liště</string>
     <string name="snygg__rule_element__smartbar_candidate_clip_icon">Ikona navržené položky v chytré liště</string>
     <string name="snygg__rule_element__smartbar_candidate_clip_text">Text navržené položky v chytré liště</string>
+    <string name="snygg__rule_element__smartbar_candidate_clip_dismiss">Tlačítko zavření navržené položky ve chytré liště</string>
     <string name="snygg__rule_element__smartbar_candidate_spacer">Odsazení návrhu v chytré liště</string>
     <string name="snygg__rule_element__subtype_panel">Panel podtypu</string>
     <string name="snygg__rule_element__subtype_panel_header">Záhlaví panelu podtypu</string>
@@ -320,10 +347,13 @@
     <string name="snygg__rule_selector__disabled">Zakázáno</string>
     <string name="snygg__property_name__background">Pozadí</string>
     <string name="snygg__property_name__foreground">Popředí</string>
+    <string name="snygg__property_name__background_blur">Rozostření pozadí</string>
     <string name="snygg__property_name__background_image">Obrázek na pozadí</string>
     <string name="snygg__property_name__content_scale">Škálování obashu</string>
     <string name="snygg__property_name__border_color">Barva okraje</string>
     <string name="snygg__property_name__border_style">Styl okraje</string>
+    <string name="snygg__property_name__background_sheen">Lesk plochy</string>
+    <string name="snygg__property_name__border_sheen">Lesk okraje</string>
     <string name="snygg__property_name__border_width">Šířka okraje</string>
     <string name="snygg__property_name__font_family">Rodina písem</string>
     <string name="snygg__property_name__font_size">Velikost písma</string>
@@ -372,6 +402,8 @@
     <string name="snygg__property_value__circle_shape">Kruhový tvar</string>
     <string name="snygg__property_value__cut_corner_shape_dp">Tvar ořezaného rohu (dp)</string>
     <string name="snygg__property_value__cut_corner_shape_percent">Tvar ořezaného rohu (%)</string>
+    <string name="snygg__property_value__sheen">Lesk</string>
+    <string name="snygg__property_value__squircle_shape">Squircle</string>
     <string name="snygg__property_value__rounded_corner_shape_dp">Zaoblený tvar rohu (dp)</string>
     <string name="snygg__property_value__rounded_corner_shape_percent">Zaoblený tvar rohu (%)</string>
     <string name="snygg__property_value__dp_size">Velikost (dp)</string>
@@ -409,7 +441,7 @@
     <string name="pref__input_feedback__any_feat_key_press__summary" comment="Preference summary">např. klávesy, tlačítka, záložky emoji</string>
     <string name="pref__input_feedback__any_feat_key_long_press__summary" comment="Preference summary">např. vyskakovací nabídky</string>
     <string name="pref__input_feedback__any_feat_key_repeated_action__summary" comment="Preference summary">např. klávesa odstranění</string>
-    <string name="pref__input_feedback__any_feat_gesture_swipe__summary" comment="Preference summary">není implementováno</string>
+    <string name="pref__input_feedback__any_feat_gesture_swipe__summary" comment="Preference summary">např. přepnutí jazyka tažením, psaní tahem</string>
     <string name="pref__input_feedback__any_feat_gesture_moving_swipe__summary" comment="Preference summary">např. posunutí při ovládání kurzoru</string>
     <string name="settings__keyboard__title" comment="Title of Keyboard preferences screen">Klávesnice</string>
     <string name="pref__keyboard__number_row__label" comment="Preference title">Řádek čísel</string>
@@ -424,7 +456,8 @@
     <string name="pref__keyboard__font_size_multiplier__label" comment="Preference title">Násobitel velikosti písma</string>
     <string name="pref__keyboard__group_layout__label" comment="Preference group title">Rozložení</string>
     <string name="pref__keyboard__landscape_input_ui_mode__label" comment="Preference value">Vstupní okno v celoobrazovkovém režimu na šířku</string>
-    <string name="pref__keyboard__key_spacing__label" comment="Preference title">Faktor odsazení klávesnice</string>
+    <string name="pref__keyboard__key_spacing__label" comment="Preference title">Mezera mezi klávesami</string>
+    <string name="pref__keyboard__key_spacing__summary" comment="Preference summary">{v} % svisle, {h} % vodorovně — větší mezera zmenší klávesy, ne klávesnici.</string>
     <string name="pref__keyboard__group_keypress__label" comment="Preference group title">Stisk klávesy</string>
     <string name="pref__keyboard__popup_enabled__label" comment="Preference title">Viditelnost vyskakovacího okna</string>
     <string name="pref__keyboard__popup_enabled__summary" comment="Preference summary">Zobrazit vyskakovací okno při stisku klávesy</string>
@@ -442,6 +475,8 @@
     <string name="pref__smartbar__group_layout_specific__label" comment="Preference group title">Předvolby pro konkrétní rozložení</string>
     <string name="pref__smartbar__flip_toggles__label" comment="Preference title">Přehodit přepínací tlačítka</string>
     <string name="pref__smartbar__flip_toggles__summary" comment="Preference summary">Prohodí přepínače řádku akcí</string>
+    <string name="pref__smartbar__selection_metrics__label" comment="Preference title, keep short">Počítadlo výběru</string>
+    <string name="pref__smartbar__selection_metrics__summary" comment="Preference summary, keep short (one line)">Slova a znaky ve výběru</string>
     <string name="pref__smartbar__shared_actions_auto_expand_collapse__label" comment="Preference title">Automatické rozšíření/sbalení</string>
     <string name="pref__smartbar__shared_actions_auto_expand_collapse__summary" comment="Preference summary">Automaticky rozšíří/sbalí řádek sdílených akcí v závislosti na současném stavu</string>
     <string name="pref__smartbar__extended_actions_placement__label" comment="Preference title">Umístění akčního řádku</string>
@@ -461,8 +496,15 @@
     <string name="pref__correction__auto_space_punctuation__summary" comment="Preference summary">Automaticky vložit mezeru za interpunkcí</string>
     <string name="pref__correction__remember_caps_lock_state__label" comment="Preference title">Pamatovat stav CapsLocku</string>
     <string name="pref__correction__remember_caps_lock_state__summary" comment="Preference summary">Caps lock zůstane aktivní při přesunu do jiného textového pole</string>
-    <string name="pref__correction__double_space_period__label" comment="Preference title">Tečka dvojitou mezerou</string>
-    <string name="pref__correction__double_space_period__summary" comment="Preference summary">Dvojité poklepání na mezerník vloží tečku a mezeru</string>
+    <string name="pref__correction__double_space_period__label" comment="Preference title">Dvojí klepnutí na mezerník</string>
+    <string name="enum__double_space_action__punctuation" comment="Enum value label">Konec věty</string>
+    <string name="enum__double_space_action__punctuation__description" comment="Enum value description. The character in brackets is the Devanagari danda, the Hindi full stop, and must stay as it is.">Znak, kterým končí věta v psaném jazyce, a za ním mezera — obvykle tečka, v hindštině danda (।).</string>
+    <string name="enum__double_space_action__comma" comment="Enum value label">Čárka</string>
+    <string name="enum__double_space_action__comma__description" comment="Enum value description">Čárka následovaná mezerou.</string>
+    <string name="enum__double_space_action__newline" comment="Enum value label">Nový řádek</string>
+    <string name="enum__double_space_action__newline__description" comment="Enum value description">Zalomení řádku místo mezery.</string>
+    <string name="enum__double_space_action__slash" comment="Enum value label">Lomítko</string>
+    <string name="enum__double_space_action__slash__description" comment="Enum value description">Lomítko bez mezer, například pro zápis a/nebo.</string>
     <string name="pref__spelling__title" comment="Preference group title">Pravopis</string>
     <string name="pref__spelling__active_spellchecker__summary_disabled">Systémově zakázáno. V textových polích se nebudou objevovat červené pruhy u nesprávných slov. Klepněte pro změnu.</string>
     <string name="pref__spelling__active_spellchecker__summary_none">Není nastavena žádná služba kontroly pravopisu v textu. Klepnutím na tlačítko to změníte.</string>
@@ -489,16 +531,24 @@
     <string name="settings__udm__open_system_manager_ui" comment="Label of the Open system manager UI menu option">Otevření správce systému UI</string>
     <string name="settings__udm__dictionary_import_success" comment="Message for dictionary import success">Vlastní slovník úspěšně importován!</string>
     <string name="settings__udm__dictionary_export_success" comment="Message for dictionary export success">Vlastní slovník úspěšně exportován!</string>
+    <string name="settings__udm__add_from_contacts">Přidat jméno z kontaktů</string>
+    <string name="settings__udm__import_from_contacts_file">Importovat jména ze souboru kontaktů</string>
+    <string name="settings__udm__contacts_confirm_message">V tomto souboru bylo nalezeno {count} jmen. Přidat je do slovníku?</string>
+    <string name="settings__udm__contacts_added_one">{name} přidáno do slovníku</string>
+    <string name="settings__udm__contacts_added_many">Do slovníku bylo přidáno {count} jmen</string>
+    <string name="settings__udm__contacts_added_none">Nebyla nalezena žádná nová jména</string>
+    <string name="settings__udm__contacts_file_unreadable">Tento soubor se nepodařilo přečíst</string>
+    <string name="settings__udm__contacts_no_picker">Nebyla nalezena žádná aplikace Kontakty</string>
     <string name="settings__udm__dialog__title_add" comment="Label for the title (when in adding mode) in the user dictionary add/edit dialog">Přidat slovo</string>
     <string name="settings__udm__dialog__title_edit" comment="Label for the title (when in editing mode) in the user dictionary add/edit dialog">Upravit slovo</string>
     <string name="settings__udm__dialog__word_label" comment="Label for the word in the user dictionary add/edit dialog">Slovo</string>
     <string name="settings__udm__dialog__word_error_empty" comment="Error label for the word in the user dictionary add/edit dialog">Prosím, zadejte slovo</string>
-    <string name="settings__udm__dialog__word_error_invalid" comment="Error label for the word in the user dictionary add/edit dialog">Prosím, zadejte slovo shodující se s {regex}</string>
+    <string name="settings__udm__dialog__word_error_invalid">Toto pole přijímá jedno slovo — bez mezer, čárek a středníků. Pro celou větu nebo víceřádkový text vytvořte úryvek v sekci Prompty.</string>
     <string name="settings__udm__dialog__freq_label" comment="Label for the frequency in the user dictionary add/edit dialog. The two decimal placeholders are the minimum and maximum frequency, both inclusive.">Frekvence (mezi {f_min} a {f_max})</string>
     <string name="settings__udm__dialog__freq_error_empty" comment="Error label for the frequency in the user dictionary add/edit dialog">Prosím, zadejte hodnotu frekvence</string>
     <string name="settings__udm__dialog__freq_error_invalid" comment="Error label for the frequency in the user dictionary add/edit dialog">Prosím, zadejte platné číslo v zadaných rozmezích</string>
     <string name="settings__udm__dialog__shortcut_label" comment="Label for the shortcut in the user dictionary add/edit dialog">Zástupce (nepovinné)</string>
-    <string name="settings__udm__dialog__shortcut_error_invalid" comment="Error label for the shortcut in the user dictionary add/edit dialog">Prosím, zadejte zkratku shodující se s {regex}</string>
+    <string name="settings__udm__dialog__shortcut_error_invalid">Zkratka je jedno slovo — bez mezer, čárek a středníků.</string>
     <string name="settings__udm__dialog__locale_label" comment="Label for the language code in the user dictionary add/edit dialog">Kód jazyka (nepovinné)</string>
     <string name="settings__udm__dialog__locale_error_invalid" comment="Error label for the language code in the user dictionary add/edit dialog">Tento kód jazyka neodpovídá očekávané syntaxi. Kód musí být buď pouze jazyk (jako cs), jazyk a země (jako cs_CZ), nebo jazyk, země a skript (jako cs_CZ-script).</string>
     <string name="settings__gestures__title" comment="Title of Gestures screen">Gesta a psaní tahem</string>
@@ -521,9 +571,12 @@
     <string name="pref__gestures__swipe_left__label" comment="Preference title">Přejetí doleva</string>
     <string name="pref__gestures__swipe_right__label" comment="Preference title">Přejeďte prstem doprava</string>
     <string name="pref__gestures__space_bar_swipe_up__label" comment="Preference title">Přejetí nahoru přes mezerník</string>
+    <string name="pref__gestures__space_bar_swipe_down__label" comment="Preference title">Přejetí dolů přes mezerník</string>
     <string name="pref__gestures__space_bar_swipe_left__label" comment="Preference title">Přejetí vlevo přes mezerník</string>
     <string name="pref__gestures__space_bar_swipe_right__label" comment="Preference title">Přejetí vpravo přes mezerník</string>
     <string name="pref__gestures__space_bar_long_press__label" comment="Preference title">Dlouhý stisk mezerníku</string>
+    <string name="pref__gestures__momentary_layer__label" comment="Preference title, keep short">Podržením nahlédnout do vrstvy</string>
+    <string name="pref__gestures__momentary_layer__summary" comment="Preference summary, keep short (one line)">Podržte ?123, přejeďte na znak a pusťte — vloží se a písmena jsou zpět</string>
     <string name="pref__gestures__delete_key_swipe_left__label" comment="Preference title">Přejetí doleva na klávese mazání</string>
     <string name="pref__gestures__delete_key_long_press__label" comment="Preference title">Dlouhé stisknutí klávesy ke smazání</string>
     <string name="pref__gestures__swipe_velocity_threshold__label" comment="Preference title">Práh rychlosti přejetí</string>
@@ -538,6 +591,10 @@
     </string>
     <string name="pref__other__settings_language__label" comment="Label of Settings language preference in Other">Jazyk nastavení</string>
     <string name="pref__other__show_app_icon__label" comment="Label of Show app icon preference in Other">Zobrazit ikonu aplikace na domovské obrazovce</string>
+    <string name="pref__other__clear_cache__label">Vymazat mezipaměť</string>
+    <string name="pref__other__clear_cache__summary">Dočasné soubory: {size}</string>
+    <string name="pref__other__clear_cache__confirm">Vymazat</string>
+    <string name="pref__other__clear_cache__message">Smaže dočasné soubory, které aplikace dokáže vytvořit znovu: sdílený soubor, který se právě přepisuje, stažené GIFy a nálepky, dekódované obrázky. Historie diktování, nahrávky, nastavení ani slovníky se nemění. Právě probíhající nahrávání nebo přepis se může přerušit.</string>
     <string name="pref__other__show_app_icon__summary_atleast_q" comment="Summary of Show app icon preference in Other for Android 10+">Vždy povoleno v systému Android 10+ kvůli systémovým omezením</string>
     <!-- About UI strings -->
     <string name="about__title" comment="Title of About activity">O aplikaci</string>
@@ -600,6 +657,10 @@
     <string name="backup_and_restore__back_up__destination_share_intent">Aplikace třetí strany pomocí nabídky sdílení</string>
     <string name="backup_and_restore__back_up__files">Vyberte, co chcete zálohovat</string>
     <string name="backup_and_restore__back_up__files_jetpref_datastore">Předvolby</string>
+    <string name="backup_and_restore__back_up__files_provider_credentials">Klíče API a hesla</string>
+    <string name="backup_and_restore__back_up__credentials_warning">Tento archiv obsahuje tvoje klíče API a hesla v čitelné podobě i tvůj kredit Dictate Cloud — kdokoli ho dostane, může diktovat na tvůj účet. Nepředávej ho dál, a pokud jsi to už udělal, změň klíč u svého poskytovatele. Všechno ostatní zaškrtnuté níže jde s ním, včetně historie přepisů a schránky.</string>
+    <string name="backup_and_restore__back_up__credentials_excluded_note">Tento archiv neobsahuje žádné klíče API, hesla ani kredit Dictate Cloud, takže ho můžeš předat dál, ale tvoje také neobnoví. Všechno ostatní zaškrtnuté níže v něm zůstává, včetně historie přepisů a schránky.</string>
+    <string name="backup_and_restore__back_up__personal_content_note">Tento archiv neobsahuje klíče API ani hesla, ale obsahuje všechno zaškrtnuté níže: historii přepisů i s uchovanými nahrávkami, schránku, tvoje prompty a slova, která se klávesnice od tebe naučila.</string>
     <string name="backup_and_restore__back_up__files_ime_keyboard">Rozšíření klávesnice</string>
     <string name="backup_and_restore__back_up__files_ime_spelling">Rozšíření kontroly pravopisu / slovníky</string>
     <string name="backup_and_restore__back_up__files_ime_theme">Rozšíření témat</string>
@@ -615,6 +676,7 @@
     <string name="backup_and_restore__restore__metadata">Vybraný archiv zálohy</string>
     <string name="backup_and_restore__restore__metadata_warn_different_version">Tento archiv zálohy byl vygenerován v jiné verzi, než jakou aktuálně používáte, což je většinou podporováno. Mějte ale prosím na vědomí, že se mohou vyskytnout menší problémy nebo se některé předvolby nemusí správně převést kvůli rozdílům ve funkcích.</string>
     <string name="backup_and_restore__restore__metadata_warn_different_vendor">Tento archiv zálohy byl vygenerován v aplikaci třetí strany, což většinou není podporováno. Mohou se vyskytnout ztráty dat, obnovte na vlastní nebezpečí!</string>
+    <string name="backup_and_restore__restore__metadata_note_no_credentials">Tento záložní archiv neobsahuje klíče API ani hesla. Všechno ostatní se obnoví. Sloučení zachová klíče, které už v tomto zařízení jsou; přepsání je odstraní, včetně kódu pro obnovení Dictate Cloud, který nelze zadat znovu.</string>
     <string name="backup_and_restore__restore__metadata_error_invalid_metadata">Tento archiv zálohy obsahuje neplatná metadata. Buď byl poškozen, nebo nesprávně upraven. Obnovení zálohy z tohoto archivu není možné, zvolte prosím jiný.</string>
     <string name="backup_and_restore__restore__metadata_error_nothing_to_restore">Tento archiv zálohy neobsahuje žádné soubory k obnovení, vyberte prosím jiný.</string>
     <string name="backup_and_restore__restore__mode">Obnovovací reřim</string>
@@ -637,7 +699,10 @@
     <string name="crash_multiple_notification__title" comment="Title of the notification for consecutive crashes">Zdá se, že Dictate přestal opakovaně pracovat…</string>
     <string name="crash_multiple_notification__body" comment="Body of the notification for consecutive crashes">Vrácení zpět na předchozí klávesnici pro zastavení nekonečného crash loopu. Klepnutím zobrazíte podrobnosti o chybě</string>
     <!-- Clipboard strings -->
+    <string name="editing__back_to_keyboard">Zpět na klávesnici</string>
     <string name="clipboard__header_title">Schránka</string>
+    <string name="clipboard__search_placeholder" comment="Hint inside the clipboard search field">Hledat ve schránce</string>
+    <string name="clipboard__search_no_results" comment="Shown when no clip contains what was typed">Žádná položka to neobsahuje</string>
     <string name="clipboard__disabled__title">Historie schránky je momentálně zakázána</string>
     <string name="clipboard__disabled__message">Historie schránky {app_name} vám umoňuje rychle ukládat a přistupovat k textu a obrázkům které zkopírujete, s možností připínat položky, nastavovat automatická čištění a nastavit maximální limit položek.</string>
     <string name="clipboard__disabled__enable_button">Zapnout historii schránky</string>
@@ -670,6 +735,8 @@
     <string name="pref__clipboard__sync_to_system_clipboard__label">Synchronizovat do systémové schránky</string>
     <string name="pref__clipboard__group_clipboard_suggestion__label">Návrhy schránky</string>
     <string name="pref__clipboard__suggestion_enabled__label" comment="Preference title">Obsah návrhu schránky</string>
+    <string name="pref__clipboard__trim_on_copy__label" comment="Preference title, keep short">Oříznout při kopírování</string>
+    <string name="pref__clipboard__trim_on_copy__summary" comment="Preference summary, keep short (one line)">Odstraní mezery a zalomení řádků na koncích</string>
     <string name="pref__clipboard__suggestion_enabled__summary" comment="Preference summary">Navrhnout obsah dříve zkopírovaný do schránky</string>
     <string name="pref__clipboard__num_history_grid_columns__label">Počet sloupců mřížky</string>
     <string name="pref__clipboard__suggestion_timeout__label" comment="Preference title; Translators: This should form a sentence together with `pref__clipboard__suggestion_timeout__summary` and is the first part">Omezit návrhy ze schránky na</string>
@@ -829,6 +896,7 @@
     <string name="action__apply">Použít</string>
     <string name="action__back_up">Zálohovat</string>
     <string name="action__cancel">Zrušit</string>
+    <string name="action__back">Zpět</string>
     <string name="action__clear">Vymazat</string>
     <string name="action__create">Vytořit</string>
     <string name="action__default">Výchozí</string>
@@ -1020,6 +1088,7 @@
     <string name="enum__swipe_action__move_cursor_start_of_page" comment="Enum value label">Přesunout kurzor na začátek stránky</string>
     <string name="enum__swipe_action__move_cursor_end_of_page" comment="Enum value label">Přesunout kurzor na konec stránky</string>
     <string name="enum__swipe_action__switch_to_clipboard_context" comment="Enum value label">Otevřít správce schránky / historii</string>
+    <string name="enum__swipe_action__switch_to_editing_context">Otevřít panel úprav textu</string>
     <string name="enum__swipe_action__switch_to_media_context" comment="Enum value label">Otevřít panel emotikonů</string>
     <string name="enum__swipe_action__shift" comment="Enum value label">Přepnout shift</string>
     <string name="enum__swipe_action__redo" comment="Enum value label">Vpřed</string>
@@ -1071,6 +1140,12 @@
         <item quantity="many">{v} znaků</item>
         <item quantity="other">{v} znaků</item>
     </plurals>
+    <plurals name="unit__words__written">
+        <item quantity="one">{v} slovo</item>
+        <item quantity="few">{v} slova</item>
+        <item quantity="many">{v} slov</item>
+        <item quantity="other">{v} slov</item>
+    </plurals>
     <plurals name="unit__candidates__written">
         <item quantity="one">{v} návrh</item>
         <item quantity="few">{v} návrhy</item>
@@ -1078,6 +1153,8 @@
         <item quantity="other">{v} návrhů</item>
     </plurals>
     <!-- Dictate strings -->
+    <string name="quick_action__ime_ui_mode_editing">Úpravy textu</string>
+    <string name="quick_action__ime_ui_mode_editing__tooltip">Přesouvání kurzoru, výběr a úpravy textu</string>
     <string name="quick_action__ime_ui_mode_dictate">Dictate</string>
     <string name="quick_action__ime_ui_mode_dictate__tooltip">Klepnutím diktujte, dalším klepnutím přepište</string>
     <string name="quick_action__dictate_live_prompt">Pokyn naživo</string>
@@ -1092,14 +1169,25 @@
     <string name="about__feedback__email">contact@devemperor.net</string>
     <string name="about__feedback__subject">Dictate Feedback</string>
     <string name="setup__provider__title">Vyberte, jak má Dictate přepisovat</string>
-    <string name="setup__provider__choose_intro">Dictate převádí vaši řeč na text pomocí služby AI. Nastavit to jde dvěma způsoby a oba jsou plně podporované — vyberte si ten, který vám vyhovuje.</string>
+    <string name="setup__provider__choose_intro">Dictate převádí vaši řeč na text pomocí služby AI. Většině lidí vyhoví jeden ze dvou způsobů — a pokud nechcete používat žádnou cloudovou službu, níže najdete další dva.</string>
     <string name="setup__provider__choice_cloud_title">Koupit kredit v aplikaci</string>
     <string name="setup__provider__choice_cloud_body">Dictate Cloud: nikde žádný účet, žádný klíč API. Minuty diktování kupujete přes Google Play a nikdy nevyprší. Pohodlná cesta — a o něco dražší než jít k poskytovateli přímo.</string>
     <string name="setup__provider__choice_cloud_btn">Zobrazit balíčky kreditu</string>
     <string name="setup__provider__choice_own_title">Použít vlastního poskytovatele AI</string>
     <string name="setup__provider__choice_own_body">Vytvořte si klíč u poskytovatele podle svého výběru — Groq je pro běžné diktování zdarma. Zůstává vám vlastní účet a platíte přímo poskytovateli za jeho ceny. Zabere to asi dvě minuty.</string>
     <string name="setup__provider__choice_own_btn">Nastavit vlastní klíč</string>
-    <string name="setup__provider__back_to_choice">Zpět k oběma možnostem</string>
+    <string name="setup__provider__back_to_choice">Zpět ke všem možnostem</string>
+    <string name="setup__provider__more_ways">Raději úplně bez cloudové služby?</string>
+    <string name="setup__provider__choice_local_title">Ve vašem zařízení, offline</string>
+    <string name="setup__provider__choice_local_body">Jednou stáhnete řečový model. Žádný účet, žádné náklady a žádná nahrávka neopustí telefon.</string>
+    <string name="setup__provider__choice_server_title">Vlastní server</string>
+    <string name="setup__provider__choice_server_body">Nasměrujte Dictate na řečový server, který provozujete sami, nebo na jakýkoli koncový bod kompatibilní s OpenAI.</string>
+    <string name="setup__provider__local_intro">Rozpoznávání řeči pak běží ve vašem telefonu: nic se nikam neposílá a funguje to i bez připojení. Vyberte si teď jeden model ke stažení — další můžete přidat nebo změnit později.</string>
+    <string name="setup__provider__local_recommended">Doporučeno pro váš jazyk</string>
+    <string name="setup__provider__local_bigger">Přesnější, ale výrazně větší stahování</string>
+    <string name="setup__provider__local_download_btn">Stáhnout model</string>
+    <string name="setup__provider__local_use_btn">Použít tento model</string>
+    <string name="setup__provider__local_all_models">Zobrazit všechny modely</string>
     <string name="setup__provider__intro">Dictate převádí váš hlas na text pomocí online služby AI. K jejímu používání potřebujete vlastní osobní klíč pro takovou službu.</string>
     <string name="setup__provider__what_is_key">Klíč API je jako osobní heslo, které aplikaci Dictate umožňuje používat službu za vás. Jeho vytvoření je zdarma a trvá asi dvě minuty.</string>
     <string name="setup__provider__recommended">Doporučujeme <b>Groq</b> – je rychlý a zdarma pro každodenní diktování.</string>
@@ -1163,6 +1251,17 @@
     <string name="dictate__floating_button_design_pill_summary">Při aktivitě se rozšíří a zobrazí časovač a živý průběh zvuku.</string>
     <string name="dictate__floating_button_design_ring">Prstenec</string>
     <string name="dictate__floating_button_design_ring_summary">Kompaktní kruh s prstencem animovaným při nahrávání a přepisu.</string>
+    <string name="dictate__floating_button_apps_title">Viditelnost v aplikacích</string>
+    <string name="dictate__floating_button_apps_summary_all">Ve všech aplikacích</string>
+    <string name="dictate__floating_button_apps_summary_only">Jen v {n} aplikacích</string>
+    <string name="dictate__floating_button_apps_summary_except">Všude kromě {n} aplikací</string>
+    <string name="dictate__floating_button_apps_scope_all">Všechny aplikace</string>
+    <string name="dictate__floating_button_apps_scope_only">Jen aplikace níže</string>
+    <string name="dictate__floating_button_apps_scope_except">Všechny kromě aplikací níže</string>
+    <string name="dictate__floating_button_apps_note">Nad aplikací, kterou vynecháte, se tlačítko nikdy nevykreslí a Dictate v ní nečte textová pole. Aplikace, které vadí služby přístupnosti jako takové, stejně pozná, že je služba zapnutá.</string>
+    <string name="dictate__floating_button_apps_list_title">Aplikace</string>
+    <string name="dictate__floating_button_apps_search">Hledat aplikace</string>
+    <string name="dictate__floating_button_apps_none">Pro „{search_term}“ nebyla nalezena žádná aplikace</string>
     <string name="dictate__floating_button_design_title">Styl tlačítka</string>
     <string name="dictate__floating_button_haptic_summary_off">Bez vibrace při klepnutí.</string>
     <string name="dictate__floating_button_haptic_summary_on">Krátké zavibrování při klepnutí na tlačítko.</string>
@@ -1218,6 +1317,8 @@
     <string name="dictate__error_transcription_failed">Přepis selhal.</string>
     <string name="dictate__error_unknown">Neznámá chyba při přepisu.</string>
     <string name="dictate__error_rewording_failed">Přeformulování selhalo.</string>
+    <string name="dictate__error_rewording_default_model">%1$s je vestavěný výchozí model poskytovatele %2$s, ne ten, který jste vybrali. Vyberte model pro přeformulování v části Poskytovatelé AI.</string>
+    <string name="dictate__notice_rewording_failed">Přeformulování selhalo – vložen původní text</string>
     <string name="dictate__error_overlay_insert_clipboard">Tato aplikace text nepřijala. Je ve schránce — podržte pole a vložte ho.</string>
     <string name="dictate__error_invalid_api_key">Zkontrolujte svůj klíč API</string>
     <string name="dictate__error_quota_exceeded">Dosažen limit nebo kvóta</string>
@@ -1225,8 +1326,11 @@
     <string name="dictate__error_text_size_limit">Text je příliš dlouhý na přeformulování</string>
     <string name="dictate__error_format_not_supported">Nepodporovaný formát zvuku</string>
     <string name="dictate__error_timeout">Vypršel časový limit požadavku</string>
+    <string name="dictate__error_timeout_on_device">Přepis v zařízení je příliš pomalý</string>
     <string name="dictate__error_network">Žádné připojení k internetu</string>
     <string name="dictate__error_server">Poskytovatel není dostupný – zkuste to znovu</string>
+    <string name="dictate__error_try_on_device">Bez připojení – zkuste v zařízení</string>
+    <string name="dictate__error_try_on_device_detail">Přepis v zařízení nepotřebuje vůbec žádné připojení — pomůže, když je poskytovatel blokovaný, i když není signál. Nastavte jej v sekci Poskytovatelé AI a zapněte Offline záloha, aby se spustil sám.</string>
     <string name="dictate__action_settings">Otevřít nastavení</string>
     <string name="dictate__action_error_details">Zobrazit podrobnosti chyby</string>
     <string name="dictate__error_details_title">Podrobnosti chyby</string>
@@ -1275,15 +1379,38 @@
     <string name="dictate__providers_cap_stt">Přepis</string>
     <string name="dictate__providers_cap_chat">Přeformulování</string>
     <string name="dictate__providers_add_custom">Přidat vlastní server</string>
-    <string name="dictate__providers_add_custom_summary">Jakýkoli koncový bod kompatibilní s OpenAI</string>
+    <string name="dictate__providers_add_custom_summary">Vlastní hosting nebo jakýkoli koncový bod kompatibilní s OpenAI — pro rozpoznávání řeči i přeformulování</string>
+    <string name="dictate__providers_azure_endpoint">Endpoint najdete vedle klíče na stránce „Keys and Endpoint“ v portálu. MAI-Transcribe běží jen v regionech East US, West US, West US 2, North Europe, Southeast Asia a Central India.</string>
+    <string name="dictate__providers_ollama_no_stt">Ollama nemá koncový bod pro rozpoznávání řeči, umí tedy jen přeformulovat. Pro diktování přes vlastní server spusťte řečový server (například Speaches, faster-whisper-server nebo whisper.cpp) a přidejte ho přes „Přidat vlastní server“ — nebo použijte rozpoznávání v zařízení, které žádný server nepotřebuje.</string>
     <string name="dictate__providers_custom_title">Vlastní server</string>
     <string name="dictate__providers_field_name">Název</string>
     <string name="dictate__providers_field_transcription_model">Model přepisu</string>
     <string name="dictate__providers_field_chat_model">Model přeformulování</string>
     <string name="dictate__providers_test">Otestovat připojení</string>
-    <string name="dictate__providers_test_success">Připojeno · {count} modelů</string>
-    <string name="dictate__providers_test_failed">Připojení selhalo</string>
+    <string name="dictate__providers_test_transcribe">Otestovat přepis</string>
+    <string name="dictate__providers_check_no_key">Nejprve zadejte svůj API klíč.</string>
+    <string name="dictate__providers_check_credentials_ok">Přihlašovací údaje ověřeny · {count} modelů</string>
+    <string name="dictate__providers_check_credentials_ok_nocount">Přihlašovací údaje ověřeny</string>
+    <string name="dictate__providers_check_endpoint_ok">Server byl dosažen · {count} modelů</string>
+    <string name="dictate__providers_check_credentials_untested">Přepis nebyl otestován.</string>
+    <string name="dictate__providers_check_transcription_ok">Přepis ověřen</string>
+    <string name="dictate__providers_check_transcription_text">Vrátilo se jako: „{text}“</string>
+    <string name="dictate__providers_check_transcription_empty">Požadavek prošel, ale nevrátil se žádný text – spojení funguje, tento model ukázce nerozuměl.</string>
+    <string name="dictate__providers_check_failed_connection">Test spojení selhal</string>
+    <string name="dictate__providers_check_failed_transcription">Test přepisu selhal</string>
+    <string name="dictate__providers_check_err_auth">Klíč byl odmítnut. Zkontrolujte jej i to, zda adresa patří ke stejnému účtu.</string>
+    <string name="dictate__providers_check_err_quota">Klíč funguje, ale účet nemá kvótu nebo překročil limit. Zkontrolujte svůj tarif u poskytovatele.</string>
+    <string name="dictate__providers_check_err_network">Server nebylo možné kontaktovat. Zkontrolujte adresu a připojení k internetu.</string>
+    <string name="dictate__providers_check_err_timeout">Žádná odpověď včas. Poskytovatel může být vytížený – zkuste to znovu.</string>
+    <string name="dictate__providers_check_err_server">Poskytovatel hlásí vlastní chybu. Tady není co měnit; zkuste to později.</string>
+    <string name="dictate__providers_check_err_format">Poskytovatel odmítl zvukovou ukázku. Možná tento formát nepřijímá.</string>
+    <string name="dictate__providers_check_err_unknown">Požadavek selhal.</string>
+    <string name="dictate__providers_azure_link_signup">Vytvořit účet Azure</string>
+    <string name="dictate__providers_azure_link_portal">Portál Azure</string>
+    <string name="dictate__providers_azure_link_guide">Průvodce nastavením</string>
     <string name="dictate__providers_network_group">Síť</string>
+    <string name="dictate__request_timeout_title">Časový limit požadavku</string>
+    <string name="dictate__request_timeout_summary">{v} s · zvyšte u pomalého vlastního serveru</string>
     <string name="dictate__proxy_title">Proxy</string>
     <string name="dictate__proxy_summary_off">Vypnuto · přímé připojení</string>
     <string name="dictate__proxy_enabled_title">Použít proxy</string>
@@ -1337,7 +1464,10 @@
     <string name="dictate__paragraph_split_off">Vypnuto</string>
     <string name="dictate__paragraph_split_value">Po {n} slovech</string>
     <string name="dictate__realtime_title">Přepis v reálném čase</string>
-    <string name="dictate__realtime_summary">Zobrazuje text živě během mluvení u poskytovatelů, kteří to podporují</string>
+    <string name="dictate__realtime_summary">Přepisuje už během mluvení, ne až po zastavení, u poskytovatelů, kteří to podporují</string>
+    <string name="dictate__realtime_mode_off">Vypnuto</string>
+    <string name="dictate__realtime_mode_live">Zobrazovat text během mluvení</string>
+    <string name="dictate__realtime_mode_at_end">Zobrazit text až po zastavení</string>
     <string name="dictate__longform_title">Dlouhé diktování</string>
     <string name="dictate__longform_summary">Přepisuj dlouhá diktování na pozadí, část po části, zatímco mluvíš dál — během nahrávání klepni na Další pro odeslání aktuální části, takže na konci není dlouhé čekání.</string>
     <string name="dictate__longform_autosplit_title">Chytré automatické dělení</string>
@@ -1396,6 +1526,26 @@
     <string name="dictate__custom_words_title">Vlastní slova</string>
     <string name="dictate__custom_words_summary_empty">Přidejte jména nebo odborné termíny, které se mají psát správně</string>
     <string name="dictate__custom_words_placeholder">např. FlorisBoard, Kubernetes, Renée, OAuth, Anthropic</string>
+    <string name="dictate__custom_words_summary">{count} slov · asi {tokens} z {budget} tokenů</string>
+    <string name="dictate__custom_words_budget_info">Každé slovo odsud jede s každým diktováním a řečový model z toho přečte jen asi {budget} tokenů kontextu. Tvůj seznam z nich zabírá asi {tokens}.</string>
+    <string name="dictate__custom_words_budget_over">Tvůj seznam je delší, než kolik řečový model přečte. K modelu se dostane asi {fits} z tvých {count} slov; zbytek se posílá při každém diktování a ignoruje se. Na větší slovní zásobu použij vlastní nahrazení — jsou přesná, fungují offline a nic nestojí.</string>
+    <string name="dictate__custom_words_import">Importovat seznam slov</string>
+    <string name="dictate__custom_words_export">Exportovat seznam slov</string>
+    <string name="dictate__custom_words_export_filename">dictate_words.txt</string>
+    <string name="dictate__custom_words_import_title">Importovat seznam slov</string>
+    <string name="dictate__custom_words_import_fitting">{count} nových slov z tohoto souboru se do tvého seznamu vejde.</string>
+    <string name="dictate__custom_words_import_known">{count} v něm už bylo.</string>
+    <string name="dictate__custom_words_import_nofit">{count} zůstalo mimo — řečový model přečte jen asi {budget} tokenů kontextu, posílala by se tedy při každém diktování a ignorovala.</string>
+    <string name="dictate__custom_words_import_unusable">{count} řádků neobsahovalo nic k zapsání a byly přeskočeny.</string>
+    <string name="dictate__custom_words_import_truncated">Přečteno bylo jen prvních {count} položek souboru.</string>
+    <string name="dictate__custom_words_import_also_dictionary">Přidat je i do osobního slovníku</string>
+    <string name="dictate__custom_words_import_also_dictionary_summary">Tento seznam říká jen řečovému modelu, jak se slovo píše. Osobní slovník je to, co klávesnice používá při psaní — nemá žádný limit délky, takže do něj jde každé slovo ze souboru, ne jen ta, která se vejdou nahoru.</string>
+    <string name="dictate__custom_words_import_empty">V tomto souboru nebyla nalezena žádná slova</string>
+    <string name="dictate__custom_words_import_done">Přidáno {count} slov</string>
+    <string name="dictate__custom_words_import_done_dictionary">Přidáno {count} slov a {dict} do tvého osobního slovníku</string>
+    <string name="dictate__file_unreadable">Tento soubor se nepodařilo přečíst</string>
+    <string name="dictate__file_export_done">Soubor uložen</string>
+    <string name="dictate__file_export_failed">Tento soubor se nepodařilo zapsat</string>
     <string name="dictate__rewording_group">Přeformulování (úpravy AI)</string>
     <string name="dictate__rewording_title">Přeformulování (AI)</string>
     <string name="dictate__rewording_summary_on">Zapnuto – přeformulujte, přeložte a naformátujte pomocí AI</string>
@@ -1424,7 +1574,11 @@
     <string name="dictate__prompt_name_title">Název</string>
     <string name="dictate__prompt_name_placeholder">např. Opravit gramatiku</string>
     <string name="dictate__prompt_text_title">Prompt</string>
-    <string name="dictate__prompt_text_placeholder">Pokyn odeslaný modelu AI</string>
+    <string name="dictate__prompt_text_placeholder">Pokyn pro AI — nebo [text v hranatých závorkách], který se vloží beze změny</string>
+    <string name="dictate__prompt_trigger_title">Zkratka při psaní (volitelné)</string>
+    <string name="dictate__prompt_trigger_placeholder">např. ;sig</string>
+    <string name="dictate__prompt_trigger_error_invalid">Zkratka je jedno slovo bez mezer, nejvýše 32 znaků.</string>
+    <string name="dictate__prompt_trigger_error_duplicate">Už ji používá „{name}“.</string>
     <string name="dictate__prompt_requires_selection_title">Vyžaduje výběr</string>
     <string name="dictate__prompt_requires_selection_summary">Pracuje s vybraným textem a nahradí jej</string>
     <string name="dictate__prompt_auto_apply_title">Použít automaticky</string>
@@ -1472,6 +1626,7 @@
     <string name="dictate__prompt_library_all">Vše</string>
     <string name="dictate__prompt_library_add">Přidat</string>
     <string name="dictate__prompt_library_added">Přidáno</string>
+    <string name="dictate__prompt_library_add_again">Přidat znovu</string>
     <string name="dictate__prompt_library_empty">Vašemu hledání neodpovídají žádné prompty.</string>
     <string name="dictate__prompt_library_error">Komunitní knihovnu se nepodařilo načíst. Zkontrolujte připojení a zkuste to znovu.</string>
     <string name="dictate__prompt_library_retry">Zkusit znovu</string>
@@ -1486,6 +1641,34 @@
     <string name="dictate__file_preparing">Příprava souboru…</string>
     <string name="dictate__file_too_large">Soubor je příliš velký – poskytovatel přijímá nejvýše 25 MB.</string>
     <string name="dictate__file_read_error">Vybraný soubor nelze přečíst.</string>
+    <string name="dictate__import_share_label">Přepsat</string>
+    <string name="dictate__import_title">Přepsat soubor</string>
+    <string name="dictate__import_menu">Přepsat soubor</string>
+    <string name="dictate__import_menu_summary">Vyberte zvukový nebo video soubor a přečtěte si, co se v něm říká</string>
+    <string name="dictate__import_step_copy">Přijímání souboru</string>
+    <string name="dictate__import_step_extract">Získávání zvuku z videa</string>
+    <string name="dictate__import_step_prepare">Příprava zvuku</string>
+    <string name="dictate__import_step_upload">Nahrávání</string>
+    <string name="dictate__import_step_transcribe">Přepis pomocí {provider}</string>
+    <string name="dictate__import_step_transcribe_local">Přepis v tomto zařízení</string>
+    <string name="dictate__import_step_finish">Dokončování</string>
+    <string name="dictate__import_step_percent">{v} %</string>
+    <string name="dictate__import_step_part">Část {current} z {total}</string>
+    <string name="dictate__import_result_label">Přepis</string>
+    <string name="dictate__import_prompt_button">Přepracovat</string>
+    <string name="dictate__import_revert">Zpět</string>
+    <string name="dictate__import_copy">Kopírovat</string>
+    <string name="dictate__import_copied">Zkopírováno!</string>
+    <string name="dictate__import_save">Uložit do souboru</string>
+    <string name="dictate__import_saved">Přepis uložen.</string>
+    <string name="dictate__import_save_failed">Přepis se nepodařilo uložit.</string>
+    <string name="dictate__import_search">Hledat v přepisu</string>
+    <string name="dictate__import_search_hits">{current}/{total}</string>
+    <string name="dictate__import_search_none">0/0</string>
+    <string name="dictate__import_retry">Zkusit znovu</string>
+    <string name="dictate__import_no_file">Nebyl sdílen žádný zvukový soubor.</string>
+    <string name="dictate__import_not_audio">Tento soubor neobsahuje zvuk.</string>
+    <string name="dictate__import_only_first">Přepisuje se jen první soubor – dalších {count} bylo vynecháno.</string>
     <string name="dictate__setup_description">Nastavte poskytovatele AI a klíč API, abyste mohli začít diktovat mikrofonem.</string>
     <string name="dictate__setup_configure_btn">Nastavit Dictate</string>
     <string name="setup__grant_mic_permission__title">Přístup k mikrofonu</string>
@@ -1542,6 +1725,16 @@
     <string name="dictate__mappings_field_to_placeholder">např. GitHub</string>
     <string name="dictate__mappings_group">Pravidla nahrazování</string>
     <string name="dictate__mappings_matchcase_summary">Nahradit pouze tehdy, když přesně odpovídají velká a malá písmena.</string>
+    <string name="dictate__mappings_import">Importovat pravidla</string>
+    <string name="dictate__mappings_export">Exportovat pravidla</string>
+    <string name="dictate__mappings_export_filename">dictate_mappings.tsv</string>
+    <string name="dictate__mappings_import_title">Importovat pravidla</string>
+    <string name="dictate__mappings_import_message">{count} nových pravidel v tomto souboru. Přidat je do tvého seznamu?</string>
+    <string name="dictate__mappings_import_known">{count} v něm už bylo.</string>
+    <string name="dictate__mappings_import_unusable">{count} řádků neuvádělo žádné nahrazení a byly přeskočeny.</string>
+    <string name="dictate__mappings_import_format">Jedno pravidlo na řádek: co je slyšet, tabulátor, čím se to má stát.</string>
+    <string name="dictate__mappings_import_empty">V tomto souboru nebyla nalezena žádná pravidla</string>
+    <string name="dictate__mappings_import_done">Přidáno {count} pravidel</string>
     <string name="dictate__mappings_matchcase_title">Rozlišovat velikost písmen</string>
     <string name="dictate__mappings_opt_caseinsensitive">Ignoruje velikost písmen</string>
     <string name="dictate__mappings_opt_casesensitive">Rozlišuje velikost písmen</string>
@@ -1553,6 +1746,7 @@
     <string name="dictate__wear_standalone_summary">Odešlete svůj API klíč do hodinek, aby mohly diktovat i bez telefonu poblíž.</string>
     <string name="dictate__wear_standalone_title">Synchronizovat klíč do hodinek</string>
     <string name="emoji__search__hint">Hledat emoji</string>
+    <string name="emoji__row__open_panel">Otevřít všechna emodži</string>
     <string name="emoji__search__no_results">Žádné odpovídající emoji</string>
     <string name="pref__suggestion__api30_inline_suggestions_enabled__label">Návrhy automatického vyplňování systému</string>
     <string name="pref__suggestion__block_possibly_offensive__summary">Zabraňuje navrhování potenciálně urážlivých slov při psaní</string>
@@ -1562,7 +1756,6 @@
     <string name="dictate__providers_field_transcription_rewording_model">Model pro přepis a přeformulování</string>
     <string name="dictate__providers_single_call_title">Jeden multimodální požadavek</string>
     <string name="dictate__providers_single_call_summary">Jeden model s podporou zvuku přepíše a zformátuje text v jediném požadavku.</string>
-    <string name="dictate__providers_single_call_pick_audio">Vyberte model s podporou zvuku (označený 🎤 v seznamu modelů).</string>
     <string name="dictate__providers_rewording_single_call_note">Momentálně se nepoužívá — váš poskytovatel přepisu provádí přeformulování ve svém jediném požadavku.</string>
     <string name="dictate__wear_title">Wear OS</string>
     <string name="dictate__wear_summary">Možnosti diktování ze spárovaných hodinek</string>
@@ -1614,6 +1807,26 @@
     <string name="dictate__history_clear_title">Vymazat historii?</string>
     <string name="dictate__history_clear_message">Tímto trvale odstraníte všechny položky historie i veškerý uchovaný zvuk.</string>
     <string name="dictate__history_clear_confirm">Vymazat vše</string>
+    <string name="dictate__history_export_title">Export do složky</string>
+    <string name="dictate__history_export_summary">Každé nové diktování se hned po dokončení zapíše také do této složky jako prostý textový soubor.</string>
+    <string name="dictate__history_export_folder">Složka</string>
+    <string name="dictate__history_export_folder_unset">Nenastaveno</string>
+    <string name="dictate__history_export_folder_unavailable">Složka není dostupná — vyberte ji znovu</string>
+    <string name="dictate__history_export_choose">Vybrat složku</string>
+    <string name="dictate__history_export_change">Změnit</string>
+    <string name="dictate__history_export_disconnect">Odpojit</string>
+    <string name="dictate__history_export_audio_title">Exportovat i nahrávku</string>
+    <string name="dictate__history_export_audio_summary">Uloží zvuk vedle přepisu.</string>
+    <string name="dictate__history_export_audio_needs_retention">Vyžaduje „Uchovávat zvuk“.</string>
+    <string name="dictate__history_export_all">Exportovat vše nyní</string>
+    <string name="dictate__history_export_all_summary">Zapíše každé diktování, které ve složce ještě není: ta z doby před jejím výběrem i ta, která nešlo zapsat, když byla složka nedostupná.</string>
+    <string name="dictate__history_export_all_result">Zapsáno: {written}, již přítomno: {skipped}, selhalo: {failed}</string>
+    <string name="dictate__history_export_last_failure">Zápis {when} selhal. „Exportovat vše nyní“ doplní, co chybí.</string>
+    <string name="dictate__history_export_warning_title">Co tam skončí</string>
+    <string name="dictate__history_export_warning_message">Složka bude od nynějška obsahovat text každého vašeho diktování a při zapnutí i nahrávky. Vše, co ji synchronizuje — cloudový klient, zálohovací nástroj, jiná aplikace — odnáší tyto přepisy z tohoto zařízení.\n\nDictate zapisuje, dokud složku neodpojíte, a nikdy z ní nic nemaže: záznamy, které vypadnou z historie, ve složce zůstávají. Pole pro hesla a anonymní režim se nikdy nezaznamenávají, a tedy ani neexportují.</string>
+    <string name="dictate__history_export_needs_history">Export do složky zapisuje to, co zaznamenává historie, takže historie musí být zapnutá.</string>
+    <string name="dictate__history_export_enable_history">Zapnout historii</string>
+    <string name="dictate__history_export_pick_failed">K této složce se nepodařilo získat oprávnění k zápisu</string>
     <string name="dictate__stats_empty">Zatím žádné diktáty — statistiky se objeví, jakmile začnete diktovat.</string>
     <string name="dictate__stats_time_saved">Ušetřený čas</string>
     <string name="dictate__stats_time_saved_sub">oproti psaní</string>
@@ -1658,6 +1871,10 @@
     <string name="dictate__action_save_audio">Uložit zvuk</string>
     <string name="dictate__audio_saved">Zvuk uložen do Downloads/Dictate: %s</string>
     <string name="dictate__audio_save_failed">Zvuk se nepodařilo uložit</string>
+    <string name="dictate__instant_recording_mode_off">Vypnuto</string>
+    <string name="dictate__instant_recording_mode_always">Při každém otevření klávesnice</string>
+    <string name="dictate__instant_recording_mode_after_switch">Jen po přepnutí na {app_name}</string>
+    <string name="dictate__instant_recording_in_numeric">Také v číselných polích</string>
     <string name="dictate__instant_recording_skip_numeric_title">Přeskočit číselná pole</string>
     <string name="dictate__instant_recording_skip_numeric_summary">Nespouštět automaticky u polí pro čísla, telefon nebo PIN</string>
     <string name="settings__localization__subtype_status_words">Návrhy</string>
@@ -1666,10 +1883,19 @@
     <string name="settings__localization__subtype_status_context">Kontext</string>
     <string name="pref__suggestion__auto_correct__label">Automatické opravy</string>
     <string name="pref__suggestion__auto_correct__summary">Automaticky opravit překlepy při stisku mezerníku</string>
+    <string name="pref__correction__auto_correct_strength__label">Síla automatických oprav</string>
+    <string name="enum__auto_correct_strength__cautious">Opatrná</string>
+    <string name="enum__auto_correct_strength__cautious__description">Opraví jen zjevné uklouznutí prstu. Neobvyklých tvarů se nikdy nedotkne.</string>
+    <string name="enum__auto_correct_strength__balanced">Vyvážená</string>
+    <string name="enum__auto_correct_strength__balanced__description">Opraví běžné překlepy včetně stisku sousední klávesy. Doporučeno.</string>
+    <string name="enum__auto_correct_strength__aggressive">Agresivní</string>
+    <string name="enum__auto_correct_strength__aggressive__description">Opraví i vzdálenější slova — a občas nahradí i to, které jste chtěli.</string>
     <string name="pref__suggestion__multilingual_typing__label">Vícejazyčné psaní</string>
     <string name="pref__suggestion__multilingual_typing__summary">Přijímat slova ze všech jazyků klávesnice</string>
     <string name="pref__suggestion__next_word_prediction__label">Návrhy dalšího slova</string>
     <string name="pref__suggestion__next_word_prediction__summary">Navrhuje pravděpodobná další slova po dokončení slova</string>
+    <string name="pref__suggestion__ignore_app_suggestion_block__label">Ignorovat aplikace, které vypínají návrhy</string>
+    <string name="pref__suggestion__ignore_app_suggestion_block__summary">Přesto je zobrazovat, kromě polí pro heslo</string>
     <string name="suggestion__added_to_dictionary">Slovo \"{word}\" bylo přidáno do slovníku</string>
     <string name="suggestion__already_in_dictionary">Slovo \"{word}\" je již ve slovníku</string>
     <string name="dictate__legacy_record">Nahrát</string>
@@ -1824,6 +2050,104 @@
     <string name="apptour53__outro_eyebrow">To je 5.3</string>
     <string name="apptour53__outro_title">Příjemné diktování</string>
     <string name="apptour53__outro_body">A spousta drobností: každý poskytovatel má vlastní logo, indikátor nahrávání může být klidný, pulzující nebo reagující na hlas, výstup promptu si vedle sebe může nechat původní přepis a odstavce se už nelámou po zkratkách. Každou prohlídku si znovu pustíte v Nastavení › O aplikaci.</string>
+
+    <string name="apptour60__cta_try">Vyzkoušet</string>
+    <string name="apptour60__art_minutes">minut</string>
+    <string name="apptour60__art_speed">1,5×</string>
+    <string name="apptour60__intro_eyebrow">Dictate 6.0</string>
+    <string name="apptour60__intro_title">Kredit, čínština, levnější diktování</string>
+    <string name="apptour60__intro_body">Tato verze přidává druhou cestu dovnitř — koupit kredit místo vlastního klíče API —, k tomu pinyin pro čínštinu, sedm jazyků s novým slovníkem a nahrávky, které stojí méně.</string>
+    <string name="apptour60__cloud_eyebrow">Novinka: Dictate Cloud</string>
+    <string name="apptour60__cloud_title">Kupte si minuty místo shánění klíče</string>
+    <string name="apptour60__cloud_body">Kdo si nechce zakládat účet u poskytovatele, koupí si teď prostě kredit. Ano, jde to přes náš server — ale ani vaše nahrávky, ani vaše texty se tam neukládají, putují rovnou dál. Celý kód serveru je veřejný a dá se přečíst. Váš vlastní klíč funguje přesně jako dřív.</string>
+    <string name="apptour60__speedup_eyebrow">Nižší náklady na API</string>
+    <string name="apptour60__speedup_title">Stejná slova, méně minut</string>
+    <string name="apptour60__speedup_body">Nahrávky lze před odesláním zrychlit, aniž by hlas zněl výš. Většina poskytovatelů účtuje podle délky: nahrávka o třetinu kratší stojí o třetinu méně. Dlouhá diktování se navíc zabalí, místo aby byla odmítnuta.</string>
+    <string name="apptour60__chinese_eyebrow">Novinka: pinyin</string>
+    <string name="apptour60__chinese_title">Psát čínsky tak, jak se čínsky píše</string>
+    <string name="apptour60__chinese_body">Pinyin s řádkem kandidátů — dosud byl jen Zhengma, který sotva kdo používá. Přibyl model v zařízení skutečně trénovaný na čínštině a poskytovatel dostupný z pevninské Číny.</string>
+    <string name="apptour60__emoji_eyebrow">Emodži</string>
+    <string name="apptour60__emoji_title">Hledat emodži ve svém jazyce</string>
+    <string name="apptour60__emoji_body">Vyhledávání emodži znalo šest jazyků. Teď jich zná přes čtyřicet — hledejte „heart", „心" nebo „قلب" a dojdete ke stejné emodži. Vyhledávání jde podle jazyka vaší klávesnice.</string>
+    <string name="apptour60__languages_eyebrow">Slovníky</string>
+    <string name="apptour60__languages_title">Sedm jazyků bez návrhů</string>
+    <string name="apptour60__languages_body">Arabština, bengálština, finština, hindština, indonéština, tamilština a urdština dostávají návrhy slov a automatické opravy. Islandština a gruzínština obsahovaly zkrátka nesprávné jazyky a byly postaveny znovu. A znaky pod dlouhým stiskem u 19 rozložení se řídí tím, co se v daném jazyce opravdu píše.</string>
+    <string name="apptour60__more_eyebrow">Kromě toho</string>
+    <string name="apptour60__more_title">Spousta drobností</string>
+    <string name="apptour60__more_body">Podržení tlačítka stop vezme zpět zaseknutý přepis. Plovoucí tlačítko už nehlásí úspěch, který nedokázalo ověřit, a zhasne s obrazovkou. Psaní tahem teď zná slova, která jste si přidali. A pád hned po aktualizaci je opraven.</string>
+    <string name="apptour60__outro_eyebrow">To je 6.0</string>
+    <string name="apptour60__outro_title">Ať slouží</string>
+    <string name="apptour60__outro_body">Ať Dictate používáte jakkoli — vlastní klíč, vlastní server, model v zařízení nebo kredit —, na ostatních cestách se nic nezměnilo. Každou prohlídku si znovu pustíte v Nastavení › O aplikaci.</string>
+    <string name="apptour61__cta_try">Vyzkoušet</string>
+    <string name="apptour61__art_folder">Samolepky</string>
+    <string name="apptour61__art_share">Sdílet přes</string>
+    <string name="apptour61__art_typed">nei</string>
+    <string name="apptour61__art_fixed">nie</string>
+    <string name="apptour61__intro_eyebrow">Dictate 6.1</string>
+    <string name="apptour61__intro_title">Samolepky, hlasové zprávy a automatické opravy, které konečně vidí překlep</string>
+    <string name="apptour61__intro_body">Ukažte klávesnici složku s vlastními samolepkami, sdílejte hlasovou zprávu přímo do Dictate, abyste zjistili, co v ní je, a získejte automatickou opravu, která konečně zaznamená chybu, kterou byla postavena přehlížet.</string>
+    <string name="apptour61__stickers_eyebrow">Novinka: vlastní samolepky</string>
+    <string name="apptour61__stickers_title">Složka v telefonu, na klávesnici</string>
+    <string name="apptour61__stickers_body">Ukažte Dictate libovolnou složku a její obrázky se stanou samolepkami — podsložky se promění v záložky s vlastními oblíbenými a naposledy použitými. Přidávejte z kterékoli aplikace přes nabídku sdílení, mažte bez opuštění klávesnice. To, co chatovací aplikace skutečně přijme, není to, co tvrdí, že přijímá: proto se každá samolepka jednou při vložení uvede do tvaru a odtud se už jen odesílá.</string>
+    <string name="apptour61__share_eyebrow">Novinka: sdílet do Dictate</string>
+    <string name="apptour61__share_title">Zjistit, co ta hlasová zpráva říká</string>
+    <string name="apptour61__share_body">Dictate je nyní v nabídce sdílení pro zvuk i video. Sdílejte tam hlasovou zprávu a otevře se obrazovka, která začne přepisovat sama — není co hledat ani co mačkat. V přepisu lze vyhledávat a dlouhé nahrávky se zpracují po částech místo odmítnutí.</string>
+    <string name="apptour61__autocorrect_eyebrow">Automatické opravy</string>
+    <string name="apptour61__autocorrect_title">Překlep, který nemohla vidět</string>
+    <string name="apptour61__autocorrect_body">Pravidlo rozhodující, zda lze slovo opravit, propouštělo prst, který sklouzl téměř k sousední klávese, ale nikdy ten, který na ni dopadl přesně — a to je právě běžný překlep. To je opraveno a rozhodnost oprav si teď nastavíte sami. Slovo, které vezme mezerník, je označeno vaší zvýrazňovací barvou a Backspace hned poté vrátí přesně to, co jste napsali.</string>
+    <string name="apptour61__contacts_eyebrow">Kontakty</string>
+    <string name="apptour61__contacts_title">Jména, která už se nepodtrhávají</string>
+    <string name="apptour61__contacts_body">Jména vašich kontaktů mohou do osobního slovníku, aby je klávesnice přestala pokládat za překlepy a začala je nabízet. Nežádá si přitom přístup k adresáři — jména vybíráte sami nebo importujete vCard. Nečte se nic, co jste nepředali.</string>
+    <string name="apptour61__models_eyebrow">Gemini a Deepgram Flux</string>
+    <string name="apptour61__models_title">Dva poskytovatelé, kteří se naučili lépe poslouchat</string>
+    <string name="apptour61__models_body">Google vydal vlastní modely převodu řeči na text, takže Gemini už nepřepisuje chatovacím modelem podle instrukce — a nově to zvládne i živě. Flux od Deepgramu si sám rozhodne, kdy jste domluvili, místo aby vyčkával ticho. A pokud mluvíte více jazyky, můžete teď říct kterými, místo abyste jeden vybrali a doufali.</string>
+    <string name="apptour61__more_eyebrow">Dále</string>
+    <string name="apptour61__more_title">Spousta drobností</string>
+    <string name="apptour61__more_body">Šablony lze spustit napsáním zkratky, nejen klepnutím. Ruštinu lze psát foneticky a francouzština najde své akcenty z holých písmen. Velmi široké tablety mají na šířku opět klávesnici. A přepínač návrhů je opravdu vypne — i tehdy, když to za vás chce udělat aplikace.</string>
+    <string name="apptour61__outro_eyebrow">To je 6.1</string>
+    <string name="apptour61__outro_title">Stejná klávesnice, méně ostrých hran</string>
+    <string name="apptour61__outro_body">Na tom, jak diktujete dosud, se nic nemění — vlastní klíč, vlastní server nebo model v zařízení. Všechny prohlídky najdete znovu v Nastavení › O aplikaci.</string>
+    <string name="apptour62__cta_try">Vyzkoušet</string>
+    <string name="apptour62__cta_manage">Kde se to vypíná</string>
+    <string name="apptour62__art_word">Zoya</string>
+    <string name="apptour62__art_emoji_word">dort</string>
+    <string name="apptour62__art_emoji">🍰</string>
+    <string name="apptour62__intro_eyebrow">Dictate 6.2</string>
+    <string name="apptour62__intro_title">Učí se vaše slova a má pět nových vzhledů</string>
+    <string name="apptour62__intro_body">Klávesnice si teď umí zapamatovat slova, která nezná žádný slovník, klávesy mohou nechat prosvítat aplikaci pod nimi a každý palec může mít svou polovinu. K tomu hrst malých pomocníků pro to, co děláte každý den.</string>
+    <string name="apptour62__learning_eyebrow">Novinka: učí se při psaní</string>
+    <string name="apptour62__learning_title">Slova, která nezná žádný slovník</string>
+    <string name="apptour62__learning_body">Napište jméno nebo odborný výraz dostatečně často a klávesnice si je nechá: přestane je označovat za chybu a začne je nabízet. Tato aktualizace funkci zapíná všem, i těm, kdo si ji dřív vypnuli. V anonymním režimu, v polích pro hesla a z čehokoli, co jste nenapsali klávesu po klávese, se neučí nic; všechno zůstává v tomto zařízení a tlačítko níže otevře seznam — i ten přepínač.</string>
+    <string name="apptour62__themes_eyebrow">Pět nových vzhledů</string>
+    <string name="apptour62__themes_title">Glass, Sand, Deep a tmavý E-Ink</string>
+    <string name="apptour62__themes_body">Dictate Glass nechává aplikaci prosvítat mezerami mezi klávesami, zatímco samotné klávesy zůstávají dost kryjící, aby se na nich dalo číst; Glass Clear jde dál a vypadá lépe — za cenu toho, že v aplikacích, které kreslí za klávesnicí, jejich text prosvítá. Sand je teplý světlý vzhled, Deep klidný tmavý a E-Ink má konečně noční variantu, takže vám automatické přepínání po setmění už nepodá bílou klávesnici.</string>
+    <string name="apptour62__split_eyebrow">Novinka: rozdělená klávesnice</string>
+    <string name="apptour62__split_title">Oba palce, bez natahování</string>
+    <string name="apptour62__split_body">Nová rychlá akce vedle jednoruční a plovoucí klávesnice roztáhne řady, aby každý palec zůstal u své poloviny. Rozdělí se každé rozložení, nejen QWERTY, protože šev se počítá ze šířek kláves místo toho, aby byl zapsaný v každém rozložení. A na šířku teď aplikace zůstává vidět, kdykoli je místo pro obojí.</string>
+    <string name="apptour62__emoji_eyebrow">Emoji</string>
+    <string name="apptour62__emoji_title">Slovo si najde své emoji</string>
+    <string name="apptour62__emoji_body">Napište slovo a emoji, které znamená, se nabídne v liště návrhů — zhruba v padesáti jazycích a ze stejných dat, jaká používá samotný systém. Veze se vedle návrhů, místo aby některému z nich bralo místo. K tomu je tu volitelná řada s připnutými a naposledy použitými emoji nad klávesami.</string>
+    <string name="apptour62__helpers_eyebrow">Čtyři malí pomocníci</string>
+    <string name="apptour62__helpers_title">Anonymní režim, čisté odkazy a odpověď na příklad</string>
+    <string name="apptour62__helpers_body">Anonymní režim zabrání tomu, aby si klávesnice cokoli pamatovala, dokud je zapnutý — nic se nenaučí, nic se neuloží. Z vložených odkazů lze odstranit sledovací parametry ještě cestou do pole. Napište příklad zakončený = a odpověď se objeví jako návrh. A se zapnutou číselnou řadou písmena zase ukazují své číslice.</string>
+    <string name="apptour62__selection_eyebrow">Výběr a pohyb</string>
+    <string name="apptour62__selection_title">Uvidíte, kolik jste vybrali</string>
+    <string name="apptour62__selection_body">Řada, která při výběru dosud stála prázdná, teď počítá jeho slova a znaky. Nová tlačítka skáčou na úplný začátek a konec pole a kopírování může nechat přebytečné mezery na okrajích za sebou. Řada akcí ustoupí stranou, jakmile výběr začne, místo aby do něj mluvila.</string>
+    <string name="apptour62__clipboard_eyebrow">Schránka</string>
+    <string name="apptour62__clipboard_title">Najděte výstřižek podle toho, co je v něm</string>
+    <string name="apptour62__clipboard_body">Ve schránce se teď dá hledat, napříč vším, co v ní je. To, co jste právě zkopírovali, se nabídne v liště návrhů jako pilulka, kterou můžete odmítnout, a zkopírovat stejný text dvakrát se počítá jako dvakrát — takže se vrátí. Smazání výstřižku teď smaže i soubor za ním, místo aby obrázek nechalo v telefonu.</string>
+    <string name="apptour62__gestures_eyebrow">Gesta</string>
+    <string name="apptour62__gestures_title">Podržet ?123, posunout, pustit</string>
+    <string name="apptour62__gestures_body">Podržte klávesu symbolů, posuňte se na znak, který chcete, a pusťte: vloží se a písmena jsou zpátky, bez přepínání tam a zase zpět. Tažení nahoru po mezerníku teď dosáhne na řádek nad, ne jen na předchozí slovo. A mezeru mezi klávesami lze nastavit v rozsahu, který je opravdu vidět.</string>
+    <string name="apptour62__export_eyebrow">Novinka: diktáty jako soubory</string>
+    <string name="apptour62__export_title">Každý diktát do složky podle vaší volby</string>
+    <string name="apptour62__export_body">Vyberte jednou složku a každý dokončený diktát se do ní navíc zapíše jako prostý textový soubor, přesně ve chvíli, kdy je hotový. Cokoli tu složku sleduje — poznámková aplikace, synchronizační nástroj, vaše záloha — dostane vaše texty, aniž by se Dictate musel učit jeho řeč.</string>
+    <string name="apptour62__more_eyebrow">A ještě</string>
+    <string name="apptour62__more_title">Spousta malých věcí</string>
+    <string name="apptour62__more_body">Návrhy se teď v každém jazyce dívají na dvě slova před kurzorem, nejen v angličtině. Zálohu lze vytvořit bez vašich API klíčů, takže se dá bezpečně předat. Vlastní přepisovací modely Azure jsou dostupné, volba modelu pro práci bez připojení teď přepne i na offline engine a každý požadavek má lhůtu odpovídající čekání. Diktáty se v historii objeví ve chvíli odeslání, importy říkají, v jakém jsou kroku, a jdou zrušit, a text spolehlivěji dorazí do aplikací, kterým to dělalo potíže.</string>
+    <string name="apptour62__outro_eyebrow">To je 6.2</string>
+    <string name="apptour62__outro_title">Stejná klávesnice, víc z ní vaše</string>
+    <string name="apptour62__outro_body">Na tom, jak diktujete, se nic nemění — vlastní klíč, vlastní server nebo model v zařízení. Všechny prohlídky najdete znovu v Nastavení › O aplikaci.</string>
     <string name="changelog__v5_0_0">• NOVÉ: Psaní tahem — přejíždějte po klávesách a pište celá slova, se slovníky pro jednotlivé jazyky staženými na vyžádání. 👆\n• NOVÉ: Návrhy slov a automatické opravy — překlepy se opravují automaticky a napsané slovo zůstává na jedno klepnutí. ✨\n• NOVÉ: Přepis v reálném čase — sledujte, jak se slova objevují, zatímco mluvíte, s OpenAI, Deepgram, Soniox, AssemblyAI a ElevenLabs. ⚡\n• NOVÉ: Tři další poskytovatelé přepisu — ElevenLabs Scribe, Deepgram a AssemblyAI. ☁️\n• NOVÉ: Klasické rozvržení diktování — hlasová obrazovka bez klávesnice z Dictate 3 je zpět, zafixovaná nebo na jedno přejetí. 🎙️\n• NOVÉ: Komunitní knihovna promptů — procházejte a sdílejte prompty pro přeformulování. 📚\n• NOVÉ: Statistiky diktování s milníky. 📊\n• NOVÉ: Offline model NVIDIA Parakeet a filtr ticha, který přeskočí prázdné nahrávky. 📴\n• Více: stabilnější plovoucí tlačítko, ovládání úsilí uvažování, haptická odezva, nový motiv E-Reader a desítky oprav. 🛠️</string>
     <string name="media__tab__gifs">GIFs</string>
     <string name="prefs__media__gif__title">GIFs</string>
@@ -1891,6 +2215,7 @@
     <string name="dictate__cloud_packs_title">Balíčky kreditu</string>
     <string name="dictate__cloud_topup_title">Dobít</string>
     <string name="dictate__cloud_pack_minutes">{minutes} minut diktování</string>
+    <string name="dictate__cloud_pack_savings">O {percent} % levnější</string>
     <string name="dictate__cloud_shop_unavailable">Balíčky kreditu tu nelze zobrazit. Obvykle to znamená, že aplikace nebyla nainstalována z Google Play nebo že na tomto zařízení není přihlášený účet Play. Váš vlastní klíč API funguje v obou případech.</string>
     <string name="dictate__cloud_activate_title">Kredit je připravený</string>
     <string name="dictate__cloud_activate_body">Máte kredit, ale diktování teď běží přes jiného poskytovatele. Přepněte, kdykoli budete chtít — bez vás se nic nezmění.</string>
@@ -1940,4 +2265,93 @@
     <string name="dictate__action_top_up">Dobít kredit</string>
     <string name="dictate__promo_low_credit_message">Kredit skoro došel.</string>
     <string name="dictate__promo_low_credit_action">Dobít</string>
+    <string name="prefs__media__sticker__title">Samolepky</string>
+    <string name="prefs__media__sticker_folder__title">Složka se samolepkami</string>
+    <string name="prefs__media__sticker_folder__summary_unset">Vyberte složku s vlastními obrázky</string>
+    <string name="prefs__media__sticker_folder_clear">Zapomenout tuto složku</string>
+    <string name="prefs__media__sticker_rescan">Načíst složku znovu</string>
+    <string name="prefs__media__sticker_rescan__summary">Použijte po přidání nebo odebrání souborů</string>
+    <string name="prefs__media__sticker_thumbnail_size">Velikost samolepek</string>
+    <string name="prefs__media__sticker_history_recent_max_size">Počet uchovaných naposledy použitých samolepek</string>
+    <string name="prefs__media__sticker_confirm_before_insert">Potvrdit před odesláním</string>
+    <string name="prefs__media__sticker_confirm_before_insert__summary">Klepnutím na samolepku ji vyberete, dalším klepnutím ji odešlete. Rychlé dvojité klepnutí ji odešle hned</string>
+    <string name="prefs__media__sticker_pinned_reset">Vymazat oblíbené samolepky</string>
+    <string name="prefs__media__sticker_history_reset">Vymazat naposledy použité samolepky</string>
+    <string name="sticker__title">Samolepky</string>
+    <string name="sticker__category_all">Vše</string>
+    <string name="sticker__section_favorites">Oblíbené</string>
+    <string name="sticker__section_recent">Naposledy použité</string>
+    <string name="sticker__section_rest">Všechny samolepky</string>
+    <string name="sticker__pin">Přidat k oblíbeným</string>
+    <string name="sticker__unpin">Odebrat z oblíbených</string>
+    <string name="sticker__reorder">Změnit pozici</string>
+    <string name="sticker__reorder_hint">Přesouvejte šipkami</string>
+    <string name="sticker__reorder_earlier">Přesunout na začátek</string>
+    <string name="sticker__reorder_later">Přesunout na konec</string>
+    <string name="sticker__search">Hledat samolepky</string>
+    <string name="sticker__search_placeholder">Hledat podle názvu souboru</string>
+    <string name="sticker__search_no_results">Žádná samolepka s tímto názvem</string>
+    <string name="sticker__setup_needed">Vyberte složku, abyste mohli používat vlastní samolepky</string>
+    <string name="sticker__setup_needed_action">Otevřít nastavení</string>
+    <string name="sticker__folder_empty">V této složce nejsou žádné obrázky</string>
+    <string name="sticker__access_lost">Složku se samolepkami už nelze číst. Vyberte ji znovu.</string>
+    <string name="sticker__folder_pick_failed">Přístup k této složce se nepodařilo zachovat</string>
+    <string name="sticker__rescan_done">Nalezeno {n} samolepek</string>
+    <string name="sticker__rescan_done_converted">Nalezeno {n} samolepek, {converted} převedeno</string>
+    <string name="sticker__copied_to_clipboard">Tato aplikace samolepky nepřijímá — zkopírováno do schránky, dlouhým stiskem vložíte</string>
+    <string name="sticker__insert_failed">Samolepku se nepodařilo vložit</string>
+    <string name="quick_action__ime_ui_mode_sticker">Samolepka</string>
+    <string name="quick_action__ime_ui_mode_sticker__tooltip">Vložit vlastní samolepky</string>
+    <string name="prefs__media__sticker_add">Přidat samolepky</string>
+    <string name="prefs__media__sticker_add__summary">Zkopírujte obrázky do složky. Obrázek můžete také sdílet do Dictate z libovolné aplikace.</string>
+    <string name="prefs__media__sticker_import_whatsapp">Načíst z WhatsAppu</string>
+    <string name="prefs__media__sticker_import_whatsapp__summary">Otevře výběr souborů ve složce se samolepkami WhatsAppu. Klávesnice jako ta od Samsungu si samolepky ukládají tam, kam žádná jiná aplikace nevidí — ty sdílejte do Dictate.</string>
+    <string name="sticker__import_share_label">Uložit jako samolepku</string>
+    <string name="sticker__import_added">Přidáno: {n}</string>
+    <string name="sticker__import_duplicate">{n} už tam bylo</string>
+    <string name="sticker__import_unsupported">{n} nepoužitelných</string>
+    <string name="sticker__import_failed">{n} se nezdařilo</string>
+    <string name="sticker__import_nothing">Není co přidat</string>
+    <string name="sticker__import_no_folder">Nejdřív vyberte složku se samolepkami</string>
+    <string name="sticker__import_needs_write">Vyberte složku se samolepkami znovu, aby šlo přidávat a mazat</string>
+    <string name="sticker__forget_recent">Odebrat z naposledy použitých</string>
+    <string name="sticker__delete_file">Smazat soubor</string>
+    <string name="sticker__delete_confirm">Opravdu smazat?</string>
+    <string name="sticker__delete_failed">Soubor se nepodařilo smazat</string>
+    <string name="prefs__media__emoji__title">Emoji</string>
+    <string name="prefs__media__sticker_import_source">Načíst z aplikace</string>
+    <string name="prefs__media__sticker_import_source__summary">Otevře výběr souborů rovnou ve složce, do které zapisuje jiná aplikace</string>
+    <string name="prefs__media__sticker_packs">Balíčky samolepek</string>
+    <string name="prefs__media__sticker_packs__summary">Vytvářejte, přejmenovávejte a mažte složky, do kterých jsou samolepky roztříděné</string>
+    <string name="sticker__source_whatsapp">WhatsApp</string>
+    <string name="sticker__source_whatsapp_business">WhatsApp Business</string>
+    <string name="sticker__source_telegram">Telegram</string>
+    <string name="sticker__source_downloads">Stažené</string>
+    <string name="sticker__source_pictures">Obrázky</string>
+    <string name="sticker__source_dcim">Fotoaparát</string>
+    <string name="sticker__source_hint">Jsou to výchozí body, ne záruky — pokud složka neexistuje, výběr se otevře jako obvykle. Aplikace, které si samolepky nechávají pro sebe, třeba klávesnice Samsungu, je umí jen sdílet do Dictate.</string>
+    <string name="sticker__import_progress">Kopíruje se {done} z {total}</string>
+    <string name="sticker__import_cancel">Klepnutím zastavíte. Co je zkopírované, zůstává.</string>
+    <string name="sticker__refused_declares_nothing">Tato aplikace nepřijímá obrázky z klávesnice — zkopírováno do schránky, dlouhým stiskem vložíte</string>
+    <string name="sticker__refused_accepts_only">Tato aplikace přijímá jen {accepted}, tato samolepka je {own} — zkopírováno do schránky, dlouhým stiskem vložíte</string>
+    <string name="sticker__move_to_pack">Přesunout do balíčku</string>
+    <string name="sticker__pack_none">Bez balíčku</string>
+    <string name="sticker__move_failed">Samolepku se nepodařilo přesunout</string>
+    <string name="sticker__pack_new">Vytvořit balíček</string>
+    <string name="sticker__pack_name">Název balíčku</string>
+    <string name="sticker__pack_rename">Přejmenovat</string>
+    <string name="sticker__pack_reorder_hint">Podržte balíček a přesuňte jej</string>
+    <string name="sticker__pack_icon_set">Použít jako ikonu balíčku</string>
+    <string name="sticker__pack_icon_clear">Odebrat ikonu balíčku</string>
+    <string name="sticker__pack_delete">Smazat balíček</string>
+    <string name="sticker__pack_delete_confirm">Smazat balíček \"{name}\" a {n} samolepek v něm?</string>
+    <string name="sticker__pack_failed">Nepovedlo se — složka může být chráněná proti zápisu</string>
+    <string name="sticker__packs_loading">Načítá se složka…</string>
+    <string name="sticker__packs_empty">Zatím žádné balíčky. Balíček je podsložka vaší složky se samolepkami.</string>
+    <string name="sticker__share">Odeslat přes sdílení</string>
+    <string name="sticker__insert_as_gif">Vložit jako GIF</string>
+    <string name="sticker__source_browse">Procházet soubory…</string>
+    <string name="sticker__source_threema">Threema</string>
+    <string name="sticker__source_signal">Signal</string>
+    <string name="sticker__source_stickers_folder">Složka se samolepkami</string>
 </resources>

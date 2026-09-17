@@ -73,6 +73,7 @@ import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -100,8 +101,15 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.roundToIntRect
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
+import androidx.compose.ui.window.PopupProperties
 import dev.patrickgold.florisboard.R
 import dev.patrickgold.florisboard.app.FlorisPreferenceStore
 import dev.patrickgold.florisboard.dictate.DictateController
@@ -503,6 +511,40 @@ private fun TranscribingContent(state: DictateController.UiState.Transcribing) {
             contentDescription = stringRes(R.string.dictate__status_transcribing_local),
         )
     }
+    // How long this has been going (#355). A spinner looks identical at second two and at minute seven,
+    // and the wait really can reach minutes — four attempts on a 120 s budget is about eight of them — so
+    // without a number there is no way to tell a slow answer from a dead one. Smaller than the status it
+    // trails, because it is the detail and not the message.
+    //
+    // Last, after the phone icon rather than before it: the icon qualifies the status word ("transcribing
+    // — here"), so splitting the two with a number breaks a phrase apart. The clock belongs at the end.
+    TranscribingElapsed(startedAtMs = state.startedAtMs)
+}
+
+/**
+ * The seconds a transcription has been running, as `12 s` (issue #355).
+ *
+ * Nothing is drawn for the first second: almost every dictation is answered inside it, and a counter
+ * that flashes "0 s" on its way past would be noise on the common path rather than reassurance on the
+ * slow one. [startedAtMs] survives retries and the on-device handover, so this is the whole wait.
+ */
+@Composable
+private fun TranscribingElapsed(startedAtMs: Long) {
+    var seconds by remember(startedAtMs) { mutableLongStateOf(0L) }
+    LaunchedEffect(startedAtMs) {
+        while (true) {
+            seconds = (SystemClock.elapsedRealtime() - startedAtMs) / 1000L
+            delay(250L)
+        }
+    }
+    if (seconds < 1L) return
+    Spacer(modifier = Modifier.width(6.dp))
+    // The Smartbar row centers its children vertically, so the smaller size sits centered against the
+    // status text rather than dropping onto its baseline.
+    SnyggText(
+        fontSizeMultiplier = 0.75f,
+        text = stringRes(R.string.unit__seconds__symbol, "v" to seconds),
+    )
 }
 
 /**
@@ -553,7 +595,7 @@ private fun RowScope.ErrorContent(state: DictateController.UiState.Error) {
                 .clip(RoundedCornerShape(8.dp))
                 .then(
                     if (hasDetail) {
-                        Modifier.clickable { detailOpen = true }
+                        Modifier.clickable { detailOpen = !detailOpen }
                     } else {
                         Modifier
                     },
@@ -576,6 +618,12 @@ private fun RowScope.ErrorContent(state: DictateController.UiState.Error) {
         }
         if (detailOpen && hasDetail) {
             ErrorDetailPopup(detail = state.detail.orEmpty(), onDismiss = { detailOpen = false })
+            // Nothing outside the popup can close it (see [ErrorDetailPopup]), so it closes itself rather
+            // than sitting over the keys until the next dictation.
+            LaunchedEffect(Unit) {
+                delay(10_000L)
+                detailOpen = false
+            }
         }
     }
 
@@ -717,23 +765,55 @@ private fun RowScope.InterruptedContent(state: DictateController.UiState.Interru
     DismissButton()
 }
 
-/** Popup with the full, unabbreviated provider error text (tap-to-expand from the error chip). */
+/**
+ * Popup with the full, unabbreviated provider error text (tap-to-expand from the error chip).
+ *
+ * Deliberately not a [DropdownMenu], which is what this was: a dropdown's window is *focusable*, and a
+ * focusable window raised by an input method takes the focus off the field being typed into. The system
+ * answers by hiding the keyboard — which tears down the popup, which lets the field have the focus back,
+ * which brings the keyboard out again; on some fields that cycle simply repeats. So this uses the same
+ * non-focusable popup the quick actions do, and nothing about the app's focus changes at all.
+ *
+ * The price is that a tap outside can no longer dismiss it (that dismissal is what the focusable window
+ * was for), so the popup is its own dismiss target, the chip toggles it, and it closes by itself after
+ * long enough to read a provider message.
+ */
 @Composable
 private fun ErrorDetailPopup(detail: String, onDismiss: () -> Unit) {
-    DropdownMenu(expanded = true, onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .widthIn(max = 320.dp)
-                .heightIn(max = 200.dp)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+    Popup(
+        properties = PopupProperties(focusable = false, clippingEnabled = false),
+        popupPositionProvider = remember {
+            object : PopupPositionProvider {
+                // Hangs from the chip's lower edge, over the keys — where the dropdown used to open.
+                override fun calculatePosition(
+                    anchorBounds: IntRect,
+                    windowSize: IntSize,
+                    layoutDirection: LayoutDirection,
+                    popupContentSize: IntSize,
+                ) = IntOffset(anchorBounds.left, anchorBounds.bottom)
+            }
+        },
+    ) {
+        Surface(
+            shape = RoundedCornerShape(8.dp),
+            tonalElevation = 3.dp,
+            shadowElevation = 3.dp,
+            modifier = Modifier.padding(4.dp).clickable(onClick = onDismiss),
         ) {
-            Text(
-                text = stringRes(R.string.dictate__error_details_title),
-                fontWeight = FontWeight.Bold,
-            )
-            Spacer(modifier = Modifier.size(6.dp))
-            Text(text = detail)
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 320.dp)
+                    .heightIn(max = 200.dp)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            ) {
+                Text(
+                    text = stringRes(R.string.dictate__error_details_title),
+                    fontWeight = FontWeight.Bold,
+                )
+                Spacer(modifier = Modifier.size(6.dp))
+                Text(text = detail)
+            }
         }
     }
 }
