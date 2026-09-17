@@ -73,6 +73,10 @@ data class QuickActionArrangement(
                 // button – it lives as a chip inside the prompt panel/row – so only the panel opener
                 // (DICTATE_PROMPTS) remains here.
                 QuickAction.InsertKey(TextKeyData.DICTATE_PROMPTS),
+                // The text editing panel (issue #386) — cursor pad, select, clipboard — high in the
+                // default order because it is the one surface that replaces a dozen of the actions
+                // further down this list, and because a panel nobody finds is a panel nobody has.
+                QuickAction.InsertKey(TextKeyData.IME_UI_MODE_EDITING),
                 QuickAction.InsertKey(TextKeyData.CLIPBOARD_SELECT_ALL),
                 QuickAction.InsertKey(TextKeyData.UNDO),
                 QuickAction.InsertKey(TextKeyData.REDO),
@@ -87,12 +91,24 @@ data class QuickActionArrangement(
                 // GIF search panel (KLIPY). Present in the action list so users can drag it into the bar
                 // for one-tap GIF access; it does nothing until a free KLIPY API key is added in settings.
                 QuickAction.InsertKey(TextKeyData.IME_UI_MODE_GIF),
+                // Local sticker panel (issue #280): the folder the user picked, no network involved.
+                // Like the GIF action it sits in the list until dragged into the bar.
+                QuickAction.InsertKey(TextKeyData.IME_UI_MODE_STICKER),
                 QuickAction.InsertKey(TextKeyData.TOGGLE_COMPACT_LAYOUT),
+                // Split keyboard for two thumbs on a wide window (issue #362). Next to one-handed
+                // because they are the same kind of answer: greyed out below 600dp, where two halves
+                // would be two rows of slivers.
+                QuickAction.InsertKey(TextKeyData.SPLIT_LAYOUT),
                 QuickAction.InsertKey(TextKeyData.TOGGLE_INCOGNITO_MODE),
                 QuickAction.InsertKey(TextKeyData.ARROW_UP),
                 QuickAction.InsertKey(TextKeyData.ARROW_DOWN),
                 QuickAction.InsertKey(TextKeyData.ARROW_LEFT),
                 QuickAction.InsertKey(TextKeyData.ARROW_RIGHT),
+                // Jump to the very start or end of the field (issue #335). The key codes and their
+                // handler have been here all along, but only a swipe gesture could reach them — next to
+                // the arrows, because that is what they are: the same journey, in one step.
+                QuickAction.InsertKey(TextKeyData.MOVE_START_OF_PAGE),
+                QuickAction.InsertKey(TextKeyData.MOVE_END_OF_PAGE),
                 QuickAction.InsertKey(TextKeyData.CLIPBOARD_CLEAR_PRIMARY_CLIP),
                 QuickAction.InsertKey(TextKeyData.LANGUAGE_SWITCH),
                 // IME-switch actions (issue #122): one-tap return to the previously used keyboard, plus the
@@ -105,6 +121,16 @@ data class QuickActionArrangement(
                 // Re-insert / re-send the last transcription safety net (issue #111). Placed at the end
                 // so it is present in the action list without taking a prominent spot at the top of the bar.
                 QuickAction.InsertKey(TextKeyData.DICTATE_REINSERT),
+                // Fold the digit row away and back without a trip through settings (issue #333). At the
+                // end for the same reason: worth having in the list, not worth a Smartbar slot for
+                // everyone who never turned the row on in the first place.
+                QuickAction.InsertKey(TextKeyData.TOGGLE_NUMBER_ROW),
+                // The number pad (issue #388). It has always been built and styled, but the only ways to
+                // ask for it were a numeric field deciding for you and a keyboard-mode cycle nobody binds
+                // to a gesture. Next to the number-row toggle because that is the other digit answer, and
+                // at the end for the same reason as the GIF and sticker panels: an IBAN or a serial number
+                // is a real errand, but not one often enough to spend a Smartbar slot on for everyone.
+                QuickAction.InsertKey(TextKeyData.VIEW_NUMERIC_ADVANCED),
             ),
             hiddenActions = listOf(
             ),
@@ -118,8 +144,10 @@ data class QuickActionArrangement(
 
         // Key codes of actions that were removed from the app; dropped from any existing stored
         // arrangement so they don't linger as "!! invalid !!". -245 = the old autocorrect-toggle
-        // placeholder (autocorrect is now fully automatic).
-        private val REMOVED_ACTION_CODES = setOf(-245)
+        // placeholder (autocorrect is now fully automatic). -27/-28 = the line-start/line-end buttons
+        // that existed for a day between two commits of #335 before they became field-start/field-end;
+        // they never reached a release, but a debug arrangement can still carry them.
+        private val REMOVED_ACTION_CODES = setOf(-245, -27, -28)
 
         override fun deserialize(value: String): QuickActionArrangement {
             val raw: QuickActionArrangement = QuickActionJsonConfig.decodeFromString(value)

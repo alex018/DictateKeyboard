@@ -68,6 +68,7 @@ import dev.patrickgold.florisboard.app.settings.dictate.DictateProxyScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictateWearScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictatePromptLibraryScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictatePromptsScreen
+import dev.patrickgold.florisboard.app.settings.dictate.DictateFloatingButtonAppsScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictateFloatingButtonScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictateFormattingScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictateLayoutScreen
@@ -78,6 +79,7 @@ import dev.patrickgold.florisboard.app.settings.dictate.DictateScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictateHistoryScreen
 import dev.patrickgold.florisboard.app.settings.dictate.DictateStatsScreen
 import dev.patrickgold.florisboard.app.settings.dictionary.DictionaryScreen
+import dev.patrickgold.florisboard.app.settings.dictionary.LearnedWordsScreen
 import dev.patrickgold.florisboard.app.settings.dictionary.UserDictionaryScreen
 import dev.patrickgold.florisboard.app.settings.dictionary.UserDictionaryType
 import dev.patrickgold.florisboard.app.settings.gestures.GesturesScreen
@@ -176,6 +178,10 @@ object Routes {
         object DictateFloatingButton
 
         @Serializable
+        @Deeplink("settings/dictate/floating-button/apps")
+        object DictateFloatingButtonApps
+
+        @Serializable
         @Deeplink("settings/dictate/formatting")
         object DictateFormatting
 
@@ -250,6 +256,10 @@ object Routes {
         @Serializable
         @Deeplink("settings/dictionary/user-dictionary")
         data class UserDictionary(val type: UserDictionaryType)
+
+        @Serializable
+        @Deeplink("settings/dictionary/learned-words")
+        object LearnedWords
 
         @Serializable
         @Deeplink("settings/gestures")
@@ -388,6 +398,7 @@ object Routes {
             composableWithDeepLink(Settings.DictateStats::class) { DictateStatsScreen() }
             composableWithDeepLink(Settings.DictateHistory::class) { DictateHistoryScreen() }
             composableWithDeepLink(Settings.DictateFloatingButton::class) { DictateFloatingButtonScreen() }
+            composableWithDeepLink(Settings.DictateFloatingButtonApps::class) { DictateFloatingButtonAppsScreen() }
             composableWithDeepLink(Settings.DictatePrompts::class) { navBackStack ->
                 val payload = navBackStack.toRoute<Settings.DictatePrompts>()
                 DictatePromptsScreen(editPromptId = payload.editPromptId)
@@ -420,6 +431,7 @@ object Routes {
             composableWithDeepLink(Settings.Typing::class) { TypingScreen() }
 
             composableWithDeepLink(Settings.Dictionary::class) { DictionaryScreen() }
+            composableWithDeepLink(Settings.LearnedWords::class) { LearnedWordsScreen() }
             composableWithDeepLink(Settings.UserDictionary::class) { navBackStack ->
                 val payload = navBackStack.toRoute<Settings.UserDictionary>()
                 UserDictionaryScreen(payload.type)

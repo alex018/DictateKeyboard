@@ -23,12 +23,15 @@ import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.width
 import dev.patrickgold.florisboard.FlorisImeService
 import dev.patrickgold.florisboard.R
 import dev.patrickgold.florisboard.app.FlorisPreferenceStore
 import dev.patrickgold.florisboard.appContext
 import dev.patrickgold.florisboard.clipboardManager
 import dev.patrickgold.florisboard.editorInstance
+import dev.patrickgold.florisboard.dictate.snippet.SnippetTriggers
 import dev.patrickgold.florisboard.extensionManager
 import dev.patrickgold.florisboard.ime.ImeUiMode
 import dev.patrickgold.florisboard.ime.core.DisplayLanguageNamesIn
@@ -46,15 +49,23 @@ import dev.patrickgold.florisboard.ime.input.InputShiftState
 import dev.patrickgold.florisboard.ime.nlp.ClipboardSuggestionCandidate
 import dev.patrickgold.florisboard.ime.nlp.PunctuationRule
 import dev.patrickgold.florisboard.ime.nlp.SuggestionCandidate
+import dev.patrickgold.florisboard.ime.nlp.WordOrigin
+import dev.patrickgold.florisboard.ime.nlp.WordSuggestionCandidate
+import dev.patrickgold.florisboard.ime.nlp.latin.DictFold
 import dev.patrickgold.florisboard.ime.nlp.latin.TouchTrace
+import dev.patrickgold.florisboard.ime.nlp.latin.WordLearningGate
+import dev.patrickgold.florisboard.ime.nlp.math.MathSuggestionCandidate
 import dev.patrickgold.florisboard.ime.popup.PopupMappingComponent
 import dev.patrickgold.florisboard.ime.text.composing.Composer
 import dev.patrickgold.florisboard.ime.text.gestures.SwipeAction
 import dev.patrickgold.florisboard.ime.text.key.KeyCode
 import dev.patrickgold.florisboard.ime.text.key.KeyType
+import dev.patrickgold.florisboard.ime.text.key.KeyVariation
 import dev.patrickgold.florisboard.ime.text.key.UtilityKeyAction
+import dev.patrickgold.florisboard.ime.text.keyboard.DevanagariBase
 import dev.patrickgold.florisboard.ime.text.keyboard.TextKeyData
 import dev.patrickgold.florisboard.ime.text.keyboard.TextKeyboardCache
+import dev.patrickgold.florisboard.ime.window.ImeWindowMode
 import dev.patrickgold.florisboard.lib.devtools.LogTopic
 import dev.patrickgold.florisboard.lib.devtools.flogError
 import dev.patrickgold.florisboard.lib.FlorisLocale
@@ -84,7 +95,23 @@ import org.florisboard.lib.android.systemService
 import org.florisboard.lib.kotlin.collectIn
 import org.florisboard.lib.kotlin.collectLatestIn
 
-private val DoubleSpacePeriodMatcher = """([^.!?‽\s]\s)""".toRegex()
+/** How much of an expanded snippet must still stand before the cursor for the backspace undo (issue #283). */
+private const val TAIL_MATCH_LENGTH = 120
+
+/**
+ * Whether a keystroke belongs to an open in-keyboard search rather than to the app's text field.
+ *
+ * Stated as what a search *takes*, not as the one thing it refuses. The rule used to name the single
+ * type it accepted — `CHARACTER` — and hand everything else to the editor, which is how every digit
+ * typed into the emoji, GIF or sticker search ended up in the message being written instead of in the
+ * search box: the number row declares its keys as `"type": "numeric"` in the layout files, so they
+ * were never characters (issue #317).
+ *
+ * Text-producing types only. A shift, a backspace or a layout switch has work of its own to do and
+ * must reach the keyboard, and an empty string is a key that writes nothing at all.
+ */
+internal fun keyProducesSearchText(type: KeyType, text: String): Boolean =
+    (type == KeyType.CHARACTER || type == KeyType.NUMERIC) && text.isNotEmpty()
 
 class KeyboardManager(context: Context) : InputKeyEventReceiver {
     private val prefs by FlorisPreferenceStore
@@ -118,6 +145,33 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     // the full-panel GifPanel show a large results grid. [gifSearchSubmit] null = the panel's home view.
     val gifSearchQuery = MutableStateFlow<String?>(null)
     val gifSearchSubmit = MutableStateFlow<String?>(null)
+
+    /**
+     * The Devanagari consonant sitting directly in front of the cursor, or [DevanagariBase.NONE] (#315).
+     *
+     * A [MutableStateFlow] drops equal values, and [DevanagariBase.of] is a single character test, so for
+     * every non-Indic language this never changes and costs no extra key recomputation per keystroke.
+     */
+    private val pendingDevanagariBase = MutableStateFlow(DevanagariBase.NONE)
+
+    /**
+     * The live query of the sticker search (issue #317), or `null` when no search is running.
+     *
+     * Shaped like the emoji search rather than the GIF one, because the difference between them is
+     * where the answer comes from: KLIPY has to be asked, so a query is submitted; sticker names are
+     * already in memory, so the results can narrow on every keystroke and there is nothing to submit.
+     */
+    val stickerSearchQuery = MutableStateFlow<String?>(null)
+
+    /**
+     * The live query of the clipboard search (issue #333), or `null` when no search is running.
+     *
+     * Same shape as the sticker one, and for the same reason: the clips are already in memory, so the
+     * list narrows on every keystroke and there is nothing to submit. The clipboard panel replaces the
+     * keyboard, which is why searching it has to look like this at all — the query needs keys to type
+     * it with, so the search takes the Smartbar's slot and hands the layout below back to the user.
+     */
+    val clipboardSearchQuery = MutableStateFlow<String?>(null)
 
     private val activeEvaluatorGuard = Mutex(locked = false)
     private var activeEvaluatorVersion = AtomicInteger(0)
@@ -153,6 +207,19 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                     keyboardCache.clear(KeyboardMode.CHARACTERS)
                 }
             }
+            // Splitting the keyboard is the one window mode that reaches into the arrangement itself: it
+            // needs a second space bar so that each half has one (issue #362), so the keyboard on screen
+            // has to be rebuilt when it is toggled. The window config is a pref, so the toggle arrives
+            // here like any other pref change — guarded, because that same pref also carries every resize
+            // drag and one-handed nudge, which change no key at all. The two arrangements live side by
+            // side in the cache, so nothing has to be thrown away here.
+            prefs.keyboard.windowConfig.asFlow().collectLatestIn(scope) {
+                val isSplit = isSplitLayoutActive()
+                if (isSplit != lastSplitLayoutState) {
+                    lastSplitLayoutState = isSplit
+                    updateActiveEvaluators()
+                }
+            }
             prefs.keyboard.hintedNumberRowEnabled.asFlow().collectLatestIn(scope) {
                 updateActiveEvaluators()
             }
@@ -182,6 +249,10 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             }
             editorInstance.activeContentFlow.collectIn(scope) { content ->
                 resetSuggestions(content)
+                pendingDevanagariBase.value = DevanagariBase.of(content.textBeforeSelection)
+            }
+            pendingDevanagariBase.collectLatestIn(scope) {
+                updateActiveEvaluators()
             }
             prefs.devtools.enabled.asFlow().collectLatestIn(scope) {
                 reevaluateDebugFlags()
@@ -190,6 +261,22 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                 reevaluateDebugFlags()
             }
         }
+    }
+
+    /**
+     * The split state the on-screen keyboard was last built for, so that a window config change that is
+     * only a resize or a one-handed nudge does not rebuild every key for nothing.
+     */
+    private var lastSplitLayoutState: Boolean = false
+
+    /**
+     * Whether the keyboard is currently split into two halves (issue #362). Read from the window
+     * controller, because the split is a window mode and not a setting of its own; false while there is
+     * no keyboard window to ask.
+     */
+    private fun isSplitLayoutActive(): Boolean {
+        val config = FlorisImeService.windowControllerOrNull()?.activeWindowConfig?.value ?: return false
+        return config.mode == ImeWindowMode.FIXED && config.fixedMode == ImeWindowMode.Fixed.THUMBS
     }
 
     fun updateActiveEvaluators(action: () -> Unit = { }) = scope.launch {
@@ -204,10 +291,12 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             if (mode != KeyboardMode.CHARACTERS) {
                 state.inputShiftState = InputShiftState.UNSHIFTED
             }
-            val computedKeyboard = keyboardCache.getOrElseAsync(mode, subtype) {
+            val isSplit = isSplitLayoutActive()
+            val computedKeyboard = keyboardCache.getOrElseAsync(mode, subtype, isSplit) {
                 layoutManager.computeKeyboardAsync(
                     keyboardMode = mode,
                     subtype = subtype,
+                    isSplit = isSplit,
                 ).await()
             }
             val computingEvaluator = ComputingEvaluatorImpl(
@@ -287,6 +376,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             SwipeAction.SHOW_INPUT_METHOD_PICKER -> TextKeyData.SYSTEM_INPUT_METHOD_PICKER
             SwipeAction.SHOW_SUBTYPE_PICKER -> TextKeyData.SHOW_SUBTYPE_PICKER
             SwipeAction.SWITCH_TO_CLIPBOARD_CONTEXT -> TextKeyData.IME_UI_MODE_CLIPBOARD
+            SwipeAction.SWITCH_TO_EDITING_CONTEXT -> TextKeyData.IME_UI_MODE_EDITING
             SwipeAction.SWITCH_TO_MEDIA_CONTEXT -> TextKeyData.IME_UI_MODE_MEDIA
             SwipeAction.SWITCH_TO_PREV_SUBTYPE -> TextKeyData.IME_PREV_SUBTYPE
             SwipeAction.SWITCH_TO_NEXT_SUBTYPE -> TextKeyData.IME_NEXT_SUBTYPE
@@ -296,27 +386,195 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             else -> null
         }
         if (keyData != null) {
+            // The one place a completed swipe becomes an input event, and therefore the one place its
+            // feedback belongs (issue #325). Seven call sites detect swipes; none of them used to ask for
+            // a tick, so "Gesture swipe sounds/vibration" was wired to nothing on the keyboard while its
+            // summary string said as much. Sitting inside this branch is what keeps the rule honest: the
+            // actions that map to no key data — NO_ACTION, and the "precisely" ones handled during the
+            // move, where gestureMovingSwipe already ticks per step — stay silent by construction rather
+            // than by a second list that could drift. Passing keyData buys the right sound for free:
+            // DELETE_WORD gets the delete effect, INSERT_SPACE the spacebar one.
+            FlorisImeService.inputFeedbackController()?.gestureSwipe(keyData)
             inputEventDispatcher.sendDownUp(keyData)
         }
     }
 
-    fun commitCandidate(candidate: SuggestionCandidate) {
+    /**
+     * Applies the correction the strip had marked, and remembers what it overwrote so the next
+     * backspace can take it back (issue #295).
+     *
+     * Separate from [commitCandidate] because only the *silent* swap earns an undo: a tap on the strip
+     * is a choice, and a backspace after one is meant for the text, not for the choice.
+     */
+    private fun commitAutoCorrection(candidate: SuggestionCandidate) {
+        // Read before the commit — afterwards the editor holds the corrected word and the typed one is
+        // gone for good.
+        val replaced = editorInstance.textCompletionWouldReplace()
+        commitCandidate(candidate, byUser = false)
+        val inserted = candidate.text.toString()
+        pendingAutoCorrection = if (replaced.isNotEmpty() && replaced != inserted) {
+            AutoCorrection(inserted = inserted, replaced = replaced)
+        } else {
+            null
+        }
+    }
+
+    /**
+     * The last word this keyboard saw finished that was genuinely typed, so the pair it forms with the
+     * next one can be learned (issue #318).
+     *
+     * Not cleared on cursor moves, because it does not need to be: [endOfWord] only believes it when the
+     * text in front of the new word actually ends with it. Same self-validating shape as [TouchTrace] —
+     * a remembered value that proves itself against the editor beats a value that relies on every
+     * possible invalidation site having been found.
+     */
+    private var lastTypedWord: String? = null
+
+    /**
+     * Everything that has to happen when a word ends: apply the correction the strip had marked, or —
+     * when there is none — offer the word to the vocabulary, and drop the tap evidence either way.
+     *
+     * One function because there are three ways to end a word (space, hardware space, punctuation) and
+     * they were each doing the same two steps by hand. Adding a third step in three places is how they
+     * start disagreeing.
+     *
+     * A word that was auto-corrected is deliberately *not* offered: what is in the editor now is a
+     * dictionary word, and what was typed has just been judged a mistake.
+     *
+     * Returns the correction that was applied, or null when the word stood as typed — the hardware-space
+     * path needs to know, and asking [NlpManager] a second time after the commit would be a different
+     * question.
+     */
+    private fun endOfWord(): SuggestionCandidate? {
+        val candidate = nlpManager.getAutoCommitCandidate()
+        if (candidate != null) {
+            commitAutoCorrection(candidate)
+            lastTypedWord = null
+        } else {
+            offerFinishedWordForLearning()
+        }
+        TouchTrace.reset() // word boundary (issue #242)
+        return candidate
+    }
+
+    /**
+     * Hands the word that just ended to [NlpManager], along with the evidence that only exists at this
+     * instant: whether every one of its characters came from a key press, and where the fingers landed.
+     *
+     * Both are read here rather than inside the provider because the provider runs a coroutine later, by
+     * which time the separator has been committed and the trace has been reset for the next word.
+     */
+    private fun offerFinishedWordForLearning() {
+        val content = editorInstance.activeContent
+        val word = content.composingText
+        if (word.isBlank()) {
+            lastTypedWord = null
+            return
+        }
+        val wasTyped = TouchTrace.wasFullyTyped(word)
+        val textBefore = content.textBeforeSelection.removeSuffix(word)
+        nlpManager.learnFinishedWord(
+            word = word,
+            origin = if (wasTyped) WordOrigin.TYPED else WordOrigin.OTHER,
+            tapPoints = TouchTrace.pointsFor(word),
+        )
+        if (wasTyped) {
+            lastTypedWord
+                ?.takeIf { textBefore.trimEnd().endsWith(it, ignoreCase = true) }
+                ?.let { nlpManager.learnWordPair(it, word) }
+        }
+        lastTypedWord = word.takeIf { wasTyped }
+    }
+
+    /**
+     * Writes [candidate] into the editor.
+     *
+     * @param byUser true when a finger landed on the strip, false when the corrector is applying a
+     *  candidate of its own accord (see [commitAutoCorrection]).
+     */
+    fun commitCandidate(candidate: SuggestionCandidate, byUser: Boolean = true) {
+        pendingExpansion = null // this write does not come through onInputKeyUp (issue #283)
+        // A tap on the strip replaces whatever the previous correction left behind, so there is nothing
+        // left to take back. [commitAutoCorrection] re-arms it immediately afterwards for its own case.
+        pendingAutoCorrection = null
         scope.launch {
             candidate.sourceProvider?.notifySuggestionAccepted(subtypeManager.activeSubtype, candidate)
+        }
+        // Tapping one of your own words counts as using it (issue #375). Restricted to words the
+        // keyboard already holds — [SuggestionCandidate.isLearned] is set by the provider that found
+        // them — because a tap on an ordinary dictionary word says nothing about personal vocabulary,
+        // and counting those would fill the store with `the` and `and`.
+        //
+        // [byUser] is why this is a parameter rather than a line at the top of this function: the
+        // auto-correction path commits through here too, and a silent swap is not a choice. Counting it
+        // would also contradict the rule one screen up, where a word that *was* auto-corrected is
+        // deliberately not offered for learning — the same event must not walk in through the other door.
+        if (byUser && candidate is WordSuggestionCandidate) {
+            if (candidate.isLearned) {
+                nlpManager.learnPickedWord(candidate.text.toString())
+            }
+            // …and the *pair* it forms with the word in front of it (issue #334, his §3.3), for any word
+            // taken from the strip rather than only for the user's own vocabulary: a pair is a statement
+            // about this sentence, not about who owns the word.
+            //
+            // Read here, before the commit, because afterwards the composing region is gone and the text
+            // before the cursor ends in the word we just wrote. Same rule the provider uses for its own
+            // context, kept deliberately narrow: letters and an apostrophe, nothing else.
+            val picked = candidate.text.toString()
+            val content = editorInstance.activeContent
+            val before = content.textBeforeSelection.removeSuffix(content.composingText).trimEnd()
+            val previous = before.takeLastWhile { DictFold.isWordChar(it) || it == '\'' }
+            if (previous.isNotEmpty()) {
+                nlpManager.learnWordPair(previous, picked)
+            }
+            // A picked word is a finished word, so the *next* one pairs with it. Without this the chain
+            // broke at every tap: `lastTypedWord` still held the word before the pick, the anchor guard
+            // in [offerFinishedWordForLearning] then failed against text that no longer ends in it, and
+            // the pair was silently dropped rather than recorded wrongly.
+            lastTypedWord = picked
         }
         // The composing word is being replaced wholesale, so its tap evidence no longer describes what is
         // in the editor (issue #242).
         TouchTrace.reset()
         when (candidate) {
             is ClipboardSuggestionCandidate -> editorInstance.commitClipboardItem(candidate.clipboardItem)
+            // Written behind the cursor verbatim, not over the current word (issue #329). What stands
+            // in front of it is the sum the user typed, and "150 * 4 = " must keep every character of
+            // itself — commitCompletion would treat the trailing token as something to replace.
+            is MathSuggestionCandidate -> editorInstance.commitText(candidate.result)
             else -> editorInstance.commitCompletion(candidate)
         }
     }
 
     fun commitGesture(word: String) {
+        // Same as above: a glide never passes through onInputKeyUp (issues #283, #295).
+        pendingExpansion = null
+        pendingAutoCorrection = null
         // A glide produces a whole word at once, so there are no per-character taps to reason about (#242).
         TouchTrace.reset()
-        editorInstance.commitGesture(fixCase(word))
+        val text = fixCase(word)
+        // A glide never passes through onInputKeyDown, so the emoji/GIF search interception there never
+        // sees it — swiping a word while searching used to drop it into the app's text field instead of
+        // the search box. Route it to the query the same way a typed character goes.
+        if (appendToActiveSearch(text)) return
+        editorInstance.commitGesture(text)
+    }
+
+    /**
+     * Appends [text] to whichever search is currently taking the keyboard's input, returning `true` when
+     * one was. Words are separated by a space, so two glides in a row read as two terms.
+     */
+    private fun appendToActiveSearch(text: String): Boolean {
+        fun joined(current: String) = if (current.isEmpty() || current.endsWith(' ')) {
+            current + text
+        } else {
+            "$current $text"
+        }
+        emojiSearchQuery.value?.let { emojiSearchQuery.value = joined(it); return true }
+        gifSearchQuery.value?.let { gifSearchQuery.value = joined(it); return true }
+        stickerSearchQuery.value?.let { stickerSearchQuery.value = joined(it); return true }
+        clipboardSearchQuery.value?.let { clipboardSearchQuery.value = joined(it); return true }
+        return false
     }
 
     /**
@@ -421,6 +679,141 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         }
     }
 
+    /**
+     * A snippet that has just been expanded, kept for exactly one keystroke so the next backspace can
+     * put the shortcut back (issue #283). [inserted] is what stands in the editor now, [replaced] what
+     * the user had typed — both including the boundary character that triggered the expansion.
+     */
+    private data class SnippetExpansion(val inserted: String, val replaced: String)
+
+    private var pendingExpansion: SnippetExpansion? = null
+
+    /**
+     * An auto-correction that has just been applied, kept for exactly one keystroke so the next
+     * backspace can put the typed word back (issue #295). [inserted] is the word that now stands,
+     * [replaced] what was actually typed.
+     *
+     * Only ever armed for a *silent* correction. Tapping a suggestion in the strip is a decision the
+     * user made and does not want undone by a backspace they meant for the letter before it.
+     */
+    private data class AutoCorrection(val inserted: String, val replaced: String)
+
+    private var pendingAutoCorrection: AutoCorrection? = null
+
+    /**
+     * Expands a typed snippet trigger (issue #283): if the word right before the cursor is a shortcut
+     * of a `[snippet]` prompt, it is replaced by that snippet plus [boundary] — the space, punctuation
+     * mark or line break that ended the word. Returns true when that happened, in which case the caller
+     * is done: the boundary character has already been written.
+     *
+     * Writing the boundary here rather than letting the normal path append it afterwards is deliberate.
+     * The replacement goes straight to the InputConnection, so the cached editor content is one step
+     * behind for a moment, and `commitChar`'s auto-space logic would decide on stale text.
+     */
+    /**
+     * The snippet trigger standing before the cursor, or null when there is none — the question
+     * [expandSnippet] asks before it acts, split out so [handleEnter] can ask it *without* acting.
+     *
+     * Never in a password field, and never while something is selected (the selection is what the user
+     * means to replace, not the word before it).
+     */
+    private fun pendingSnippetTrigger(): String? {
+        if (SnippetTriggers.isEmpty) return null
+        if (activeState.keyVariation == KeyVariation.PASSWORD) return null
+        val content = editorInstance.activeContent
+        if (content.selection.isSelectionMode) return null
+        val token = SnippetTriggers.triggerCandidate(content.textBeforeSelection) ?: return null
+        return token.takeIf { SnippetTriggers.bodyFor(it) != null }
+    }
+
+    private fun expandSnippet(boundary: String): Boolean {
+        val token = pendingSnippetTrigger() ?: return false
+        val body = SnippetTriggers.bodyFor(token) ?: return false
+
+        val inserted = body + boundary
+        val replaced = token + boundary
+        TouchTrace.reset() // the word is gone, and with it its tap evidence (issue #242)
+        editorInstance.autoSpace.setInactive()
+        editorInstance.phantomSpace.setInactive()
+        editorInstance.replaceTextBeforeCursor(token.length, inserted)
+        pendingExpansion = SnippetExpansion(inserted = inserted, replaced = replaced)
+        return true
+    }
+
+    /**
+     * Undoes the snippet expansion of the previous keystroke, if the editor still ends exactly in what
+     * was inserted. Returns true when the backspace was consumed by putting the shortcut back.
+     */
+    /**
+     * Puts back the word the previous keystroke auto-corrected away, if the editor still ends in what
+     * the correction wrote. Returns true when the backspace was spent on that instead of deleting.
+     *
+     * The boundary that triggered the correction — the space or punctuation mark typed after it — is
+     * kept: the point is to take back a word that was changed for you, not to undo your own keystroke.
+     * A second backspace then deletes normally, because this only ever fires once.
+     */
+    /**
+     * The boundary character standing after [correction]'s word, "" when there is none, or null when
+     * the editor no longer ends in the corrected word at all and nothing may be assumed about it.
+     *
+     * A correction is written as `word` on the punctuation path and as `word ` on the space path, and
+     * the cached text before the cursor is capped, so only the tail is compared — the same reasoning as
+     * in [undoSnippetExpansion].
+     */
+    private fun boundaryAfter(correction: AutoCorrection): String? {
+        val content = editorInstance.activeContent
+        if (content.selection.isSelectionMode) return null
+        val before = content.textBeforeSelection
+        val tail = correction.inserted.takeLast(TAIL_MATCH_LENGTH)
+        return when {
+            before.endsWith(tail) -> ""
+            before.length > correction.inserted.length && before.dropLast(1).endsWith(tail) -> before.takeLast(1)
+            else -> null
+        }
+    }
+
+    private fun undoAutoCorrection(): Boolean {
+        val correction = pendingAutoCorrection ?: return false
+        pendingAutoCorrection = null
+        val boundary = boundaryAfter(correction) ?: return false
+        editorInstance.replaceTextBeforeCursor(
+            correction.inserted.length + boundary.length,
+            correction.replaced + boundary,
+        )
+        // The restored word is the user's own spelling again; nothing about the taps that produced it
+        // still describes what is in the editor (issue #242).
+        TouchTrace.reset()
+        // …and taking a correction back is the plainest thing a user can say about a word: *that spelling
+        // was intended* (issue #318). It counts double, and it bypasses the slip reasoning, which would
+        // otherwise reject it for certain — a word restored from a correction is one cheap edit from a
+        // dictionary word by construction, which is exactly what that reasoning treats as a typo.
+        val restored = correction.replaced.trim()
+        if (restored.isNotEmpty()) {
+            nlpManager.learnFinishedWord(
+                word = restored,
+                origin = WordOrigin.TYPED,
+                tapPoints = null,
+                weight = WordLearningGate.REJECTION_WEIGHT,
+                trustedByUser = true,
+            )
+        }
+        lastTypedWord = null
+        return true
+    }
+
+    private fun undoSnippetExpansion(): Boolean {
+        val expansion = pendingExpansion ?: return false
+        pendingExpansion = null
+        val content = editorInstance.activeContent
+        if (content.selection.isSelectionMode) return false
+        // Only the last stretch is compared: the cached text before the cursor is capped, so a snippet
+        // longer than that would never match in full. Deleting past the cache is fine, that goes to the
+        // editor itself.
+        if (!content.textBeforeSelection.endsWith(expansion.inserted.takeLast(TAIL_MATCH_LENGTH))) return false
+        editorInstance.replaceTextBeforeCursor(expansion.inserted.length, expansion.replaced)
+        return true
+    }
+
     private fun revertPreviouslyAcceptedCandidate() {
         editorInstance.phantomSpace.candidateForRevert?.let { candidateForRevert ->
             candidateForRevert.sourceProvider?.let { sourceProvider ->
@@ -447,9 +840,31 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             it.isManualSelectionModeEnd = false
         }
         revertPreviouslyAcceptedCandidate()
+        // A backspace straight after a snippet expanded puts the shortcut back instead of deleting
+        // (issue #283). A second one then deletes normally.
+        if (undoSnippetExpansion()) {
+            TouchTrace.reset()
+            return
+        }
+        // And straight after an auto-correction it puts the typed word back (issue #295), which is the
+        // fastest way out of a correction you did not want. A second one then deletes normally.
+        if (undoAutoCorrection()) return
         // Keep the tap evidence aligned with the word: a single-character backspace drops the last tap,
         // anything coarser (a whole word) invalidates the trace entirely (issue #242).
-        if (unit == OperationUnit.CHARACTERS) TouchTrace.pop() else TouchTrace.reset()
+        if (unit == OperationUnit.CHARACTERS) {
+            TouchTrace.pop()
+        } else {
+            TouchTrace.reset()
+            // Not a retraction of the word for learning purposes (issue #318). There used to be an
+            // "unlearn what you just deleted" hook here, and the device test showed it was theatre: it
+            // only fires for KeyCode.DELETE_WORD, which is neither the default swipe action nor the one
+            // that works — "delete words precisely" deletes by *selecting* and never reaches this path,
+            // so the hook was unreachable in practice while looking like a feature. Taking a word back is
+            // the long-press on its suggestion and the Learned words screen, both of which are deliberate.
+            // Deleting a word right after typing it is usually editing this text, not a statement about
+            // your vocabulary — and promotion needs three sightings, so there is room to change your mind.
+            lastTypedWord = null
+        }
         editorInstance.deleteBackwards(unit)
     }
 
@@ -470,6 +885,19 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      * Handles a [KeyCode.ENTER] event.
      */
     private fun handleEnter() {
+        // Enter ends a word too, and in a chat app it is the *usual* way to end the last one (issue
+        // #375): a word typed on its own line was never counted, never paired with its predecessor and
+        // therefore never learned, however often it was typed. Reported as "six sightings, still 1×".
+        //
+        // Deliberately [offerFinishedWordForLearning] rather than [endOfWord]: the latter would also
+        // apply the pending auto-correction, and in a field where Enter submits that means silently
+        // rewriting the last word in the instant it is sent. Learning is free to be late; a swap is not
+        // free to be a surprise.
+        //
+        // A pending snippet trigger is skipped for the same reason the space path skips it: there,
+        // `expandSnippet` runs before `endOfWord` and the trigger never reaches the vocabulary (issue
+        // #283). A shortcut somebody invented is not a word they typed.
+        if (pendingSnippetTrigger() == null) offerFinishedWordForLearning()
         TouchTrace.reset() // word boundary (issue #242)
         val info = editorInstance.activeInfo
         val isShiftPressed = inputEventDispatcher.isPressed(KeyCode.SHIFT)
@@ -477,6 +905,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             return
         }
         if (info.imeOptions.flagNoEnterAction || info.inputAttributes.flagTextMultiLine && isShiftPressed) {
+            if (expandSnippet("\n")) return
             editorInstance.performEnter()
         } else {
             when (val action = info.imeOptions.action) {
@@ -486,9 +915,14 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                 ImeOptions.Action.PREVIOUS,
                 ImeOptions.Action.SEARCH,
                 ImeOptions.Action.SEND -> {
+                    // Deliberately no snippet expansion here (issue #283): this Enter submits the field,
+                    // so expanding would insert the block and send it in the same keystroke, unread.
                     editorInstance.performEnterAction(action)
                 }
-                else -> editorInstance.performEnter()
+                else -> {
+                    if (expandSnippet("\n")) return
+                    editorInstance.performEnter()
+                }
             }
         }
     }
@@ -626,8 +1060,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
      * but skips handling changing to characters keyboard and double space periods.
      */
     fun handleHardwareKeyboardSpace() {
-        val candidate = nlpManager.getAutoCommitCandidate()
-        candidate?.let { commitCandidate(it) }
+        val candidate = endOfWord()
         // Skip handling changing to characters keyboard and double space periods
         // TODO: this is whether we commit space after selecting candidate. Should be determined by SuggestionProvider
         if (!subtypeManager.activeSubtype.primaryLocale.supportsAutoSpace &&
@@ -637,13 +1070,57 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     }
 
     /**
+     * The word that just ended together with the capital form its language insists on, or null when
+     * there is nothing to do (issue #333).
+     *
+     * Split from [applyStandaloneCapitalization] because the two have to happen on either side of
+     * [endOfWord]: the word is only readable while it is still composing, and rewriting it is only
+     * safe once the correction path has declined it.
+     */
+    private fun pendingStandaloneCapitalization(): Pair<String, String>? {
+        if (!prefs.correction.autoCapitalization.get()) return null
+        if (activeState.keyVariation == KeyVariation.PASSWORD) return null
+        val content = editorInstance.activeContent
+        if (content.selection.isSelectionMode) return null
+        val word = content.composingText
+        if (word.isEmpty()) return null
+        val capitalized = nlpManager.standaloneCapitalization(word) ?: return null
+        return word to capitalized
+    }
+
+    /**
+     * Writes the capital form over the word it belongs to, and arms the same one-keystroke undo every
+     * other silent correction gets (issue #295): a backspace right after puts the typed spelling back,
+     * which is the escape hatch for the rare place where the lowercase form was meant.
+     *
+     * Only reached from [handleSpace]. A word ended by a full stop is deliberately left alone — "i.e."
+     * would otherwise become "I.e." with no way to notice in time, and the pronoun is followed by a
+     * space almost every time it is written, because a verb follows it.
+     */
+    private fun applyStandaloneCapitalization(pending: Pair<String, String>?) {
+        val (word, capitalized) = pending ?: return
+        // The editor has to still end in the word that was read before the boundary; if anything moved
+        // in between, the safe thing is to leave the text exactly as the user left it.
+        if (!editorInstance.activeContent.textBeforeSelection.endsWith(word)) return
+        editorInstance.replaceTextBeforeCursor(word.length, capitalized)
+        pendingAutoCorrection = AutoCorrection(inserted = capitalized, replaced = word)
+    }
+
+    /**
      * Handles a [KeyCode.SPACE] event. Also handles the auto-correction of two space taps if
      * enabled by the user.
      */
     private fun handleSpace(data: KeyData) {
-        val candidate = nlpManager.getAutoCommitCandidate()
-        candidate?.let { commitCandidate(it) }
-        TouchTrace.reset() // word boundary (issue #242)
+        // Before the auto-commit candidate: otherwise autocorrect replaces the shortcut with a "better"
+        // word and there is nothing left to recognise (issue #283).
+        if (expandSnippet(KeyCode.SPACE.toChar().toString())) return
+        // Read while the word is still composing; applied below, once the correction path has had its
+        // say and declined (issue #333).
+        val standaloneCapitalization = pendingStandaloneCapitalization()
+        val candidate = endOfWord()
+        if (candidate == null) {
+            applyStandaloneCapitalization(standaloneCapitalization)
+        }
         if (prefs.keyboard.spaceBarSwitchesToCharacters.get()) {
             when (activeState.keyboardMode) {
                 KeyboardMode.NUMERIC_ADVANCED,
@@ -656,10 +1133,15 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         }
         if (prefs.correction.doubleSpacePeriod.get()) {
             if (inputEventDispatcher.isConsecutiveUp(data)) {
+                // Both halves from the active language's punctuation rule (issue #333): the set that
+                // says a sentence is already finished, and the character that finishes one.
+                val terminators = nlpManager.getActivePunctuationRule().symbolsTerminatingSentence
                 val text = editorInstance.run { activeContent.getTextBeforeCursor(2) }
-                if (text.length == 2 && DoubleSpacePeriodMatcher.matches(text)) {
+                if (DoubleSpace.triggersOn(text, terminators)) {
                     editorInstance.deleteBackwards(OperationUnit.CHARACTERS)
-                    editorInstance.commitText(". ")
+                    editorInstance.commitText(
+                        DoubleSpace.replacementFor(prefs.correction.doubleSpaceAction.get(), terminators),
+                    )
                     return
                 }
             }
@@ -668,6 +1150,27 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         if (!subtypeManager.activeSubtype.primaryLocale.supportsAutoSpace &&
                 candidate != null) { /* Do nothing */ } else {
             editorInstance.commitText(KeyCode.SPACE.toChar().toString())
+        }
+    }
+
+    /**
+     * Handles a [KeyCode.TOGGLE_NUMBER_ROW] event: folds the digit row away or brings it back
+     * (issue #333).
+     *
+     * Writes to whichever level currently decides, because that is the only version of this button
+     * that always does something. The row is a global preference that a subtype may overrule in either
+     * direction (issue #315, see LayoutManager) — so with an overruling subtype active, flipping the
+     * global setting would leave the keyboard looking exactly as it did, and the button would appear
+     * broken. Clearing the subtype's choice instead would work, but silently throws away a decision the
+     * user made per language; changing that same decision does not.
+     */
+    private suspend fun handleToggleNumberRow() {
+        val subtype = subtypeManager.activeSubtype
+        val override = subtype.numberRow
+        if (override != null) {
+            subtypeManager.modifySubtypeWithSameId(subtype.copy(numberRow = !override))
+        } else {
+            prefs.keyboard.numberRow.set(!prefs.keyboard.numberRow.get())
         }
     }
 
@@ -775,25 +1278,40 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     }
 
     /**
-     * While an emoji search is active, folds typing-related keys into the search query instead of letting
-     * them reach the editor. Returns `true` when the key was consumed. A backspace on an empty query exits
-     * the search (a common "back out" gesture), and Enter is swallowed so it never inserts a newline.
+     * Folds a keystroke into [query] while that search is open, instead of letting it reach the editor.
+     * Returns `true` when the key was consumed, `false` when the search is closed or the key is not one
+     * that writes text.
+     *
+     * One function for all three searches (emoji, GIF, sticker). They were three copies of the same
+     * twenty lines, and the copies are what let the bug in [keyProducesSearchText] sit in all three at
+     * once: a rule that lives in one place can only be wrong once.
+     *
+     * A backspace on an empty query leaves the search — a common "back out" gesture — and Enter is the
+     * only thing the three still disagree about, so it is passed in: GIF submits its query, the other
+     * two swallow it, because their results are already filtered and a newline would land in whatever
+     * the user was writing.
      */
-    private fun handleEmojiSearchKey(data: KeyData): Boolean {
-        val current = emojiSearchQuery.value ?: return false
+    private fun handleSearchKey(
+        query: MutableStateFlow<String?>,
+        data: KeyData,
+        onEnter: (String) -> Unit,
+        onExit: () -> Unit,
+    ): Boolean {
+        val current = query.value ?: return false
         when (data.code) {
-            KeyCode.SPACE -> emojiSearchQuery.value = "$current "
-            KeyCode.ENTER -> { /* swallow: keep the query, never commit a newline */ }
+            KeyCode.SPACE -> query.value = "$current "
+            KeyCode.ENTER -> onEnter(current)
             KeyCode.DELETE, KeyCode.DELETE_WORD -> {
                 if (current.isEmpty()) {
-                    closeEmojiSearch()
+                    onExit()
                 } else {
-                    emojiSearchQuery.value = current.dropLast(1)
+                    query.value = current.dropLast(1)
                 }
             }
             else -> {
-                if (data.type != KeyType.CHARACTER) return false
-                emojiSearchQuery.value = current + data.asString(isForDisplay = false)
+                val text = data.asString(isForDisplay = false)
+                if (!keyProducesSearchText(data.type, text)) return false
+                query.value = current + text
             }
         }
         return true
@@ -809,6 +1327,52 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     fun clearGifSearch() {
         if (gifSearchQuery.value == null) return
         gifSearchQuery.value = ""
+    }
+
+    /** Empties the sticker query without leaving the search — the ✕ inside the search bar. */
+    fun clearStickerSearch() {
+        if (stickerSearchQuery.value == null) return
+        stickerSearchQuery.value = ""
+    }
+
+    /** Empties the clipboard query without leaving the search — the ✕ inside the search bar. */
+    fun clearClipboardSearch() {
+        if (clipboardSearchQuery.value == null) return
+        clipboardSearchQuery.value = ""
+    }
+
+    /** Starts a clipboard search: shows the text keyboard so the user can type what to look for. */
+    fun activateClipboardSearch() {
+        clipboardSearchQuery.value = ""
+        activeState.imeUiMode = ImeUiMode.TEXT
+    }
+
+    /**
+     * Closes the clipboard search. [returnToPanel] separates backing out — which belongs back in the
+     * panel the search was opened from — from having just pasted a clip, after which the keyboard is
+     * where the user wants to be, because what follows a paste is usually more writing.
+     */
+    fun closeClipboardSearch(returnToPanel: Boolean = true) {
+        if (clipboardSearchQuery.value == null) return
+        clipboardSearchQuery.value = null
+        if (returnToPanel) activeState.imeUiMode = ImeUiMode.CLIPBOARD
+    }
+
+    /** Starts a sticker search: shows the text keyboard so the user can type a file name. */
+    fun activateStickerSearch() {
+        stickerSearchQuery.value = ""
+        activeState.imeUiMode = ImeUiMode.TEXT
+    }
+
+    /**
+     * Closes the sticker search. [returnToPanel] is what separates backing out — which belongs back in
+     * the panel the search was opened from — from having just inserted a sticker, after which the
+     * keyboard is where the user wants to be.
+     */
+    fun closeStickerSearch(returnToPanel: Boolean = true) {
+        if (stickerSearchQuery.value == null) return
+        stickerSearchQuery.value = null
+        if (returnToPanel) activeState.imeUiMode = ImeUiMode.STICKER
     }
 
     /** Starts a GIF search: shows the text keyboard so the user can type the query. */
@@ -838,29 +1402,6 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         if (returnToPanel) activeState.imeUiMode = ImeUiMode.GIF
     }
 
-    /**
-     * While a GIF search is active, folds typing keys into the query instead of the editor. Mirrors
-     * [handleEmojiSearchKey]: backspace on an empty query exits, Enter is swallowed.
-     */
-    private fun handleGifSearchKey(data: KeyData): Boolean {
-        val current = gifSearchQuery.value ?: return false
-        when (data.code) {
-            KeyCode.SPACE -> gifSearchQuery.value = "$current "
-            KeyCode.ENTER -> submitGifSearch(current) // Enter runs the search → full results page.
-            KeyCode.DELETE, KeyCode.DELETE_WORD -> {
-                if (current.isEmpty()) {
-                    closeGifSearch()
-                } else {
-                    gifSearchQuery.value = current.dropLast(1)
-                }
-            }
-            else -> {
-                if (data.type != KeyType.CHARACTER) return false
-                gifSearchQuery.value = current + data.asString(isForDisplay = false)
-            }
-        }
-        return true
-    }
 
     override fun onInputKeyDown(data: KeyData) {
         val windowController = FlorisImeService.windowControllerOrNull()
@@ -881,11 +1422,37 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
     }
 
     override fun onInputKeyUp(data: KeyData) = activeState.batchEdit {
-        val windowController = FlorisImeService.windowControllerOrNull() ?: return@batchEdit
-        if (emojiSearchQuery.value != null && handleEmojiSearchKey(data)) {
-            return@batchEdit
+        // Both undos last exactly one keystroke: anything but a plain backspace lets them go, and the
+        // expansion and the correction re-arm themselves further down (issues #283, #295).
+        if (data.code != KeyCode.DELETE) {
+            pendingExpansion = null
+            pendingAutoCorrection = null
         }
-        if (gifSearchQuery.value != null && handleGifSearchKey(data)) {
+        val windowController = FlorisImeService.windowControllerOrNull() ?: return@batchEdit
+        // Only one of the three can be open at a time — each is reached from its own panel — so the
+        // first one that answers has consumed the key.
+        val consumedBySearch = handleSearchKey(
+            query = emojiSearchQuery,
+            data = data,
+            onEnter = { /* swallow: the results are already filtered */ },
+            onExit = { closeEmojiSearch() },
+        ) || handleSearchKey(
+            query = gifSearchQuery,
+            data = data,
+            onEnter = { query -> submitGifSearch(query) }, // Enter runs the search → full results page
+            onExit = { closeGifSearch() },
+        ) || handleSearchKey(
+            query = stickerSearchQuery,
+            data = data,
+            onEnter = { /* swallow: the results are already filtered */ },
+            onExit = { closeStickerSearch() },
+        ) || handleSearchKey(
+            query = clipboardSearchQuery,
+            data = data,
+            onEnter = { /* swallow: the results are already filtered */ },
+            onExit = { closeClipboardSearch() },
+        )
+        if (consumedBySearch) {
             return@batchEdit
         }
         when (data.code) {
@@ -927,6 +1494,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             }
             KeyCode.TOGGLE_FLOATING_WINDOW -> windowController.actions.toggleFloatingWindow()
             KeyCode.TOGGLE_COMPACT_LAYOUT -> windowController.actions.toggleCompactLayout()
+            KeyCode.SPLIT_LAYOUT -> windowController.actions.toggleSplitLayout()
             KeyCode.COMPACT_LAYOUT_TO_LEFT -> windowController.actions.compactLayoutToLeft()
             KeyCode.COMPACT_LAYOUT_TO_RIGHT -> windowController.actions.compactLayoutToRight()
             KeyCode.TOGGLE_RESIZE_MODE -> windowController.editor.toggleEnabled()
@@ -949,6 +1517,17 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                 gifSearchSubmit.value = null
                 activeState.imeUiMode = ImeUiMode.GIF
             }
+            // Opens the local sticker panel (issue #280) — the user's own folder, no network involved.
+            KeyCode.IME_UI_MODE_STICKER -> {
+                closeEmojiSearch(returnToMedia = false)
+                activeState.imeUiMode = ImeUiMode.STICKER
+            }
+            // Opens the text editing panel (issue #386). The keys on it send the very codes handled in
+            // this `when`, so the panel adds a surface and no second implementation of anything.
+            KeyCode.IME_UI_MODE_EDITING -> {
+                closeEmojiSearch(returnToMedia = false)
+                activeState.imeUiMode = ImeUiMode.EDITING
+            }
             KeyCode.IME_UI_MODE_DICTATE -> dev.patrickgold.florisboard.dictate.DictateController.onMicClick(appContext)
             KeyCode.DICTATE_LIVE_PROMPT -> dev.patrickgold.florisboard.dictate.DictateController.startLivePrompt(appContext)
             KeyCode.DICTATE_PROMPTS -> {
@@ -958,6 +1537,11 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             // Repurposed for the transcription history panel (issue #140): opens the browsable list of
             // recent dictations to quickly re-insert or re-transcribe, superseding the one-shot reinsert.
             KeyCode.DICTATE_REINSERT -> { activeState.imeUiMode = ImeUiMode.HISTORY }
+            // Keys that are there to be looked at, not pressed: the अ key wearing the pending consonant
+            // (issue #315). The consonant is already in the text, so writing anything would double it —
+            // and without this branch the fallthrough below would try to encode a negative code point.
+            KeyCode.PREVIEW_ONLY,
+            KeyCode.NOOP -> { /* nothing to do */ }
             KeyCode.KANA_SWITCHER -> handleKanaSwitch()
             KeyCode.KANA_HIRA -> handleKanaHira()
             KeyCode.KANA_KATA -> handleKanaKata()
@@ -983,6 +1567,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                 activeState.isActionsEditorVisible = !activeState.isActionsEditorVisible
             }
             KeyCode.TOGGLE_INCOGNITO_MODE -> scope.launch { handleToggleIncognitoMode() }
+            KeyCode.TOGGLE_NUMBER_ROW -> scope.launch { handleToggleNumberRow() }
             KeyCode.UNDO -> editorInstance.performUndo()
             KeyCode.VIEW_CHARACTERS -> activeState.keyboardMode = KeyboardMode.CHARACTERS
             KeyCode.VIEW_NUMERIC -> activeState.keyboardMode = KeyboardMode.NUMERIC
@@ -993,7 +1578,7 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
             KeyCode.VIEW_SYMBOLS2 -> activeState.keyboardMode = KeyboardMode.SYMBOLS2
             else -> {
                 if (activeState.imeUiMode == ImeUiMode.MEDIA) {
-                    nlpManager.getAutoCommitCandidate()?.let { commitCandidate(it) }
+                    nlpManager.getAutoCommitCandidate()?.let { commitAutoCorrection(it) }
                     editorInstance.commitText(data.asString(isForDisplay = false))
                     return@batchEdit
                 }
@@ -1018,14 +1603,66 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                     else -> when (data.type) {
                         KeyType.CHARACTER, KeyType.NUMERIC ->{
                             val text = data.asString(isForDisplay = false)
-                            if (!UCharacter.isUAlphabetic(UCharacter.codePointAt(text, 0))) {
-                                nlpManager.getAutoCommitCandidate()?.let { commitCandidate(it) }
-                                // Punctuation ends the word — drop the tap evidence for it (issue #242).
-                                TouchTrace.reset()
-                            } else {
-                                TouchTrace.commit(text)
+                            val codePoint = UCharacter.codePointAt(text, 0)
+                            when {
+                                UCharacter.isUAlphabetic(codePoint) -> {
+                                    TouchTrace.commit(text)
+                                    editorInstance.commitChar(text)
+                                }
+                                // A digit does not end the word it is written into. Unicode's word rules
+                                // keep `top1` in one piece (UAX#29 WB9/WB10) and so does the composing
+                                // region built from them, so treating a digit as a boundary made the two
+                                // halves of the keyboard disagree about where the word ends — and the
+                                // half that ends it too early hands the other one's work in.
+                                //
+                                // That is how `top10` became `Top 1` (issue #311): "Top" is a German noun
+                                // waiting in the strip while `top` is composed, the first digit collected
+                                // that correction as if the word were finished, and the phantom space that
+                                // follows every committed candidate put a space after it. Nothing about
+                                // the digit was wrong; the word simply was not over.
+                                //
+                                // A digit used to throw the whole trace away, on the reasoning that a
+                                // trace which no longer matches the word cannot decode it anyway. That
+                                // was true when the trace was one thing; since issue #318 split the
+                                // *characters* from the *coordinates* it is only half true, and the half
+                                // it got wrong is the one that decides whether a word may be learned.
+                                // Dropping the record meant `wasFullyTyped("prateek99")` answered no, so
+                                // no word carrying a digit could ever be learned — which is exactly what
+                                // round 3 set out to allow. Recorded as deliberately chosen: on a layout
+                                // without a number row the digit comes off the symbol layer, where a
+                                // coordinate means nothing in the letter geometry the decoder reasons
+                                // about (issues #242, #311, #318).
+                                UCharacter.isDigit(codePoint) -> {
+                                    TouchTrace.markPendingExact()
+                                    TouchTrace.commit(text)
+                                    editorInstance.commitChar(text)
+                                }
+                                // A punctuation mark ends the word too, so it can expand a snippet
+                                // trigger (issue #283) — and then it has already written itself.
+                                else -> {
+                                    val composing = editorInstance.activeContent.composingText
+                                    if (text.length == 1 && nlpManager.continuesWord(composing, text[0])) {
+                                        // Not every separator separates. An e-mail or web address runs
+                                        // through its `@`, its dots and its slashes, and the provider is
+                                        // asked rather than told so that this decision and the composing
+                                        // region are the same decision (issue #318).
+                                        //
+                                        // Recorded as deliberately chosen rather than as a tap: the `@`
+                                        // key sits on the symbol layer, where a coordinate means nothing
+                                        // in the letter geometry the decoder reasons about. The character
+                                        // still has to be recorded, because the trace is what proves the
+                                        // whole run was typed and not dictated (issues #242, #318).
+                                        TouchTrace.markPendingExact()
+                                        TouchTrace.commit(text)
+                                        editorInstance.commitChar(text)
+                                    } else if (!expandSnippet(text)) {
+                                        // Punctuation ends the word: correct it or learn it, then drop
+                                        // the tap evidence (issues #242, #318).
+                                        endOfWord()
+                                        editorInstance.commitChar(text)
+                                    }
+                                }
                             }
-                            editorInstance.commitChar(text)
                         }
                         else -> {
                             flogError(LogTopic.KEY_EVENTS) { "Received unknown key: $data" }
@@ -1179,6 +1816,9 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
         override val isGifSearchActive: Boolean
             get() = gifSearchQuery.value != null
 
+        override val devanagariBase: String
+            get() = pendingDevanagariBase.value
+
         override fun context(): Context = appContext
 
         val androidKeyguardManager = context().systemService(AndroidKeyguardManager::class)
@@ -1210,10 +1850,32 @@ class KeyboardManager(context: Context) : InputKeyEventReceiver {
                 KeyCode.LANGUAGE_SWITCH -> {
                     subtypeManager.subtypes.size > 1
                 }
+                KeyCode.SPLIT_LAYOUT -> {
+                    // Two halves of a window this narrow would be two rows of slivers (issue #362), so
+                    // the action is greyed out rather than hidden — the same answer the language switch
+                    // gives when there is only one language. The measured window is asked first and the
+                    // display only as a fallback: the Smartbar can compose before the keyboard view has
+                    // been measured, and a window of no width yet would grey the action out for the
+                    // first frames of every keyboard that opens.
+                    val rootBounds = FlorisImeService.windowControllerOrNull()?.activeRootInsets?.value?.boundsDp
+                    val windowWidth = rootBounds?.width?.takeIf { it > 0.dp }
+                        ?: appContext.resources.configuration.screenWidthDp.dp
+                    windowWidth >= SplitLayoutMinWindowWidth
+                }
                 KeyCode.DICTATE_REINSERT -> {
                     // Opens the transcription history panel (issue #140); greyed out only when the history
                     // feature itself is turned off, since the panel is otherwise always available.
                     dev.patrickgold.florisboard.dictate.DictateController.isHistoryEnabled()
+                }
+                KeyCode.VIEW_NUMERIC_ADVANCED -> {
+                    // The number-pad action (issue #388) is for digits in an ordinary text field. In a
+                    // number or phone field the pad is already what opens, so the action can only take
+                    // something away: those layouts deliberately have no ABC key, while the advanced pad
+                    // has one, and it leads to letters with no route back to the digits short of leaving
+                    // the field and coming back. Greyed out rather than hidden, like the split-layout
+                    // action, so a button the user placed in the bar does not disappear from under them.
+                    editorInfo.inputAttributes.type != InputAttributes.Type.NUMBER &&
+                        editorInfo.inputAttributes.type != InputAttributes.Type.PHONE
                 }
                 else -> true
             }

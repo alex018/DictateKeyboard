@@ -28,6 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -318,3 +319,222 @@ private fun reasoningEffortDialogLabel(effort: DictateReasoningEffort?): String 
         DictateReasoningEffort.CUSTOM -> R.string.dictate__reasoning_effort_custom
     },
 )
+
+/**
+ * Instant recording as one row instead of two switches (issue #224).
+ *
+ * The feature has three states a user can actually name — off, on for every field the keyboard opens
+ * on, and on only when they have just switched *to* Dictate — plus one detail that only matters while
+ * it is on, whether number-only fields count. As two independent switches that read as a puzzle; as one
+ * row with a dialog it reads as a question with an answer.
+ *
+ * The three states are stored as the two booleans they have always been ([enabled] and [afterSwitchOnly]),
+ * so nobody's existing setting needs migrating; only the presentation is unified.
+ */
+@Composable
+internal fun PreferenceUiScope<FlorisPreferenceModel>.InstantRecordingPreference(
+    enabled: PreferenceData<Boolean>,
+    afterSwitchOnly: PreferenceData<Boolean>,
+    skipNumeric: PreferenceData<Boolean>,
+    title: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+    onTurnedOn: () -> Unit,
+) {
+    val scope = rememberCoroutineScope()
+    val isEnabled by enabled.collectAsState()
+    val isAfterSwitchOnly by afterSwitchOnly.collectAsState()
+    val isSkipNumeric by skipNumeric.collectAsState()
+    var dialogOpen by remember { mutableStateOf(false) }
+
+    val modeOff = stringRes(R.string.dictate__instant_recording_mode_off)
+    val modeAlways = stringRes(R.string.dictate__instant_recording_mode_always)
+    val modeAfterSwitch = stringRes(R.string.dictate__instant_recording_mode_after_switch)
+
+    Preference(
+        icon = icon,
+        modifier = modifier,
+        title = title,
+        summary = when {
+            !isEnabled -> modeOff
+            isAfterSwitchOnly -> modeAfterSwitch
+            else -> modeAlways
+        },
+        onClick = { dialogOpen = true },
+    )
+
+    if (dialogOpen) {
+        // 0 = off, 1 = every time the keyboard opens, 2 = only after switching to Dictate.
+        val current = when {
+            !isEnabled -> 0
+            isAfterSwitchOnly -> 2
+            else -> 1
+        }
+        var tmpMode by remember(current) { mutableStateOf(current) }
+        var tmpInNumeric by remember(isSkipNumeric) { mutableStateOf(!isSkipNumeric) }
+        JetPrefAlertDialog(
+            scrollModifier = florisDialogScroll(),
+            title = title,
+            confirmLabel = stringRes(R.string.action__ok),
+            onConfirm = {
+                val wasOff = !isEnabled
+                scope.launch {
+                    enabled.set(tmpMode != 0)
+                    afterSwitchOnly.set(tmpMode == 2)
+                    skipNumeric.set(!tmpInNumeric)
+                }
+                dialogOpen = false
+                // The recovery offer for an interrupted recording is mutually exclusive with this
+                // (issue #120), and that is worth saying once, at the moment it starts applying.
+                if (wasOff && tmpMode != 0) onTurnedOn()
+            },
+            dismissLabel = stringRes(R.string.action__cancel),
+            onDismiss = { dialogOpen = false },
+            contentPadding = PaddingValues(horizontal = 8.dp),
+        ) {
+            Column {
+                listOf(modeOff, modeAlways, modeAfterSwitch).forEachIndexed { index, label ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .selectable(selected = index == tmpMode, onClick = { tmpMode = index })
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(
+                            selected = index == tmpMode,
+                            onClick = null,
+                            modifier = Modifier.padding(end = 12.dp),
+                        )
+                        Text(text = label)
+                    }
+                }
+                // Only meaningful while the feature is on, so it is disabled rather than hidden: a
+                // checkbox that vanishes takes its own explanation with it.
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .selectable(
+                            selected = tmpInNumeric,
+                            enabled = tmpMode != 0,
+                            onClick = { tmpInNumeric = !tmpInNumeric },
+                        )
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(
+                        checked = tmpInNumeric,
+                        onCheckedChange = null,
+                        enabled = tmpMode != 0,
+                        modifier = Modifier.padding(end = 12.dp),
+                    )
+                    Text(
+                        text = stringRes(R.string.dictate__instant_recording_in_numeric),
+                        color = if (tmpMode != 0) {
+                            MaterialTheme.colorScheme.onSurface
+                        } else {
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Real-time transcription as one row with three answers instead of a switch (issue #345).
+ *
+ * Streaming used to be a yes/no question, and "yes" carried a second decision nobody was asked: the
+ * provisional words were typed into the field as they arrived. That is the right answer for people who
+ * want to watch the transcript build, and the wrong one for people who only want the speed — the
+ * constant re-writing reads as stuttering, and a half-finished sentence in a chat box is a distraction.
+ * Both wants are now nameable: stream and show it, or stream and stay quiet until the recording stops.
+ *
+ * Stored as the two booleans they are ([enabled] and [hidePreview]), so an existing on/off choice keeps
+ * meaning what it meant — anyone who had realtime on lands on "show while speaking", which is what they
+ * already had.
+ */
+@Composable
+internal fun PreferenceUiScope<FlorisPreferenceModel>.RealtimeTranscriptionPreference(
+    enabled: PreferenceData<Boolean>,
+    hidePreview: PreferenceData<Boolean>,
+    title: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+) {
+    val scope = rememberCoroutineScope()
+    val isEnabled by enabled.collectAsState()
+    val isHidePreview by hidePreview.collectAsState()
+    var dialogOpen by remember { mutableStateOf(false) }
+
+    val modeOff = stringRes(R.string.dictate__realtime_mode_off)
+    val modeLive = stringRes(R.string.dictate__realtime_mode_live)
+    val modeAtEnd = stringRes(R.string.dictate__realtime_mode_at_end)
+
+    Preference(
+        icon = icon,
+        modifier = modifier,
+        title = title,
+        summary = when {
+            !isEnabled -> modeOff
+            isHidePreview -> modeAtEnd
+            else -> modeLive
+        },
+        onClick = { dialogOpen = true },
+    )
+
+    if (dialogOpen) {
+        // 0 = off, 1 = stream and show the words as they arrive, 2 = stream but only show the result.
+        val current = when {
+            !isEnabled -> 0
+            isHidePreview -> 2
+            else -> 1
+        }
+        var tmpMode by remember(current) { mutableStateOf(current) }
+        JetPrefAlertDialog(
+            scrollModifier = florisDialogScroll(),
+            title = title,
+            confirmLabel = stringRes(R.string.action__ok),
+            onConfirm = {
+                scope.launch {
+                    enabled.set(tmpMode != 0)
+                    // Only meaningful while streaming is on, but written unconditionally so the choice
+                    // survives switching the feature off and on again.
+                    if (tmpMode != 0) hidePreview.set(tmpMode == 2)
+                }
+                dialogOpen = false
+            },
+            dismissLabel = stringRes(R.string.action__cancel),
+            onDismiss = { dialogOpen = false },
+            contentPadding = PaddingValues(horizontal = 8.dp),
+        ) {
+            Column {
+                // What the feature is, kept where the row used to say it — the summary now names the
+                // chosen mode, so without this the explanation would have nowhere left to live.
+                Text(
+                    text = stringRes(R.string.dictate__realtime_summary),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+                listOf(modeOff, modeLive, modeAtEnd).forEachIndexed { index, label ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .selectable(selected = index == tmpMode, onClick = { tmpMode = index })
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        RadioButton(
+                            selected = index == tmpMode,
+                            onClick = null,
+                            modifier = Modifier.padding(end = 12.dp),
+                        )
+                        Text(text = label)
+                    }
+                }
+            }
+        }
+    }
+}

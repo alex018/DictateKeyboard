@@ -14,6 +14,7 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.ui.viewinterop.AndroidView
+import dev.patrickgold.florisboard.dictate.cloud.DictateCloudPack
 import dev.patrickgold.florisboard.dictate.ui.AudioReactiveCloudOrbView
 import dev.patrickgold.florisboard.dictate.ui.DictateAuroraOrbView
 import dev.patrickgold.florisboard.dictate.ui.DictateWaveform
@@ -32,9 +33,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -45,17 +48,23 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Segment
+import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Celebration
+import androidx.compose.material.icons.filled.ContactPage
 import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Dialpad
+import androidx.compose.material.icons.filled.EmojiEmotions
+import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Gesture
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Insights
+import androidx.compose.material.icons.filled.IosShare
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.PhoneAndroid
@@ -63,14 +72,17 @@ import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.RecordVoiceOver
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Dns
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Spellcheck
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.VerticalSplit
 import androidx.compose.material.icons.outlined.Gif
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -91,13 +103,18 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -112,6 +129,8 @@ import dev.patrickgold.florisboard.lib.util.launchUrl
 import kotlinx.coroutines.launch
 import org.florisboard.lib.compose.stringRes
 import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.max
 import kotlin.math.sin
 
@@ -154,13 +173,80 @@ internal data class WhatsNewPage(
     val art: TourArt? = null,
 )
 
-/** The live previews a page can show in place of its icon — the real views, not a picture of them. */
+/**
+ * The live previews a page can show in place of its icon — the real views, not a picture of them.
+ *
+ * Every one of these is drawn at runtime rather than shipped as an image, and the reason is colour
+ * and language: they derive from the theme accent, so they follow whatever the user has set, and
+ * the ones carrying text let the system font render it. A drawable would need a light and a dark
+ * variant, and the three with writing in them would need twenty-one.
+ */
 internal enum class TourArt {
     /** The audio-reactive cloud orb (5.2). */
     CLOUD_ORB,
 
     /** Aurora and Lattice side by side, both idle, as the button actually sits there (5.3). */
     DESIGN_ORBS,
+
+    /** A credit pack filling up, minutes counting on (6.0). */
+    CREDIT_METER,
+
+    /** One recording drawn twice, the second squeezed — what speeding up does to the bill (6.0). */
+    WAVE_COMPRESS,
+
+    /** Pinyin typing itself out and picking a candidate (6.0). */
+    PINYIN_STRIP,
+
+    /** A suggestion strip wandering through the newly supported scripts (6.0). */
+    SCRIPT_CAROUSEL,
+
+    /** The emoji search finding the same emoji in three languages (6.0). */
+    EMOJI_SEARCH,
+
+    /** A folder of pictures becoming tabs and tiles on the keyboard (6.1). */
+    STICKER_GRID,
+
+    /** A voice message going from the share sheet to readable text on its own (6.1). */
+    SHARE_TO_TEXT,
+
+    /** The strip marking the word space will take, and the word being swapped for it (6.1). */
+    CORRECTION_PILL,
+
+    /** A word typed often enough to be kept, climbing the three stages into the strip (6.2). */
+    LEARN_LADDER,
+
+    /** App content passing behind a key grid — the glass lives in the gaps, not on the keys (6.2). */
+    GLASS_KEYS,
+
+    /** A row of keys breaking into two runs, with both thumbs reaching their own half (6.2). */
+    SPLIT_ROW,
+
+    /** A typed word finding its emoji, which rides along instead of taking a suggestion's seat (6.2). */
+    EMOJI_RIDE,
+
+    /** The symbol layer held open, slid across, and handed back to the letters (6.2). */
+    LAYER_PEEK,
+
+    /** Light passing once across the keyboard, leaving a few keys awake — the opening page (6.2). */
+    KEYBOARD_WAKE,
+
+    /** A typed sum getting its answer back in the suggestion strip (6.2). */
+    INLINE_ANSWER,
+
+    /** A selection sweeping across two lines while the row counts what it holds (6.2). */
+    SELECTION_COUNT,
+
+    /** A search narrowing three clips down to the one that contains it (6.2). */
+    CLIP_SEARCH,
+
+    /** A finished dictation dropping into a folder as a file (6.2). */
+    FOLDER_DROP,
+
+    /** Four rows settling into place one after another — the "also" page (6.2). */
+    SMALL_THINGS,
+
+    /** A ring closing on a check — the outro (6.2). */
+    DONE_RING,
 }
 
 private val WhatsNewPages50: List<WhatsNewPage> = listOf(
@@ -504,11 +590,293 @@ private val WhatsNewPages53: List<WhatsNewPage> = listOf(
  * tour a user hasn't seen yet; Settings › About lists them all for re-viewing. Append the next release's
  * tour here.
  */
+/**
+ * The 6.0 tour. Shorter than 5.0's ten pages on purpose: the release is wide, but only a handful of
+ * the changes are things a user has to be *told* about rather than simply run into.
+ */
+private val WhatsNewPages60: List<WhatsNewPage> = listOf(
+    WhatsNewPage(
+        icon = Icons.Filled.AutoAwesome,
+        eyebrow = R.string.apptour60__intro_eyebrow,
+        title = R.string.apptour60__intro_title,
+        body = R.string.apptour60__intro_body,
+        cta = R.string.apptour__start,
+        route = null,
+        kind = PageKind.INTRO,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Cloud,
+        eyebrow = R.string.apptour60__cloud_eyebrow,
+        title = R.string.apptour60__cloud_title,
+        body = R.string.apptour60__cloud_body,
+        cta = R.string.apptour60__cta_try,
+        route = Routes.Settings.DictateCloud,
+        highlight = true,
+        art = TourArt.CREDIT_METER,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.ContentCut,
+        eyebrow = R.string.apptour60__speedup_eyebrow,
+        title = R.string.apptour60__speedup_title,
+        body = R.string.apptour60__speedup_body,
+        cta = R.string.apptour60__cta_try,
+        route = Routes.Settings.DictateRecording,
+        highlight = true,
+        art = TourArt.WAVE_COMPRESS,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Language,
+        eyebrow = R.string.apptour60__chinese_eyebrow,
+        title = R.string.apptour60__chinese_title,
+        body = R.string.apptour60__chinese_body,
+        cta = R.string.apptour60__cta_try,
+        route = Routes.Settings.Localization,
+        highlight = true,
+        art = TourArt.PINYIN_STRIP,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Search,
+        eyebrow = R.string.apptour60__emoji_eyebrow,
+        title = R.string.apptour60__emoji_title,
+        body = R.string.apptour60__emoji_body,
+        cta = R.string.apptour60__cta_try,
+        route = Routes.Settings.Localization,
+        art = TourArt.EMOJI_SEARCH,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Spellcheck,
+        eyebrow = R.string.apptour60__languages_eyebrow,
+        title = R.string.apptour60__languages_title,
+        body = R.string.apptour60__languages_body,
+        cta = R.string.apptour60__cta_try,
+        route = Routes.Settings.Localization,
+        art = TourArt.SCRIPT_CAROUSEL,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Bolt,
+        eyebrow = R.string.apptour60__more_eyebrow,
+        title = R.string.apptour60__more_title,
+        body = R.string.apptour60__more_body,
+        cta = R.string.apptour__next,
+        route = null,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Celebration,
+        eyebrow = R.string.apptour60__outro_eyebrow,
+        title = R.string.apptour60__outro_title,
+        body = R.string.apptour60__outro_body,
+        cta = R.string.apptour__done,
+        route = null,
+        kind = PageKind.OUTRO,
+    ),
+)
+
+private val WhatsNewPages61: List<WhatsNewPage> = listOf(
+    WhatsNewPage(
+        icon = Icons.Filled.AutoAwesome,
+        eyebrow = R.string.apptour61__intro_eyebrow,
+        title = R.string.apptour61__intro_title,
+        body = R.string.apptour61__intro_body,
+        cta = R.string.apptour__start,
+        route = null,
+        kind = PageKind.INTRO,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.EmojiEmotions,
+        eyebrow = R.string.apptour61__stickers_eyebrow,
+        title = R.string.apptour61__stickers_title,
+        body = R.string.apptour61__stickers_body,
+        cta = R.string.apptour61__cta_try,
+        route = Routes.Settings.Media,
+        highlight = true,
+        art = TourArt.STICKER_GRID,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.IosShare,
+        eyebrow = R.string.apptour61__share_eyebrow,
+        title = R.string.apptour61__share_title,
+        body = R.string.apptour61__share_body,
+        cta = R.string.apptour__next,
+        // No route: the feature lives in every other app's share sheet, not on a settings screen,
+        // and a button that opened the wrong place would teach the wrong gesture.
+        route = null,
+        highlight = true,
+        art = TourArt.SHARE_TO_TEXT,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Spellcheck,
+        eyebrow = R.string.apptour61__autocorrect_eyebrow,
+        title = R.string.apptour61__autocorrect_title,
+        body = R.string.apptour61__autocorrect_body,
+        cta = R.string.apptour61__cta_try,
+        route = Routes.Settings.Typing,
+        highlight = true,
+        art = TourArt.CORRECTION_PILL,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.ContactPage,
+        eyebrow = R.string.apptour61__contacts_eyebrow,
+        title = R.string.apptour61__contacts_title,
+        body = R.string.apptour61__contacts_body,
+        cta = R.string.apptour61__cta_try,
+        route = Routes.Settings.Dictionary,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.RecordVoiceOver,
+        eyebrow = R.string.apptour61__models_eyebrow,
+        title = R.string.apptour61__models_title,
+        body = R.string.apptour61__models_body,
+        cta = R.string.apptour61__cta_try,
+        route = Routes.Settings.DictateProviders,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Bolt,
+        eyebrow = R.string.apptour61__more_eyebrow,
+        title = R.string.apptour61__more_title,
+        body = R.string.apptour61__more_body,
+        cta = R.string.apptour__next,
+        route = null,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Celebration,
+        eyebrow = R.string.apptour61__outro_eyebrow,
+        title = R.string.apptour61__outro_title,
+        body = R.string.apptour61__outro_body,
+        cta = R.string.apptour__done,
+        route = null,
+        kind = PageKind.OUTRO,
+    ),
+)
+
+private val WhatsNewPages62: List<WhatsNewPage> = listOf(
+    WhatsNewPage(
+        icon = Icons.Filled.AutoAwesome,
+        eyebrow = R.string.apptour62__intro_eyebrow,
+        title = R.string.apptour62__intro_title,
+        body = R.string.apptour62__intro_body,
+        cta = R.string.apptour__start,
+        route = null,
+        kind = PageKind.INTRO,
+        art = TourArt.KEYBOARD_WAKE,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Psychology,
+        eyebrow = R.string.apptour62__learning_eyebrow,
+        title = R.string.apptour62__learning_title,
+        body = R.string.apptour62__learning_body,
+        // This release flips the default to on *and* migrates existing users onto it, overwriting a
+        // deliberate "off" that nothing can tell apart from an untouched default. So the button is
+        // the way back out, not the way in: the page has to say plainly that it is on and where the
+        // switch is, which is what makes this page a release blocker rather than an announcement.
+        cta = R.string.apptour62__cta_manage,
+        route = Routes.Settings.Dictionary,
+        highlight = true,
+        art = TourArt.LEARN_LADDER,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Brush,
+        eyebrow = R.string.apptour62__themes_eyebrow,
+        title = R.string.apptour62__themes_title,
+        body = R.string.apptour62__themes_body,
+        cta = R.string.apptour62__cta_try,
+        route = Routes.Settings.Theme,
+        highlight = true,
+        art = TourArt.GLASS_KEYS,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.VerticalSplit,
+        eyebrow = R.string.apptour62__split_eyebrow,
+        title = R.string.apptour62__split_title,
+        body = R.string.apptour62__split_body,
+        // The split is switched on by a Smartbar quick action, so the settings screen that matters is
+        // the one where the quick actions are arranged, not a keyboard-layout page.
+        cta = R.string.apptour62__cta_try,
+        route = Routes.Settings.Smartbar,
+        art = TourArt.SPLIT_ROW,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.EmojiEmotions,
+        eyebrow = R.string.apptour62__emoji_eyebrow,
+        title = R.string.apptour62__emoji_title,
+        body = R.string.apptour62__emoji_body,
+        cta = R.string.apptour62__cta_try,
+        route = Routes.Settings.Media,
+        art = TourArt.EMOJI_RIDE,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Tune,
+        eyebrow = R.string.apptour62__helpers_eyebrow,
+        title = R.string.apptour62__helpers_title,
+        body = R.string.apptour62__helpers_body,
+        cta = R.string.apptour62__cta_try,
+        route = Routes.Settings.Typing,
+        art = TourArt.INLINE_ANSWER,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.SelectAll,
+        eyebrow = R.string.apptour62__selection_eyebrow,
+        title = R.string.apptour62__selection_title,
+        body = R.string.apptour62__selection_body,
+        cta = R.string.apptour62__cta_try,
+        route = Routes.Settings.Smartbar,
+        art = TourArt.SELECTION_COUNT,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.ContentPaste,
+        eyebrow = R.string.apptour62__clipboard_eyebrow,
+        title = R.string.apptour62__clipboard_title,
+        body = R.string.apptour62__clipboard_body,
+        cta = R.string.apptour62__cta_try,
+        route = Routes.Settings.Clipboard,
+        art = TourArt.CLIP_SEARCH,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Gesture,
+        eyebrow = R.string.apptour62__gestures_eyebrow,
+        title = R.string.apptour62__gestures_title,
+        body = R.string.apptour62__gestures_body,
+        cta = R.string.apptour62__cta_try,
+        route = Routes.Settings.Gestures,
+        art = TourArt.LAYER_PEEK,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Folder,
+        eyebrow = R.string.apptour62__export_eyebrow,
+        title = R.string.apptour62__export_title,
+        body = R.string.apptour62__export_body,
+        cta = R.string.apptour62__cta_try,
+        route = Routes.Settings.DictateHistory,
+        art = TourArt.FOLDER_DROP,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Bolt,
+        eyebrow = R.string.apptour62__more_eyebrow,
+        title = R.string.apptour62__more_title,
+        body = R.string.apptour62__more_body,
+        cta = R.string.apptour__next,
+        route = null,
+        art = TourArt.SMALL_THINGS,
+    ),
+    WhatsNewPage(
+        icon = Icons.Filled.Celebration,
+        eyebrow = R.string.apptour62__outro_eyebrow,
+        title = R.string.apptour62__outro_title,
+        body = R.string.apptour62__outro_body,
+        cta = R.string.apptour__done,
+        route = null,
+        kind = PageKind.OUTRO,
+        art = TourArt.DONE_RING,
+    ),
+)
+
 internal val WHATS_NEW_TOURS: List<WhatsNewTourDef> = listOf(
     WhatsNewTourDef(VersionName(5, 0, 0), WhatsNewPages50),
     WhatsNewTourDef(VersionName(5, 1, 0), WhatsNewPages51),
     WhatsNewTourDef(VersionName(5, 2, 0), WhatsNewPages52),
     WhatsNewTourDef(VersionName(5, 3, 0), WhatsNewPages53),
+    WhatsNewTourDef(VersionName(6, 0, 0), WhatsNewPages60),
+    WhatsNewTourDef(VersionName(6, 1, 0), WhatsNewPages61),
+    WhatsNewTourDef(VersionName(6, 2, 0), WhatsNewPages62),
 )
 
 /**
@@ -783,6 +1151,1560 @@ private fun TourDesignOrbs() {
     }
 }
 
+/**
+ * A credit pack filling up: the minutes count on and the bar follows.
+ *
+ * The figure is [DictateCloudPack.PRO]'s own, read from the enum the shop reads, so the picture
+ * cannot drift away from what is actually on sale. Deliberately no "x % cheaper" badge: that
+ * number is worked out from Play's own prices at runtime and differs by country, so a fixed one
+ * painted into an illustration would be a claim the tour cannot keep.
+ */
+@Composable
+private fun TourCreditMeter() {
+    val accent = MaterialTheme.colorScheme.primary
+    val transition = rememberInfiniteTransition(label = "credit")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(4200, easing = LinearEasing), RepeatMode.Restart),
+        label = "credit-cycle",
+    )
+    // Fills over the first third and then rests, so someone arriving mid-animation still sees it
+    // happen rather than a bar that is simply already full.
+    val fill = (cycle / 0.34f).coerceAtMost(1f)
+    Surface(shape = RoundedCornerShape(20.dp), color = accent.copy(alpha = 0.12f)) {
+        Column(modifier = Modifier.width(200.dp).padding(18.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = (DictateCloudPack.PRO.minutes * fill).toInt().toString(),
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = accent,
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = stringRes(R.string.apptour60__art_minutes),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.ic_dictate_cloud),
+                    contentDescription = null,
+                    tint = accent,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+            Spacer(modifier = Modifier.height(14.dp))
+            Canvas(modifier = Modifier.fillMaxWidth().height(8.dp)) {
+                drawRoundRect(
+                    color = accent.copy(alpha = 0.22f),
+                    cornerRadius = CornerRadius(size.height / 2f),
+                )
+                drawRoundRect(
+                    color = accent,
+                    size = Size(size.width * fill, size.height),
+                    cornerRadius = CornerRadius(size.height / 2f),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The bar heights both waveforms are drawn from.
+ *
+ * One profile, used twice at two widths — that is the whole point of the picture. Two different
+ * shapes would read as two different recordings, which is exactly the thing speeding up does not do.
+ */
+private val TOUR_WAVE: List<Float> = List(30) { i ->
+    (0.30f + 0.70f * abs(sin(i * 1.9f)) * (0.55f + 0.45f * abs(sin(i * 0.7f + 1f))))
+        .coerceIn(0.18f, 1f)
+}
+
+@Composable
+private fun TourWaveBars(color: androidx.compose.ui.graphics.Color, fraction: Float) {
+    Canvas(modifier = Modifier.fillMaxWidth().height(30.dp)) {
+        val usable = size.width * fraction
+        val gap = usable / TOUR_WAVE.size
+        val barWidth = max(2f, gap * 0.5f)
+        TOUR_WAVE.forEachIndexed { i, height ->
+            val barHeight = size.height * height
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(i * gap + (gap - barWidth) / 2f, (size.height - barHeight) / 2f),
+                size = Size(barWidth, barHeight),
+                cornerRadius = CornerRadius(barWidth / 2f),
+            )
+        }
+    }
+}
+
+/** The same recording above and below, the lower one squeezing itself shorter. */
+@Composable
+private fun TourWaveCompress() {
+    val accent = MaterialTheme.colorScheme.primary
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val transition = rememberInfiniteTransition(label = "compress")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(3800, easing = LinearEasing), RepeatMode.Restart),
+        label = "compress-cycle",
+    )
+    val squeeze = 1f - 0.34f * (cycle / 0.45f).coerceAtMost(1f)
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.width(148.dp)) {
+                TourWaveBars(color = accent.copy(alpha = 0.30f), fraction = 1f)
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Text("3:00", style = MaterialTheme.typography.labelMedium, color = muted)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Surface(shape = RoundedCornerShape(percent = 50), color = accent.copy(alpha = 0.14f)) {
+            Text(
+                text = stringRes(R.string.apptour60__art_speed),
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp),
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = accent,
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(modifier = Modifier.width(148.dp)) {
+                TourWaveBars(color = accent, fraction = squeeze)
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                text = "2:00",
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = accent,
+            )
+        }
+    }
+}
+
+private const val TOUR_PINYIN = "nihao"
+private val TOUR_CANDIDATES = listOf("你好", "尼豪", "泥")
+
+/**
+ * Pinyin typing itself out, the candidates arriving, the first one landing in the text.
+ *
+ * Real text in real composables rather than a drawing, because these glyphs have to come from the
+ * system font — a picture of them would be a picture of *our* font at *our* size.
+ */
+@Composable
+private fun TourPinyinStrip() {
+    val accent = MaterialTheme.colorScheme.primary
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val transition = rememberInfiniteTransition(label = "pinyin")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(5400, easing = LinearEasing), RepeatMode.Restart),
+        label = "pinyin-cycle",
+    )
+    val typed = ((cycle / 0.40f).coerceAtMost(1f) * TOUR_PINYIN.length).toInt()
+    val candidatesIn = cycle > 0.44f
+    val picked = cycle > 0.66f
+
+    Column(
+        modifier = Modifier.width(216.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(modifier = Modifier.height(38.dp), contentAlignment = Alignment.Center) {
+            Text(
+                text = if (picked) TOUR_CANDIDATES.first() else "",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(muted.copy(alpha = 0.25f)),
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        Text(
+            text = TOUR_PINYIN.take(typed) + if (typed < TOUR_PINYIN.length) "▌" else "",
+            style = MaterialTheme.typography.bodyLarge,
+            color = accent,
+            letterSpacing = 2.sp,
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            TOUR_CANDIDATES.forEachIndexed { index, candidate ->
+                val chosen = picked && index == 0
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (chosen) accent else accent.copy(alpha = 0.12f),
+                ) {
+                    Text(
+                        text = if (candidatesIn) candidate else " ",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (chosen) MaterialTheme.colorScheme.onPrimary else accent,
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The seven languages that gained a word list, shown as the suggestion strip they now fill.
+ *
+ * Written in their own scripts rather than named in the user's, because "Tamil" says nothing about
+ * what changed and தமிழ் says all of it.
+ */
+private val TOUR_SCRIPTS = listOf("العربية", "বাংলা", "suomi", "हिन्दी", "Indonesia", "தமிழ்", "اردو")
+
+@Composable
+private fun TourScriptCarousel() {
+    val accent = MaterialTheme.colorScheme.primary
+    val transition = rememberInfiniteTransition(label = "scripts")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = TOUR_SCRIPTS.size.toFloat(),
+        animationSpec = infiniteRepeatable(
+            tween(TOUR_SCRIPTS.size * 1600, easing = LinearEasing),
+            RepeatMode.Restart,
+        ),
+        label = "scripts-cycle",
+    )
+    val step = cycle.toInt() % TOUR_SCRIPTS.size
+    val frac = cycle - floor(cycle)
+    // A short dip at each hand-over, so the words change rather than blink.
+    val fade = when {
+        frac < 0.12f -> frac / 0.12f
+        frac > 0.88f -> (1f - frac) / 0.12f
+        else -> 1f
+    }
+    Row(
+        modifier = Modifier.width(260.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        for (slot in 0..2) {
+            val word = TOUR_SCRIPTS[(step + slot) % TOUR_SCRIPTS.size]
+            val middle = slot == 1
+            Surface(
+                modifier = Modifier.weight(1f).alpha(fade),
+                shape = RoundedCornerShape(10.dp),
+                color = if (middle) accent.copy(alpha = 0.16f) else androidx.compose.ui.graphics.Color.Transparent,
+            ) {
+                Text(
+                    text = word,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = if (middle) FontWeight.Bold else FontWeight.Normal,
+                    color = if (middle) accent else MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The same emoji found under three languages.
+ *
+ * The words are deliberately not translated: the point of the picture is that these are *different*
+ * languages, which a locale-swapped trio would hide rather than show.
+ */
+private val TOUR_EMOJI_WORDS = listOf("heart", "心", "قلب")
+private val TOUR_EMOJI = listOf("❤️", "💖", "💘")
+
+@Composable
+private fun TourEmojiSearch() {
+    val accent = MaterialTheme.colorScheme.primary
+    val transition = rememberInfiniteTransition(label = "emoji")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = TOUR_EMOJI_WORDS.size.toFloat(),
+        animationSpec = infiniteRepeatable(
+            tween(TOUR_EMOJI_WORDS.size * 2600, easing = LinearEasing),
+            RepeatMode.Restart,
+        ),
+        label = "emoji-cycle",
+    )
+    val word = TOUR_EMOJI_WORDS[cycle.toInt() % TOUR_EMOJI_WORDS.size]
+    val frac = cycle - floor(cycle)
+    val typed = word.take(((frac / 0.40f).coerceAtMost(1f) * word.length).toInt())
+    val hits = if (frac < 0.48f) 0 else (((frac - 0.48f) / 0.13f).toInt() + 1).coerceAtMost(TOUR_EMOJI.size)
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Surface(shape = RoundedCornerShape(percent = 50), color = accent.copy(alpha = 0.12f)) {
+            Row(
+                modifier = Modifier.width(180.dp).padding(horizontal = 14.dp, vertical = 9.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = null,
+                    tint = accent,
+                    modifier = Modifier.size(18.dp),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = typed + if (typed.length < word.length) "▌" else "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(14.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            TOUR_EMOJI.forEachIndexed { index, emoji ->
+                Text(
+                    text = emoji,
+                    fontSize = 30.sp,
+                    modifier = Modifier.alpha(if (index < hits) 1f else 0f),
+                )
+            }
+        }
+    }
+}
+
+/** Tiles for the sticker grid: shapes rather than pictures, so nothing has to ship with the app. */
+private val TOUR_STICKER_TABS = 3
+private val TOUR_STICKER_TILES = 6
+
+/**
+ * A folder becoming a keyboard panel.
+ *
+ * Deliberately abstract: the tiles are rounded shapes in the accent colour, not stickers, because a
+ * picture would have to be shipped, licensed and drawn twice for light and dark. What the page has
+ * to convey is the shape of the feature — tabs across the top, a grid below, one of them kept — and
+ * that survives without a single real image.
+ */
+@Composable
+private fun TourStickerGrid() {
+    val accent = MaterialTheme.colorScheme.primary
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val transition = rememberInfiniteTransition(label = "stickers")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(4600, easing = LinearEasing), RepeatMode.Restart),
+        label = "sticker-cycle",
+    )
+    // The tiles arrive one after another rather than all at once: a folder being read, not a picture
+    // of a full grid.
+    val shown = ((cycle / 0.55f).coerceAtMost(1f) * TOUR_STICKER_TILES).toInt()
+    val starred = cycle > 0.72f
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(
+            modifier = Modifier.width(196.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Folder,
+                contentDescription = null,
+                tint = muted,
+                modifier = Modifier.size(15.dp),
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = stringRes(R.string.apptour61__art_folder),
+                style = MaterialTheme.typography.labelSmall,
+                color = muted,
+                maxLines = 1,
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        // Subfolders as tabs, the first one active — the one thing about the panel worth showing.
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            repeat(TOUR_STICKER_TABS) { index ->
+                Box(
+                    modifier = Modifier
+                        .size(width = if (index == 0) 34.dp else 26.dp, height = 6.dp)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(if (index == 0) accent else accent.copy(alpha = 0.22f)),
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            repeat(2) { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    repeat(3) { column ->
+                        val index = row * 3 + column
+                        val here = index < shown
+                        Box(
+                            modifier = Modifier
+                                .size(58.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(
+                                    accent.copy(alpha = if (here) 0.10f + 0.05f * (index % 3) else 0.04f),
+                                ),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (here) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .clip(RoundedCornerShape(if (index % 2 == 0) 50 else 28))
+                                        .background(accent.copy(alpha = 0.55f)),
+                                )
+                            }
+                            // One of them kept, because favourites are half of what a folder is for.
+                            if (index == 1 && starred) {
+                                Icon(
+                                    imageVector = Icons.Filled.Star,
+                                    contentDescription = null,
+                                    tint = accent,
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp)
+                                        .size(13.dp),
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A voice message arriving from another app and turning into text by itself.
+ *
+ * The three beats are the whole feature: it comes from a share sheet, it starts without being asked,
+ * and what you get back is text you can read. The lines are bars rather than words so the picture
+ * needs no translation — the one label on it is the share sheet's own.
+ */
+@Composable
+private fun TourShareToText() {
+    val accent = MaterialTheme.colorScheme.primary
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val transition = rememberInfiniteTransition(label = "share")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(5000, easing = LinearEasing), RepeatMode.Restart),
+        label = "share-cycle",
+    )
+    val handedOver = cycle > 0.30f
+    // Four lines of transcript, filling in one after another once the file has been handed over.
+    val lines = if (!handedOver) 0 else (((cycle - 0.34f) / 0.12f).toInt() + 1).coerceIn(0, 4)
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(200.dp)) {
+        Surface(
+            shape = RoundedCornerShape(14.dp),
+            color = accent.copy(alpha = if (handedOver) 0.22f else 0.10f),
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 9.dp),
+            ) {
+                Text(
+                    text = stringRes(R.string.apptour61__art_share),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = muted,
+                )
+                Spacer(modifier = Modifier.height(5.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.Mic,
+                        contentDescription = null,
+                        tint = accent,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Spacer(modifier = Modifier.width(7.dp))
+                    Text(
+                        text = "Dictate",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(7.dp))
+        Icon(
+            imageVector = Icons.Filled.ArrowDownward,
+            contentDescription = null,
+            tint = accent.copy(alpha = if (handedOver) 1f else 0.30f),
+            modifier = Modifier.size(16.dp),
+        )
+        Spacer(modifier = Modifier.height(7.dp))
+        Box(modifier = Modifier.fillMaxWidth().height(22.dp)) {
+            TourWaveBars(
+                color = accent.copy(alpha = if (handedOver) 0.45f else 0.18f),
+                fraction = 1f,
+            )
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        // The transcript. Bars, not words: nothing here needs translating, and a fake sentence in
+        // English on a page shown in twenty languages would read as an oversight.
+        Column(
+            verticalArrangement = Arrangement.spacedBy(5.dp),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            listOf(1f, 0.92f, 0.97f, 0.55f).forEachIndexed { index, width ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(width)
+                        .height(5.dp)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(
+                            MaterialTheme.colorScheme.onSurface
+                                .copy(alpha = if (index < lines) 0.55f else 0.08f),
+                        ),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The suggestion strip marking what space will take, and then taking it.
+ *
+ * Both halves of the autocorrect work are in one picture: the middle candidate wears the accent pill
+ * that #295 asked for, and the word in the field above is swapped for it. The typed word and its
+ * correction are strings rather than literals, so a translator can pick a slip that is a real one in
+ * their language — "teh" means nothing outside English.
+ */
+@Composable
+private fun TourCorrectionPill() {
+    val accent = MaterialTheme.colorScheme.primary
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val typedWord = stringRes(R.string.apptour61__art_typed)
+    val fixedWord = stringRes(R.string.apptour61__art_fixed)
+    val transition = rememberInfiniteTransition(label = "correction")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(4200, easing = LinearEasing), RepeatMode.Restart),
+        label = "correction-cycle",
+    )
+    val pilled = cycle > 0.34f
+    val committed = cycle > 0.62f
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(216.dp)) {
+        Box(modifier = Modifier.height(40.dp), contentAlignment = Alignment.Center) {
+            Text(
+                text = if (committed) fixedWord else typedWord,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = if (committed) accent else MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(muted.copy(alpha = 0.25f)),
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // The typed word stays on the left and stays tappable — the correction is never the only
+            // way out (#150), and the picture should not suggest otherwise.
+            Text(
+                text = typedWord,
+                style = MaterialTheme.typography.bodyMedium,
+                color = muted,
+            )
+            Surface(
+                shape = RoundedCornerShape(percent = 50),
+                color = if (pilled) accent else Color.Transparent,
+            ) {
+                Text(
+                    text = fixedWord,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (pilled) {
+                        MaterialTheme.colorScheme.onPrimary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                )
+            }
+            Text(
+                text = "…",
+                style = MaterialTheme.typography.bodyMedium,
+                color = muted,
+            )
+        }
+    }
+}
+
+/**
+ * A word being typed often enough to be kept, then arriving in the strip as a suggestion.
+ *
+ * The three rungs are the three stages a word climbs before it counts as known, and the counter is
+ * digits rather than words, so only the example word itself needs translating — and it has to be
+ * translated, because a name that looks unknown in English is an ordinary word elsewhere.
+ */
+@Composable
+private fun TourLearnLadder() {
+    val accent = MaterialTheme.colorScheme.primary
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val word = stringRes(R.string.apptour62__art_word)
+    val transition = rememberInfiniteTransition(label = "learning")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(5200, easing = LinearEasing), RepeatMode.Restart),
+        label = "learn-cycle",
+    )
+    // Three typings, then the word is known and the strip offers it.
+    val typed = ((cycle / 0.20f).toInt() + 1).coerceIn(1, 3)
+    val rungs = if (cycle > 0.62f) 3 else typed
+    val learned = cycle > 0.68f
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(216.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = word,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = if (learned) accent else MaterialTheme.colorScheme.onSurface,
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "×$typed",
+                style = MaterialTheme.typography.labelMedium,
+                color = muted,
+            )
+        }
+        Spacer(modifier = Modifier.height(14.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            repeat(3) { index ->
+                Box(
+                    modifier = Modifier
+                        .size(width = 44.dp, height = 6.dp)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(if (index < rungs) accent else accent.copy(alpha = 0.16f)),
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(muted.copy(alpha = 0.25f)),
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        // The strip: the learned word takes a seat there, next to the ordinary suggestions.
+        Row(
+            modifier = Modifier.fillMaxWidth().height(28.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(width = 38.dp, height = 7.dp)
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(muted.copy(alpha = 0.25f)),
+            )
+            if (learned) {
+                Surface(shape = RoundedCornerShape(percent = 50), color = accent) {
+                    Text(
+                        text = word,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(width = 52.dp, height = 7.dp)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(muted.copy(alpha = 0.25f)),
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .size(width = 38.dp, height = 7.dp)
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(muted.copy(alpha = 0.25f)),
+            )
+        }
+    }
+}
+
+/**
+ * App content drifting past behind a grid of keys.
+ *
+ * This is the one thing about the glass themes worth showing and the one thing a screenshot of them
+ * gets wrong: the keys are nearly solid — they have to be, or foreign text reads straight through
+ * them — and the translucency lives in the gaps between them. Carries no text at all, so it needs no
+ * translation, and every colour derives from the accent.
+ */
+@Composable
+private fun TourGlassKeys() {
+    val accent = MaterialTheme.colorScheme.primary
+    val surface = MaterialTheme.colorScheme.surface
+    val foreign = MaterialTheme.colorScheme.onSurface
+    val transition = rememberInfiniteTransition(label = "glass")
+    val drift by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(9000, easing = LinearEasing), RepeatMode.Restart),
+        label = "glass-drift",
+    )
+
+    Box(
+        modifier = Modifier
+            .size(width = 216.dp, height = 132.dp)
+            .clip(RoundedCornerShape(20.dp)),
+    ) {
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            drawRect(color = accent.copy(alpha = 0.30f))
+            // Bands of "app" passing behind: one accent, two neutral lines of foreign writing.
+            for (i in 0 until 3) {
+                val y = size.height * (0.16f + 0.28f * i)
+                val x = ((drift + i * 0.34f) % 1f) * (size.width * 1.6f) - size.width * 0.5f
+                drawRoundRect(
+                    color = if (i == 1) accent.copy(alpha = 0.65f) else foreign.copy(alpha = 0.32f),
+                    topLeft = Offset(x, y),
+                    size = Size(size.width * 0.52f, size.height * 0.12f),
+                    cornerRadius = CornerRadius(size.height * 0.06f, size.height * 0.06f),
+                )
+            }
+        }
+        Column(
+            modifier = Modifier.fillMaxSize().padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            repeat(3) { row ->
+                Row(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    repeat(4) { column ->
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(9.dp))
+                                // 94 %: the threshold at which foreign writing stops reading through
+                                // a key. The last row's right-hand key is the accent one.
+                                .background(
+                                    if (row == 2 && column == 3) accent.copy(alpha = 0.94f)
+                                    else surface.copy(alpha = 0.94f),
+                                ),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A keyboard coming apart in the middle, with a thumb arriving at each half.
+ *
+ * Bars rather than letters, because the split is geometry: it falls where the accumulated key width
+ * first reaches half the row, which is why it works for every layout and not just QWERTY.
+ */
+@Composable
+private fun TourSplitRow() {
+    val accent = MaterialTheme.colorScheme.primary
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val transition = rememberInfiniteTransition(label = "split")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(4600, easing = LinearEasing), RepeatMode.Restart),
+        label = "split-cycle",
+    )
+    // Open, hold, close again — so the picture says it is a toggle, not a fixed layout.
+    val open = when {
+        cycle < 0.22f -> cycle / 0.22f
+        cycle < 0.80f -> 1f
+        else -> 1f - (cycle - 0.80f) / 0.20f
+    }
+    val gap = 4f + 40f * open
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.width(216.dp),
+    ) {
+        repeat(3) { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth().height(22.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    repeat(if (row == 2) 3 else 4) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(accent.copy(alpha = 0.16f)),
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(gap.dp))
+                Row(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    repeat(if (row == 2) 3 else 4) {
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(accent.copy(alpha = 0.16f)),
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        // Two thumbs, reaching in from the edges they actually rest on.
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            repeat(2) { side ->
+                Box(
+                    modifier = Modifier
+                        .offset(x = ((if (side == 0) 1f else -1f) * 26f * open).dp)
+                        .size(18.dp)
+                        .clip(CircleShape)
+                        .background(if (open > 0.5f) accent.copy(alpha = 0.55f) else muted.copy(alpha = 0.3f)),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * A typed word bringing its emoji along.
+ *
+ * The point of the picture is what does *not* happen: the two ordinary suggestions keep their seats
+ * and the emoji arrives beside them. Word and emoji are both strings, because the word has to be one
+ * the language really writes and the emoji has to be one that word really means.
+ */
+@Composable
+private fun TourEmojiRide() {
+    val accent = MaterialTheme.colorScheme.primary
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val word = stringRes(R.string.apptour62__art_emoji_word)
+    val emoji = stringRes(R.string.apptour62__art_emoji)
+    val transition = rememberInfiniteTransition(label = "emoji-ride")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(4400, easing = LinearEasing), RepeatMode.Restart),
+        label = "emoji-cycle",
+    )
+    val letters = ((cycle / 0.30f) * word.length).toInt().coerceIn(0, word.length)
+    val ride = ((cycle - 0.34f) / 0.16f).coerceIn(0f, 1f)
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(216.dp)) {
+        Box(modifier = Modifier.height(40.dp), contentAlignment = Alignment.Center) {
+            Text(
+                text = word.take(letters),
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(muted.copy(alpha = 0.25f)),
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Row(
+            modifier = Modifier.fillMaxWidth().height(32.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                text = word,
+                style = MaterialTheme.typography.bodyMedium,
+                color = muted,
+            )
+            Box(
+                modifier = Modifier
+                    .size(width = 44.dp, height = 7.dp)
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(muted.copy(alpha = 0.25f)),
+            )
+            Surface(
+                shape = RoundedCornerShape(percent = 50),
+                color = accent.copy(alpha = 0.16f * ride),
+                modifier = Modifier
+                    .alpha(ride)
+                    .offset(y = ((1f - ride) * 10f).dp),
+            ) {
+                Text(
+                    text = emoji,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+                    fontSize = 19.sp,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The symbol layer held open with one finger and handed straight back.
+ *
+ * Three beats, which is the whole gesture: hold, slide onto a character, let go — the character is in
+ * the field and the letters are already back. The symbols carry no language, so the picture needs no
+ * translation; "?123" is the key's own label from the layout file.
+ */
+@Composable
+private fun TourLayerPeek() {
+    val accent = MaterialTheme.colorScheme.primary
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val symbols = listOf("%", "&", "#", "@", "+")
+    val target = 2
+    val transition = rememberInfiniteTransition(label = "peek")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(5000, easing = LinearEasing), RepeatMode.Restart),
+        label = "peek-cycle",
+    )
+    val held = cycle > 0.14f && cycle < 0.72f
+    val peek = when {
+        cycle < 0.14f -> 0f
+        cycle < 0.26f -> (cycle - 0.14f) / 0.12f
+        cycle < 0.72f -> 1f
+        cycle < 0.80f -> 1f - (cycle - 0.72f) / 0.08f
+        else -> 0f
+    }
+    val onTarget = cycle > 0.46f && cycle < 0.72f
+    val inserted = cycle > 0.72f
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(216.dp)) {
+        Box(modifier = Modifier.height(34.dp), contentAlignment = Alignment.Center) {
+            Text(
+                text = if (inserted) symbols[target] else "",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = accent,
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(muted.copy(alpha = 0.25f)),
+        )
+        Spacer(modifier = Modifier.height(14.dp))
+        // The layer that peeks in, and the letters waiting underneath it.
+        Box(modifier = Modifier.fillMaxWidth().height(34.dp), contentAlignment = Alignment.Center) {
+            Row(
+                modifier = Modifier.fillMaxWidth().alpha(1f - peek),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                repeat(5) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(30.dp)
+                            .clip(RoundedCornerShape(7.dp))
+                            .background(muted.copy(alpha = 0.18f)),
+                    )
+                }
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .alpha(peek)
+                    .offset(y = ((1f - peek) * -10f).dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                symbols.forEachIndexed { index, symbol ->
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(30.dp)
+                            .clip(RoundedCornerShape(7.dp))
+                            .background(
+                                if (onTarget && index == target) accent
+                                else accent.copy(alpha = 0.14f),
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = symbol,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (onTarget && index == target) {
+                                MaterialTheme.colorScheme.onPrimary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        // The key being held, and the finger on its way across to the character.
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Surface(
+                shape = RoundedCornerShape(7.dp),
+                color = if (held) accent else muted.copy(alpha = 0.18f),
+            ) {
+                Text(
+                    text = "?123",
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = if (held) MaterialTheme.colorScheme.onPrimary else muted,
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(22.dp)
+                    .clip(RoundedCornerShape(7.dp))
+                    .background(muted.copy(alpha = 0.18f)),
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Box(modifier = Modifier.fillMaxWidth().height(16.dp)) {
+            Box(
+                modifier = Modifier
+                    .offset(x = (14f + 104f * peek * (if (onTarget) 1f else 0.45f)).dp)
+                    .size(14.dp)
+                    .clip(CircleShape)
+                    .background(accent.copy(alpha = if (held) 0.55f else 0f)),
+            )
+        }
+    }
+}
+
+/**
+ * A selection sweeping across the text while the row above counts what it holds.
+ *
+ * Lines are bars and the count is digits, so nothing here needs translating. The number climbing as
+ * the selection grows is the whole point: it is the row that used to stand empty.
+ */
+@Composable
+private fun TourSelectionCount() {
+    val accent = MaterialTheme.colorScheme.primary
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val transition = rememberInfiniteTransition(label = "selection")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(4800, easing = LinearEasing), RepeatMode.Restart),
+        label = "selection-cycle",
+    )
+    val grown = ((cycle - 0.12f) / 0.45f).coerceIn(0f, 1f)
+    val words = (grown * 12).toInt()
+    val chars = (grown * 68).toInt()
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(216.dp)) {
+        Box(modifier = Modifier.height(28.dp), contentAlignment = Alignment.Center) {
+            if (words > 0) {
+                Surface(shape = RoundedCornerShape(percent = 50), color = accent.copy(alpha = 0.16f)) {
+                    Text(
+                        text = "$words · $chars",
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 3.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = accent,
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        // Two lines of text; the selection fills the first and then part of the second.
+        Column(verticalArrangement = Arrangement.spacedBy(9.dp)) {
+            repeat(2) { line ->
+                val fill = (grown * 2f - line).coerceIn(0f, 1f)
+                Box(
+                    modifier = Modifier
+                        .size(width = 200.dp, height = 11.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(muted.copy(alpha = 0.22f)),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .fillMaxWidth(if (line == 1) fill * 0.6f else fill)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(accent.copy(alpha = 0.45f)),
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(14.dp))
+        // The actions row, stepping aside once the selection is under way.
+        Row(
+            modifier = Modifier.fillMaxWidth().alpha(if (grown > 0.25f) 0.25f else 1f),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            repeat(5) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(16.dp)
+                        .clip(RoundedCornerShape(5.dp))
+                        .background(muted.copy(alpha = 0.20f)),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Three clips narrowing to the one that contains what was searched for.
+ *
+ * The query is a growing bar rather than a word, and the match is a highlighted run inside a clip —
+ * that is what searching *content* looks like, and it carries no language.
+ */
+@Composable
+private fun TourClipSearch() {
+    val accent = MaterialTheme.colorScheme.primary
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val transition = rememberInfiniteTransition(label = "clips")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(5200, easing = LinearEasing), RepeatMode.Restart),
+        label = "clip-cycle",
+    )
+    val typed = ((cycle - 0.08f) / 0.25f).coerceIn(0f, 1f)
+    val filtered = cycle > 0.45f
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(216.dp)) {
+        Surface(
+            shape = RoundedCornerShape(percent = 50),
+            color = muted.copy(alpha = 0.14f),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Search,
+                    contentDescription = null,
+                    tint = muted,
+                    modifier = Modifier.size(14.dp),
+                )
+                Spacer(modifier = Modifier.width(7.dp))
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(typed * 0.55f)
+                        .height(8.dp)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(accent.copy(alpha = 0.55f)),
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(10.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(7.dp)) {
+            repeat(3) { index ->
+                // Only the middle clip survives the filter.
+                val kept = index == 1 || !filtered
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (index == 1 && filtered) accent.copy(alpha = 0.10f) else muted.copy(alpha = 0.10f),
+                    modifier = Modifier.fillMaxWidth().alpha(if (kept) 1f else 0.12f),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 9.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(width = 34.dp, height = 8.dp)
+                                .clip(RoundedCornerShape(percent = 50))
+                                .background(muted.copy(alpha = 0.40f)),
+                        )
+                        // The run that matched, lit in the accent.
+                        Box(
+                            modifier = Modifier
+                                .size(width = 44.dp, height = 8.dp)
+                                .clip(RoundedCornerShape(percent = 50))
+                                .background(
+                                    if (index == 1 && filtered) accent else muted.copy(alpha = 0.40f),
+                                ),
+                        )
+                        Box(
+                            modifier = Modifier
+                                .size(width = 26.dp, height = 8.dp)
+                                .clip(RoundedCornerShape(percent = 50))
+                                .background(muted.copy(alpha = 0.40f)),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * A finished dictation dropping into a folder as a file, and the folder filling up.
+ *
+ * The beat that matters is *automatic*: nothing is tapped between the waveform stopping and the file
+ * landing. Wordless by construction.
+ */
+@Composable
+private fun TourFolderDrop() {
+    val accent = MaterialTheme.colorScheme.primary
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val transition = rememberInfiniteTransition(label = "export")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(5000, easing = LinearEasing), RepeatMode.Restart),
+        label = "export-cycle",
+    )
+    val spoken = (cycle / 0.30f).coerceIn(0f, 1f)
+    val fall = ((cycle - 0.34f) / 0.28f).coerceIn(0f, 1f)
+    val landed = cycle > 0.62f
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(216.dp)) {
+        // The dictation: bars rising while it is spoken, then still.
+        Row(
+            modifier = Modifier.height(26.dp).alpha(1f - fall),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            repeat(9) { index ->
+                val reach = (spoken * 9f - index).coerceIn(0f, 1f)
+                Box(
+                    modifier = Modifier
+                        .size(width = 4.dp, height = (6 + 18 * reach * (0.5f + 0.5f * sin(index.toFloat()))).dp)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(accent.copy(alpha = 0.55f)),
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(6.dp))
+        // The file on its way down.
+        Box(modifier = Modifier.height(34.dp), contentAlignment = Alignment.TopCenter) {
+            if (fall > 0f && !landed) {
+                Box(
+                    modifier = Modifier
+                        .offset(y = (fall * 22f).dp)
+                        .size(width = 22.dp, height = 28.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(accent.copy(alpha = 0.75f)),
+                )
+            }
+        }
+        // The folder, with what has already arrived in it.
+        Box(contentAlignment = Alignment.Center) {
+            Icon(
+                imageVector = Icons.Filled.Folder,
+                contentDescription = null,
+                tint = accent.copy(alpha = if (landed) 0.9f else 0.45f),
+                modifier = Modifier.size(64.dp),
+            )
+            Row(
+                modifier = Modifier.offset(y = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
+            ) {
+                repeat(3) { index ->
+                    Box(
+                        modifier = Modifier
+                            .size(width = 7.dp, height = 10.dp)
+                            .clip(RoundedCornerShape(2.dp))
+                            .background(
+                                MaterialTheme.colorScheme.surface.copy(
+                                    alpha = if (landed || index < 2) 0.92f else 0.25f,
+                                ),
+                            ),
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Box(
+            modifier = Modifier
+                .size(width = 96.dp, height = 5.dp)
+                .clip(RoundedCornerShape(percent = 50))
+                .background(muted.copy(alpha = 0.18f)),
+        )
+    }
+}
+
+/**
+ * A ring closing on a check — the last page.
+ *
+ * Smaller than the other artwork on purpose: the outro also carries the donation invite, and a
+ * full-height picture would push it off the screen on a short phone.
+ */
+@Composable
+private fun TourDoneRing() {
+    val accent = MaterialTheme.colorScheme.primary
+    val transition = rememberInfiniteTransition(label = "done")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(4200, easing = LinearEasing), RepeatMode.Restart),
+        label = "done-cycle",
+    )
+    val sweep = (cycle / 0.42f).coerceIn(0f, 1f)
+    val tick = ((cycle - 0.44f) / 0.18f).coerceIn(0f, 1f)
+
+    Canvas(modifier = Modifier.size(96.dp)) {
+        val stroke = size.minDimension * 0.07f
+        val inset = stroke / 2f + size.minDimension * 0.06f
+        drawCircle(
+            color = accent.copy(alpha = 0.14f),
+            radius = size.minDimension / 2f - inset,
+            center = Offset(size.width / 2f, size.height / 2f),
+            style = Stroke(width = stroke),
+        )
+        drawArc(
+            color = accent,
+            startAngle = -90f,
+            sweepAngle = 360f * sweep,
+            useCenter = false,
+            topLeft = Offset(inset, inset),
+            size = Size(size.width - inset * 2f, size.height - inset * 2f),
+            style = Stroke(width = stroke, cap = StrokeCap.Round),
+        )
+        // The check, drawn in two strokes so it can be written rather than appear.
+        val a = Offset(size.width * 0.32f, size.height * 0.52f)
+        val b = Offset(size.width * 0.44f, size.height * 0.65f)
+        val c = Offset(size.width * 0.70f, size.height * 0.38f)
+        if (tick > 0f) {
+            val first = (tick / 0.4f).coerceIn(0f, 1f)
+            drawLine(
+                color = accent,
+                start = a,
+                end = Offset(a.x + (b.x - a.x) * first, a.y + (b.y - a.y) * first),
+                strokeWidth = stroke,
+                cap = StrokeCap.Round,
+            )
+            if (tick > 0.4f) {
+                val second = ((tick - 0.4f) / 0.6f).coerceIn(0f, 1f)
+                drawLine(
+                    color = accent,
+                    start = b,
+                    end = Offset(b.x + (c.x - b.x) * second, b.y + (c.y - b.y) * second),
+                    strokeWidth = stroke,
+                    cap = StrokeCap.Round,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The opening page: light passing once across the keyboard, leaving a few keys awake.
+ *
+ * The first version of this page was chips flying out of an app tile, and it read as decoration
+ * rather than as anything — abstract motion with nothing behind it. This shows the thing the release
+ * is about instead: a keyboard, waking up. One slow sweep, no text.
+ */
+@Composable
+private fun TourKeyboardWake() {
+    val accent = MaterialTheme.colorScheme.primary
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val transition = rememberInfiniteTransition(label = "wake")
+    val sweep by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(5600, easing = LinearEasing), RepeatMode.Restart),
+        label = "wake-sweep",
+    )
+    // Which keys stay awake after the light has gone past — fixed, not random, so the picture is the
+    // same one every time it is looked at.
+    val awake = remember { setOf(2, 7, 11, 15, 19) }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(7.dp),
+        modifier = Modifier.width(212.dp),
+    ) {
+        repeat(3) { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                repeat(7) { column ->
+                    val index = row * 7 + column
+                    // The sweep runs left to right and a little downwards, so the rows light in turn.
+                    val own = column / 7f * 0.7f + row * 0.1f
+                    val near = 1f - (abs(sweep - own) / 0.16f).coerceIn(0f, 1f)
+                    val lit = if (sweep > own) 0.30f else 0f
+                    Box(
+                        modifier = Modifier
+                            .size(width = 22.dp, height = 26.dp)
+                            .clip(RoundedCornerShape(7.dp))
+                            .background(
+                                accent.copy(
+                                    alpha = 0.10f + 0.65f * near +
+                                        (if (index in awake) lit * 0.5f else 0f),
+                                ),
+                            ),
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(2.dp))
+        // The space bar, so the shape reads as a keyboard rather than as a grid of tiles.
+        Box(
+            modifier = Modifier
+                .size(width = 118.dp, height = 20.dp)
+                .clip(RoundedCornerShape(7.dp))
+                .background(
+                    accent.copy(alpha = 0.10f + 0.55f * (1f - (abs(sweep - 0.82f) / 0.16f).coerceIn(0f, 1f))),
+                ),
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Box(
+            modifier = Modifier
+                .size(width = 64.dp, height = 4.dp)
+                .clip(RoundedCornerShape(percent = 50))
+                .background(muted.copy(alpha = 0.18f)),
+        )
+    }
+}
+
+/**
+ * One helper shown properly instead of four shown in passing: a sum getting its answer.
+ *
+ * The first version cycled through all four utilities in one small frame and none of them landed —
+ * four seconds each is not long enough to work out what you are being shown. The calculator is the
+ * one of the four that can be read at a glance, and the page's own text names the other three. Big
+ * type, one beat, digits only.
+ */
+@Composable
+private fun TourInlineAnswer() {
+    val accent = MaterialTheme.colorScheme.primary
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val transition = rememberInfiniteTransition(label = "calculator")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(4600, easing = LinearEasing), RepeatMode.Restart),
+        label = "calc-cycle",
+    )
+    // Typed, then answered, then held long enough to be read.
+    val typedChars = ((cycle / 0.34f) * 6f).toInt().coerceIn(0, 6)
+    val typed = "7 × 8 =".take(if (typedChars >= 6) 7 else typedChars)
+    val answered = cycle > 0.42f
+    val accepted = cycle > 0.68f
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(216.dp)) {
+        // The field, with what was typed and — once taken — the answer behind it.
+        Box(modifier = Modifier.height(52.dp), contentAlignment = Alignment.Center) {
+            Text(
+                text = if (accepted) "7 × 8 = 56" else typed,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(muted.copy(alpha = 0.25f)),
+        )
+        Spacer(modifier = Modifier.height(14.dp))
+        // The strip: the answer arrives as a suggestion, which is the whole feature.
+        Row(
+            modifier = Modifier.fillMaxWidth().height(40.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(width = 34.dp, height = 7.dp)
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(muted.copy(alpha = 0.22f)),
+            )
+            Surface(
+                shape = RoundedCornerShape(percent = 50),
+                color = if (answered) accent else Color.Transparent,
+                modifier = Modifier.alpha(if (answered) 1f else 0f),
+            ) {
+                Text(
+                    text = "56",
+                    modifier = Modifier.padding(horizontal = 18.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .size(width = 34.dp, height = 7.dp)
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(muted.copy(alpha = 0.22f)),
+            )
+        }
+    }
+}
+
+/**
+ * Four rows settling into place, one after another — the "and a lot of small things" page.
+ *
+ * Replaces a grid of two dozen dots pulsing in a diagonal wave, which was busy enough to pull the
+ * eye off the text it was standing next to. A page that says "many small things" should not itself
+ * be the loudest thing on the screen: same statement, four beats, slow.
+ */
+@Composable
+private fun TourSmallThings() {
+    val accent = MaterialTheme.colorScheme.primary
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    val transition = rememberInfiniteTransition(label = "small-things")
+    val cycle by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(7200, easing = LinearEasing), RepeatMode.Restart),
+        label = "small-cycle",
+    )
+    val settled = (cycle / 0.19f).toInt()
+
+    Column(
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+        modifier = Modifier.width(196.dp),
+    ) {
+        repeat(4) { row ->
+            val done = row < settled
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .clip(CircleShape)
+                        .background(if (done) accent else accent.copy(alpha = 0.16f)),
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Box(
+                    modifier = Modifier
+                        .size(width = (150 - row * 18).dp, height = 8.dp)
+                        .clip(RoundedCornerShape(percent = 50))
+                        .background(if (done) muted.copy(alpha = 0.38f) else muted.copy(alpha = 0.16f)),
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun PageContent(page: WhatsNewPage) {
     Column(
@@ -813,6 +2735,26 @@ private fun PageContent(page: WhatsNewPage) {
             when (page.art) {
                 TourArt.CLOUD_ORB -> TourCloudOrb()
                 TourArt.DESIGN_ORBS -> TourDesignOrbs()
+                TourArt.CREDIT_METER -> TourCreditMeter()
+                TourArt.WAVE_COMPRESS -> TourWaveCompress()
+                TourArt.PINYIN_STRIP -> TourPinyinStrip()
+                TourArt.SCRIPT_CAROUSEL -> TourScriptCarousel()
+                TourArt.EMOJI_SEARCH -> TourEmojiSearch()
+                TourArt.STICKER_GRID -> TourStickerGrid()
+                TourArt.SHARE_TO_TEXT -> TourShareToText()
+                TourArt.CORRECTION_PILL -> TourCorrectionPill()
+                TourArt.LEARN_LADDER -> TourLearnLadder()
+                TourArt.GLASS_KEYS -> TourGlassKeys()
+                TourArt.SPLIT_ROW -> TourSplitRow()
+                TourArt.EMOJI_RIDE -> TourEmojiRide()
+                TourArt.LAYER_PEEK -> TourLayerPeek()
+                TourArt.KEYBOARD_WAKE -> TourKeyboardWake()
+                TourArt.INLINE_ANSWER -> TourInlineAnswer()
+                TourArt.SELECTION_COUNT -> TourSelectionCount()
+                TourArt.CLIP_SEARCH -> TourClipSearch()
+                TourArt.FOLDER_DROP -> TourFolderDrop()
+                TourArt.SMALL_THINGS -> TourSmallThings()
+                TourArt.DONE_RING -> TourDoneRing()
             }
         } else {
             Box(

@@ -26,7 +26,28 @@ data class ProviderConfig(
     val apiKey: String,
     val extraHeaders: Map<String, String> = emptyMap(),
     val proxy: ProxyConfig? = null,
-    val timeoutSeconds: Long = 120,
+    /**
+     * How long a single read or write may take no bytes at all before the connection counts as dead.
+     *
+     * **Not a budget for the whole request.** It is the gap between bytes, which is why it also decides
+     * how long a model may think: while the server works on the audio it sends nothing, and that
+     * silence is one long read. Two minutes suits a dictation; an import raises it, because a piece of
+     * one can be ten minutes of speech for the model to get through.
+     */
+    val timeoutSeconds: Long = DEFAULT_TIMEOUT_SECONDS,
+    /**
+     * Budget for a whole call — connect, upload, wait, read — where it must differ from
+     * [timeoutSeconds] (issue #337).
+     *
+     * The two were the same number until a shared file went up. A whole call is a different question
+     * from a stalled socket, and for an import it can honestly take longer than two minutes: 25 MB of
+     * audio on a mobile connection, and then a model reading ten minutes of speech. Worse, a timeout
+     * counts as retryable, so the same bytes went up four times before the failure appeared.
+     *
+     * Null keeps the old behaviour: the call budget is [timeoutSeconds]. Only the file import raises
+     * it, and only because it runs on a screen with visible progress and a cancel button.
+     */
+    val callTimeoutSeconds: Long? = null,
     val transcriptionApi: TranscriptionApi = TranscriptionApi.OPENAI_MULTIPART,
     /**
      * Single-call multimodal transcription (issue #130): when true, audio is sent to `chat/completions`
@@ -47,13 +68,19 @@ data class ProviderConfig(
     /**
      * Curated model ids for providers without an OpenAI-style `/models` catalog (ElevenLabs, Deepgram,
      * AssemblyAI, issue #143): [OpenAiCompatibleClient.listModels] returns these offline so the model
-     * picker and connection test work without a live `/models` call.
+     * picker fills without a live `/models` call. Not a connection test — that has its own authenticated
+     * request per provider, because a list compiled into the app can never fail (#384).
      */
     val curatedModels: List<String> = emptyList(),
 ) {
     /** Base URL guaranteed to end with a single trailing slash. */
     val normalizedBaseUrl: String
         get() = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
+
+    companion object {
+        /** Two minutes per read or write, which is the app's answer to "is this connection alive?". */
+        const val DEFAULT_TIMEOUT_SECONDS = 120L
+    }
 }
 
 /**
@@ -102,6 +129,21 @@ enum class TranscriptionApi {
      * `api.assemblyai.com/v2` upload/transcript endpoints with a raw `authorization: <key>` header.
      */
     ASSEMBLYAI_ASYNC,
+
+    /**
+     * Azure Speech, Fast Transcription with MAI-Transcribe (issue #349): one `multipart/form-data` POST
+     * to `speechtotext/transcriptions:transcribe?api-version=…` carrying an `audio` file part and a
+     * `definition` part holding the options as JSON, authenticated with `Ocp-Apim-Subscription-Key`.
+     *
+     * The `definition` part is what makes this its own wire format rather than another multipart
+     * variant: every option — the model, the language, the vocabulary — lives inside one JSON string
+     * instead of beside the file as its own form field. Selecting MAI is itself two of those options
+     * (`enhancedMode.enabled` and `enhancedMode.model`), not a value the endpoint takes on its own.
+     *
+     * The transcript comes back as `combinedPhrases[].text`, one entry per channel, speaker or
+     * language rather than one per response. See [OpenAiCompatibleClient].
+     */
+    AZURE_FAST_TRANSCRIPTION,
 
     /**
      * On-device transcription (issue #104): no network call at all. Handled by
